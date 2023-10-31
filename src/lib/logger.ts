@@ -641,21 +641,21 @@ export class Record {
      */
     private static recLog(scheme: LoggerScheme, config: LogRecordConfig, logMessage?: string): string {
         // TODO(BATU1579): 自定义日志格式
-        logMessage = `[${scheme.displayName}] [${getCallerName(config.skipCallerNumber)}]: ${logMessage}`;
-
+        let detailMessage = `[${scheme.displayName}] [${getCallerName(config.skipCallerNumber)}]: ${logMessage}`;
+        let showMessage = `${logMessage}`;
         // 向日志堆栈中添加数据
         let needRecord = config.needRecord ?? scheme.needRecord ?? true;
         if (needRecord && scheme.level >= Record.RECORD_LEVEL) {
-            LOG_STACK.push(new LogStackFrame(logMessage, scheme));
+            LOG_STACK.push(new LogStackFrame(detailMessage, scheme));
         }
 
         // 输出日志
         let needPrint = config.needPrint ?? scheme.needPrint ?? true;
         if (needPrint && scheme.level >= Record.DISPLAY_LEVEL) {
-            scheme.logFunction(logMessage);
+            scheme.logFunction(showMessage);
         }
 
-        return logMessage;
+        return detailMessage;
     }
 }
 

@@ -2,13 +2,103 @@
     {
         "name": "_TOKEN",
         "type": "text",
-        "label": "pushplus 的用户 Token",
-        "help": "可以在 pushplus 的微信公众号中获取，不使用 pushplus 则留空"
+        "label": "UID",
+        "help": "微信推送每日收益(24点), 无需则不用填写"
     },
     {
-        "label": "显示控制台(需要悬浮窗权限)",
+        "name": "TELEMETRY",
         "type": "checkbox",
-        "name": "_SHOW_CONSOLE",
+        "label": "发送使用数据和错误报告",
+        "help": "帮助开发者改进脚本，这个报告会被认为是机密的，匿名的。"
+    },
+    {
+        "label": "有柿",
+        "type": "checkbox",
+        "name": "YouShi",
+        "default": true
+    },
+    {
+        "label": "书旗小说",
+        "type": "checkbox",
+        "name": "ShuQi",
+        "default": true
+    },
+    {
+        "label": "星空免费小说",
+        "type": "checkbox",
+        "name": "StarrySky",
+        "default": true
+    },
+    {
+        "label": "奇迹免费小说",
+        "type": "checkbox",
+        "name": "MarvelFree",
+        "default": true
+    },
+    {
+        "label": "茄子免费小说",
+        "type": "checkbox",
+        "name": "EggplantFree",
+        "default": true
+    },
+    {
+        "label": "七猫免费小说",
+        "type": "checkbox",
+        "name": "SevenCatsFree",
+        "default": true
+    },
+    {
+        "label": "熊猫脑洞小说",
+        "type": "checkbox",
+        "name": "PandaBrain",
+        "default": true
+    },
+    {
+        "label": "番茄畅听",
+        "type": "checkbox",
+        "name": "Tomato",
+        "default": true
+    },
+    {
+        "label": "番茄免费小说",
+        "type": "checkbox",
+        "name": "TomatoFree",
+        "default": true
+    },
+    {
+        "label": "番茄畅听音乐版",
+        "type": "checkbox",
+        "name": "TomatoLite",
+        "default": true
+    },
+    {
+        "label": "红果免费短剧",
+        "type": "checkbox",
+        "name": "RedFruits",
+        "default": true
+    },
+    {
+        "label": "快手免费小说",
+        "type": "checkbox",
+        "name": "KuaiShouFree",
+        "default": true
+    },
+    {
+        "label": "速读免费小说",
+        "type": "checkbox",
+        "name": "SpeedFree",
+        "default": true
+    },
+    {
+        "label": "得间小说",
+        "type": "checkbox",
+        "name": "DeJian",
+        "default": true
+    },
+    {
+        "label": "望潮",
+        "type": "checkbox",
+        "name": "WanChao",
         "default": true
     }
 ]

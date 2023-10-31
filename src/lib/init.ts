@@ -7,8 +7,8 @@
  * @Description: 脚本初始化
  */
 import { Record } from "./logger";
-import { SHOW_CONSOLE, SHORT_WAIT_MS } from "../global";
 import { PermissionException, ServiceNotEnabled } from "./exception";
+import { waitRandomTime } from "./utils";
 
 export function init() {
     // check accessibility permission
@@ -18,7 +18,7 @@ export function init() {
         }
         auto.waitFor();
     } else {
-        Record.verbose("Accessibility permissions enabled");
+        Record.verbose("已启用无障碍辅助功能权限");
     }
 
     // check is service alive
@@ -28,16 +28,24 @@ export function init() {
             'Please try restarting the service or re-installing Hamibot'
         );
     } else {
-        Record.debug("Screen size: " + device.height + " x " + device.width);
+        Record.debug("分辨率: " + device.height + " x " + device.width);
     }
 
-    // show console
-    if (SHOW_CONSOLE) {
-        console.show();
-        sleep(SHORT_WAIT_MS);
-        console.setPosition(0, 100);
-        console.setSize(device.width, device.height / 4);
+    if (!requestScreenCapture()) {
+        throw new PermissionException("Accessibility permission obtaining failure.");
+    } else {
+        Record.debug("启动视觉识别")
     }
 
-    setScreenMetrics(1080, 2400);
+    // download resource
+    if (!files.exists("/sdcard/exit-white.jpg")){
+        Record.debug("正在加载资源")
+        let img = images.load("https://hamibot-1304500632.cos.ap-nanjing.myqcloud.com/exit-white.jpg")
+        if(img != null){
+            img.saveTo("/sdcard/exit-white.jpg")
+        }
+    }
+    device.keepScreenOn(3600 * 1000)
+    console.show();
+    waitRandomTime(1)
 }

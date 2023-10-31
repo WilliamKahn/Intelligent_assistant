@@ -16,5 +16,6 @@
         "noImplicitAny": false,
 		"noUnusedParameters": true,
 		"noFallthroughCasesInSwitch": true,
+        "experimentalDecorators": true
     }
 }

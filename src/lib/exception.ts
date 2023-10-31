@@ -110,6 +110,18 @@ export function isValueException(error: any): error is ValueException {
     return __isExceptionType<ValueException>(error, 'ValueException');
 }
 
+export class ExceedMaxNumberOfAttempts extends BaseException {
+    readonly exceptionType: string = "ExceedMaxNumberOfAttempts";
+}
+
+export class CurrentAppBanned extends BaseException{
+    readonly exceptionType: string = "CurrentAppBanned";
+}
+
+export function isCurrentAppBanned(error: any): error is CurrentAppBanned {
+    return __isExceptionType<CurrentAppBanned>(error, 'CurrentAppBanned');
+}
+
 export class WidgetNotFoundException extends BaseException {
     readonly exceptionType: string = "WidgetNotFoundException";
 }
