@@ -6,7 +6,7 @@
  * @FilePath: \\src\\index.ts
  * @Description: 脚本入口
  */
-import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, RANGE_FOUR_FIFTHS_SCREEN, RANGE_MIDDLE_SCREEN, STORAGE, deJian, eggplantFree, filteredList, kuaiShouFree, list, marvelFree, pandaBrain, redFruits, sevenCatsFree, shuQi, speedFree, starrySky, tomato, tomatoFree, tomatoLite, youShi } from "./global";
+import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, RANGE_FOUR_FIFTHS_SCREEN, RANGE_MIDDLE_SCREEN, STORAGE, deJian, eggplantFree, filteredList, kuaiShouFree, list, marvelFree, pandaBrain, redFruits, sevenCatsFree, shuQi, speedFree, starrySky, tomato, tomatoFree, tomatoLite, wanChao, youShi } from "./global";
 import { clearBackground, convertSecondsToMinutes, doFuncUntilPopupsGone, findAndClick, normalClick, resizeX, resizeY, scrollTo, sendErrorMessage, sendIncomeMessageToWxPuher, toShowString } from "./lib/utils";
 import { init } from "./lib/init";
 import { Record as LogRecord } from "./lib/logger";
@@ -15,17 +15,15 @@ import { BaseKey } from "./scripts/abstract/Base";
 
 init()
 
-test()
-// main()
+// test()
+main()
 
 function test() {
     // for(let app of list){
     //     log(`${app.appName}: ${app.fetch(BaseKey.Weight)}`)
     // }
-    STORAGE.put("app","DeJian")
-    //doFuncUntilPopupsGone(['从第一天签到'], undefined, {errorMsg: "账号异常"})
-    //账号异常如何判断
-    //watch
+    //sevenCatsFree.start(60 * 60)
+    launchPackage("com.huawei.contacts")
 }
 
 function main() {
@@ -90,7 +88,7 @@ function main() {
             //执行流程
             STORAGE.put("app", app.constructor.name)
             surplus = app.start(executeTime)
-
+            LogRecord.debug(`surplus: ${surplus}`)
             //surplus分配算法
             let remainingAllocation = 30 * 60
             for (let tmp of sortedList) {

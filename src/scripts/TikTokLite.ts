@@ -93,7 +93,7 @@ export class TikTokLite extends Base{
             for(let i = 0;i<10;i++){
                 let tmp = text("开宝箱").findOne(3 * 65 * 1000)
                 if(tmp != null) {
-                    randomClick(tmp)
+                    randomClick(tmp.bounds())
                     back()
                 }
             }

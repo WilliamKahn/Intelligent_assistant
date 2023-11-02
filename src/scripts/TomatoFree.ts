@@ -90,9 +90,7 @@ export class TomatoFree extends AbstractTomato {
             searchByLeftRangeOption: textMatches("吃饭补贴.+"), 
             bounds: RANGE_MIDDLE_SCREEN
         })){
-            let reward = textStartsWith("领取").findOnce()
-            if(reward != null) {
-                randomClick(reward)
+            if(findAndClick(textStartsWith("领取"))) {
                 doFuncUntilPopupsGone(this.buttonNameList, {
                     func: () => { 
                         this.watch(text("日常福利"))

@@ -6,10 +6,11 @@
         "help": "微信推送每日收益(24点), 无需则不用填写"
     },
     {
-        "name": "TELEMETRY",
+        "label": "是否显示控制台",
+        "help": "日志信息在hamibot中可查看, 关闭后可提高效率",
+        "name": "_SHOW_CONSOLE",
         "type": "checkbox",
-        "label": "发送使用数据和错误报告",
-        "help": "帮助开发者改进脚本，这个报告会被认为是机密的，匿名的。"
+        "default": false
     },
     {
         "label": "有柿",

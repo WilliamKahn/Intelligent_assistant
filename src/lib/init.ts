@@ -9,6 +9,7 @@
 import { Record } from "./logger";
 import { PermissionException, ServiceNotEnabled } from "./exception";
 import { waitRandomTime } from "./utils";
+import { SHOW_CONSOLE } from "../global";
 
 export function init() {
     // check accessibility permission
@@ -46,6 +47,8 @@ export function init() {
         }
     }
     device.keepScreenOn(3600 * 1000)
-    console.show();
-    waitRandomTime(1)
+    if(SHOW_CONSOLE) {
+        console.show()
+        waitRandomTime(1)
+    }
 }

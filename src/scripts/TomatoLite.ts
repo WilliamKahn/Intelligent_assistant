@@ -13,7 +13,6 @@ export class TomatoLite extends AbstractTomato {
         this.appName = NAME_READ_TOMATO_LITE
         this.packageName = PACKAGE_READ_TOMATO_LITE
         this.tab = id(this.packageName+":id/c7")
-        this.backTimes = 2
         this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, BASE_ASSIMT_TIME)
         this.medEffEstimatedTime = this.fetch(BaseKey.medEffEstimatedTime, 35 * 60)
     }

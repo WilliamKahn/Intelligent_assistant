@@ -1,12 +1,13 @@
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_SEVEN_CATS_FREE, PACKAGE_READ_SEVEN_CATS_FREE, RANGE_FOUR_FIFTHS_SCREEN, RANGE_MIDDLE_SCREEN } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
-import { findAndClick, closeByImageMatching, getStrByOcrRecognizeLimitBounds, doFuncAtGivenTime, doFuncUntilPopupsGone, randomClickChildInList, waitRandomTime, normalClick, resizeX, resizeY } from "../lib/utils";
+import { findAndClick, closeByImageMatching, getStrByOcrRecognizeLimitBounds, doFuncAtGivenTime, doFuncUntilPopupsGone, randomClickChildInList, waitRandomTime, normalClick, resizeX, resizeY, merge } from "../lib/utils";
 import { Base, BaseKey } from "./abstract/Base";
 
 export class SevenCatsFree extends Base{
 
     buttonNameList:string[] = [
         '看小视频再领.*',
+        "立得现金到账"
     ]
 
     constructor(){
@@ -62,15 +63,29 @@ export class SevenCatsFree extends Base{
     @functionLog("签到")
     signIn(): void {
         this.goTo(this.tab, 2)
-        this.clickPop()
+        doFuncUntilPopupsGone(this.buttonNameList, {
+            func: ()=>{
+                this.watch(text("日常福利"))
+            }
+        })
     }
 
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goTo(this.tab, 2)
-        this.clickPop()
+        doFuncUntilPopupsGone(this.buttonNameList, {
+            func: ()=>{
+                this.watch(text("日常福利"))
+            },
+            ocrRecognizeText: "看小视频再领.*|立得现金到账"
+        })
         if(findAndClick(text("开宝箱得金币"))) {
-            this.clickPop()
+            doFuncUntilPopupsGone(this.buttonNameList, {
+                func: ()=>{
+                    this.watch(text("日常福利"))
+                },
+                ocrRecognizeText: "看小视频再领.*|立得现金到账"
+            })
         }
     }
 
@@ -128,21 +143,4 @@ export class SevenCatsFree extends Base{
         }
     }
 
-    clickPop(): void {
-        let flag = true
-        doFuncUntilPopupsGone(this.buttonNameList, {
-            func: ()=>{
-                this.watch(text("日常福利"))
-                flag = false
-            }
-        })
-        if(flag) {
-            let str = getStrByOcrRecognizeLimitBounds()
-            const match = str.match(/看小视频再领[0-9]+金币/)
-            if(match){
-                normalClick(resizeX(random(350, 700)), resizeY(random(1250, 1300)))
-                this.watch(text("日常福利"))
-            }
-        }
-    }
 }

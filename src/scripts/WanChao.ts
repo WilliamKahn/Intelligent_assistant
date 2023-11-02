@@ -1,6 +1,7 @@
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_WANCHAO, PACKAGE_READ_WANCHAO, RANGE_FIXED_SCREEN } from "../global";
 import { measureExecutionTime } from "../lib/decorators";
-import { findAndClick, isGrayColor, resizeX, resizeY, waitRandomTime } from "../lib/utils";
+import { Record } from "../lib/logger";
+import { findAndClick, getScreenImage, isGrayColor, resizeX, resizeY, waitRandomTime } from "../lib/utils";
 import { Base, BaseKey } from "./abstract/Base";
 
 export class WanChao extends Base {
@@ -46,7 +47,10 @@ export class WanChao extends Base {
                 waitRandomTime(3)
             }
             if(findAndClick(className("android.view.View").depth(13).drawingOrder(0).boundsInside(350,550,700,900))){
-                findAndClick(text("确定"))
+                let money = textMatches("[0-9]+\.[0-9]+元").boundsInside(resizeX(108),resizeY(1140),resizeX(972),resizeY(1323)).findOnce() 
+                if(money != null) {
+                    Record.log(`中奖${money.text()}`)
+                }
             }
         }
     }
@@ -65,7 +69,7 @@ export class WanChao extends Base {
             top = detection.bounds().top
         }
         //var img = images.read('/sdcard/Pictures/Screenshots/test1.jpg')
-        const img = captureScreen()
+        const img = getScreenImage()
         let min = 10000
         let index = 0
         for (let x = from; x < end; x++) {

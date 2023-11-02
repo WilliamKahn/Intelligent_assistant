@@ -9,18 +9,19 @@ import { ExceedMaxNumberOfAttempts } from "../../lib/exception"
 */
 export abstract class Base {
 
-    //app名称
+    //app名称包名
     appName: string = ""
-    //包名
     packageName: string = ""
+
     //导航栏跳转参数 用于防止重复点击
     tab: UiSelector = text("")
     depth: number = 0
     preComponent: UiSelector = text("")
     preNum: number = -1
+
     //观看广告
     exitNum: number = 1
-    backTimes: number = 1
+
     //执行预估时间
     highEffEstimatedTime: number = BASE_ASSIMT_TIME
     medEffEstimatedTime: number = MAX_ASSIMT_TIME
@@ -77,8 +78,13 @@ export abstract class Base {
         Record.log(`尝试启动${this.appName}`)
         let isLauchApp = launchPackage(this.packageName)
         if(isLauchApp) {
+            waitRandomTime(5)
+            findAndClick(text("打开"), {
+                ocrRecognizeText: "打开"
+            })
             Record.log(`${this.appName}已启动`)
-            waitRandomTime(15)
+            waitRandomTime(10)
+
         } else {
             Record.log(`${this.appName}应用未安装`)
         }
@@ -103,16 +109,7 @@ export abstract class Base {
             readTime += waitRandomTime(10)
             //防止app内广告
             if(this.verify){
-                try {
-                    this.backUntilFind(textMatches(merge(["菜单", ".*[0-9]*[金]?币"])))
-                } catch (error) {
-                    Record.warn("阅读异常, 正在重试")
-                    clearBackground()
-                    if(this.lauchApp()){
-                        this.readBook(totalTime - readTime)
-                    }
-                    return
-                }
+                this.backUntilFind(textMatches(merge(["菜单", ".*[0-9]*[金]?币"])))
             } else {
                 let waitSign = ['.*后可领奖励','.*后可领取奖励', '.*后领取观看奖励']
                 if(textMatches(merge(waitSign)).exists()){
@@ -137,13 +134,8 @@ export abstract class Base {
      * @description 基于视觉观看广告，
      * @returns 
      */
-    watch(exitSign: UiSelector, times?:number){
+    watch(exitSign: UiSelector, times:number = this.exitNum){
         //回调次数
-        if(times == undefined){
-            times = this.exitNum
-        } else {
-            times++
-        }
         if(exitSign.exists()){
             //记录上次退出时按钮
             if(times != this.exitNum){
@@ -170,14 +162,14 @@ export abstract class Base {
         }
         if(text("该视频所提到的内容是").exists()){
             back()
-            this.watch(exitSign, times)
+            this.watch(exitSign, ++times)
             return
         }
         close(times)
         if(findAndClick(text("领取奖励"))){
-            times = undefined
+            times = this.exitNum
         }
-        this.watch(exitSign, times)
+        this.watch(exitSign, ++times)
     }
 
     /**
@@ -185,7 +177,6 @@ export abstract class Base {
      * @param component 可以选定整条导航栏或者单个控件
      * @param num -1代表单个控件，大于0后指定component下某个子类
      * @param depth depth代表子类深度,默认为0，列表默认点击子项，
-     * @param sign 确认点击生效后的标识
      * @returns void
      */
     goTo(component: UiSelector, num: number){
@@ -207,9 +198,9 @@ export abstract class Base {
             }
             if(this.preComponent.toString() == component.toString()
                 && this.preNum == num) {
-                randomClick(tmp)
+                randomClick(tmp.bounds())
             } else {
-                randomClick(tmp, {check: true})
+                randomClick(tmp.bounds(), {check: true})
             }
         }
         this.preComponent = component
@@ -244,6 +235,13 @@ export abstract class Base {
         } else {
             return tmp
         }
+    }
+
+    /**
+     * @description 重置留存记录
+     */
+    clear(){
+        this.preComponent = text("")
     }
 
     /**

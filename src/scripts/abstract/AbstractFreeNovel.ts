@@ -9,7 +9,7 @@ export abstract class AbstractFreeNovel extends Base {
     tab: UiSelector
 
     buttonNameList:string[] = [
-        '看小视频再领.+'
+        '看小视频再领.*'
     ]
 
     constructor(packageName: string) {
@@ -74,24 +74,46 @@ export abstract class AbstractFreeNovel extends Base {
     @functionLog("签到")
     signIn(): void {
         this.goTo(this.tab, 2)
-        this.clickPop()
+        doFuncUntilPopupsGone(this.buttonNameList, {
+            func: ()=>{
+                this.watch(text("日常福利"))
+            },
+            ocrRecognizeText: "看小视频再领[0-9]+金币"
+        })
     }
 
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goTo(this.tab, 2)
-        this.clickPop()
+        doFuncUntilPopupsGone(this.buttonNameList, {
+            func: ()=>{
+                this.watch(text("日常福利"))
+            },
+            ocrRecognizeText: "看小视频再领[0-9]+金币"
+        })
         if (findAndClick(textMatches(merge(['开宝箱得金币', '[0-9]+分[0-9]+秒'])))) {
-            this.clickPop()
+            doFuncUntilPopupsGone(this.buttonNameList, {
+                func: ()=>{
+                    this.watch(text("日常福利"))
+                },
+                ocrRecognizeText: "看小视频再领[0-9]+金币"
+            })
         }
     }
 
     @functionLog("看视频")
     watchAds(): void {
         this.goTo(this.tab, 2)
-        if(findAndClick(text("去观看"), {bounds: RANGE_FOUR_FIFTHS_SCREEN})){
+        if(findAndClick(text("去观看"), {
+            bounds: RANGE_FOUR_FIFTHS_SCREEN,
+            normalClickOptions: {waitTimes: 10},
+            untilGone: true
+        })){
             this.watch(text("日常福利"))
-            findAndClick(text("领金币"))
+            findAndClick(text("领金币"), {
+                bounds: RANGE_FOUR_FIFTHS_SCREEN,
+                untilGone: true
+            })
         }
     }
 
@@ -100,9 +122,16 @@ export abstract class AbstractFreeNovel extends Base {
         this.goTo(this.tab, 2)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && findAndClick(text("去逛逛"), {bounds: RANGE_FOUR_FIFTHS_SCREEN})) {
+            && findAndClick(text("去逛逛"), {
+                bounds: RANGE_FOUR_FIFTHS_SCREEN,
+                normalClickOptions: {waitTimes: 10},
+                untilGone: true
+            })) {
             this.watch(text("日常福利"))
-            findAndClick(text("领金币"))
+            findAndClick(text("领金币"), {
+                bounds: RANGE_FOUR_FIFTHS_SCREEN,
+                untilGone: true
+            })
         }
     }
 
@@ -157,24 +186,6 @@ export abstract class AbstractFreeNovel extends Base {
                 id(this.packageName+":id/right_content_view"),
                 random(0, 8)
             )
-        }
-    }
-
-    clickPop(): void {
-        let flag = true
-        doFuncUntilPopupsGone(this.buttonNameList, {
-            func: ()=>{
-                this.watch(text("日常福利"))
-                flag = false
-            }
-        })
-        if(flag) {
-            let str = getStrByOcrRecognizeLimitBounds()
-            const match = str.match(/看小视频再领[0-9]+金币/)
-            if(match){
-                normalClick(resizeX(random(350, 700)), resizeY(random(1250, 1300)))
-                this.watch(text("日常福利"))
-            }
         }
     }
 }

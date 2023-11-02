@@ -1,6 +1,6 @@
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_DEJIAN, PACKAGE_READ_DEJIAN, RANGE_MIDDLE_SCREEN } from "../global";
 import { Base, BaseKey } from "./abstract/Base";
-import { findAndClick, scrollTo, randomClickChildInList, clickUntilGone, merge, doFuncUntilPopupsGone, doFuncAtGivenTime, closeByImageMatching } from "../lib/utils";
+import { findAndClick, scrollTo, randomClickChildInList, merge, doFuncUntilPopupsGone, doFuncAtGivenTime, closeByImageMatching } from "../lib/utils";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 
@@ -135,7 +135,7 @@ export class DeJian extends Base {
                 const match = title.text().match(regex)
                 if(match) {
                     for(let i = parseInt(match[1]); i < parseInt(match[2]); i++){
-                        clickUntilGone(text("看视频赚金币"))
+                        findAndClick(text("看视频赚金币"), {untilGone: true})
                         Record.log(`参与活动, 正在观看${i+1}/${match[2]}个广告`)
                         this.watch(text("金币收益"))
                         //看视频继续赚金币

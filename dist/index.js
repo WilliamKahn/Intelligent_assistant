@@ -58,13 +58,16 @@ __webpack_require__.d(__webpack_exports__, {
   "dx": () => (/* binding */ RANGE_MIDDLE_SCREEN),
   "lU": () => (/* binding */ REDUNDANCY_TIME),
   "mr": () => (/* binding */ ROBOT_ID),
+  "wd": () => (/* binding */ SHOW_CONSOLE),
   "P_": () => (/* binding */ STORAGE),
   "cB": () => (/* binding */ WAIT_TIME_AFTER_CLICK),
   "b1": () => (/* binding */ WX_PUSHER_URL),
-  "g$": () => (/* binding */ _TOKEN)
+  "g$": () => (/* binding */ _TOKEN),
+  "C": () => (/* binding */ filteredList),
+  "pb": () => (/* binding */ list)
 });
 
-// UNUSED EXPORTS: APP_ENV, PROJECT_NAME, STORAGE_WEIGHT_CONTAINER, VERSION, WEIGHT_ASSIMT_TIME, deJian, eggplantFree, filteredList, kuaiShou, kuaiShouFree, kuaiShouLite, list, marvelFree, pandaBrain, redFruits, sevenCatsFree, shuQi, speedFree, starrySky, tikTokLite, tomato, tomatoFree, tomatoLite, wanChao, youShi
+// UNUSED EXPORTS: APP_ENV, PROJECT_NAME, STORAGE_WEIGHT_CONTAINER, VERSION, WEIGHT_ASSIMT_TIME, _SHOW_CONSOLE, deJian, eggplantFree, kuaiShou, kuaiShouFree, kuaiShouLite, marvelFree, pandaBrain, redFruits, sevenCatsFree, shuQi, speedFree, starrySky, tikTokLite, tomato, tomatoFree, tomatoLite, wanChao, youShi
 
 // EXTERNAL MODULE: ./src/lib/exception.ts
 var exception = __webpack_require__(564);
@@ -260,7 +263,9 @@ var DeJian = function (_super) {
 
         if (match) {
           for (var i = parseInt(match[1]); i < parseInt(match[2]); i++) {
-            (0,utils/* clickUntilGone */.q1)(text("看视频赚金币"));
+            (0,utils/* findAndClick */.Od)(text("看视频赚金币"), {
+              untilGone: true
+            });
             logger/* Record.log */.WV.log("\u53C2\u4E0E\u6D3B\u52A8, \u6B63\u5728\u89C2\u770B".concat(i + 1, "/").concat(match[2], "\u4E2A\u5E7F\u544A"));
             this.watch(text("金币收益"));
             (0,utils/* findAndClick */.Od)(id("com.zhangyue.module.ad:id/iv_dialog_reward_close"));
@@ -1178,10 +1183,7 @@ var TomatoFree = function (_super) {
       searchByLeftRangeOption: textMatches("吃饭补贴.+"),
       bounds: RANGE_MIDDLE_SCREEN
     })) {
-      var reward = textStartsWith("领取").findOnce();
-
-      if (reward != null) {
-        (0,utils/* randomClick */.vn)(reward);
+      if ((0,utils/* findAndClick */.Od)(textStartsWith("领取"))) {
         (0,utils/* doFuncUntilPopupsGone */.PI)(this.buttonNameList, {
           func: function func() {
             _this.watch(text("日常福利"));
@@ -1332,7 +1334,6 @@ var TomatoLite = function (_super) {
     _this.appName = NAME_READ_TOMATO_LITE;
     _this.packageName = PACKAGE_READ_TOMATO_LITE;
     _this.tab = id(_this.packageName + ":id/c7");
-    _this.backTimes = 2;
     _this.highEffEstimatedTime = _this.fetch(Base/* BaseKey.highEffEstimatedTime */.N.highEffEstimatedTime, BASE_ASSIMT_TIME);
     _this.medEffEstimatedTime = _this.fetch(Base/* BaseKey.medEffEstimatedTime */.N.medEffEstimatedTime, 35 * 60);
     return _this;
@@ -1538,6 +1539,7 @@ var WanChao_decorate = undefined && undefined.__decorate || function (decorators
 
 
 
+
 var WanChao = function (_super) {
   WanChao_extends(WanChao, _super);
 
@@ -1593,7 +1595,11 @@ var WanChao = function (_super) {
       }
 
       if ((0,utils/* findAndClick */.Od)(className("android.view.View").depth(13).drawingOrder(0).boundsInside(350, 550, 700, 900))) {
-        (0,utils/* findAndClick */.Od)(text("确定"));
+        var money = textMatches("[0-9]+\.[0-9]+元").boundsInside((0,utils/* resizeX */.wK)(108), (0,utils/* resizeY */.ov)(1140), (0,utils/* resizeX */.wK)(972), (0,utils/* resizeY */.ov)(1323)).findOnce();
+
+        if (money != null) {
+          logger/* Record.log */.WV.log("\u4E2D\u5956".concat(money.text()));
+        }
       }
     }
   };
@@ -1612,7 +1618,7 @@ var WanChao = function (_super) {
       top = detection.bounds().top;
     }
 
-    var img = captureScreen();
+    var img = (0,utils/* getScreenImage */.h3)();
     var min = 10000;
     var index = 0;
 
@@ -1753,7 +1759,7 @@ var YouShi = function (_super) {
   };
 
   YouShi.prototype.weight = function () {
-    this.goTo(this.tab, 2);
+    this.goTo(this.tab, 3);
 
     if ((0,utils/* findAndClick */.Od)(textMatches("我的金币:.*"))) {
       var tmp = textMatches(/(\d+)/).boundsInside(0, 0, (0,utils/* resizeX */.wK)(500), (0,utils/* resizeY */.ov)(600)).findOnce();
@@ -1768,7 +1774,7 @@ var YouShi = function (_super) {
   YouShi.prototype.signIn = function () {
     var _this = this;
 
-    this.goTo(this.tab, 2);
+    this.goTo(this.tab, 3);
 
     if ((0,utils/* findAndClick */.Od)(text("立即签到"), {
       bounds: RANGE_MIDDLE_SCREEN
@@ -1785,7 +1791,7 @@ var YouShi = function (_super) {
   YouShi.prototype.openTreasure = function () {
     var _this = this;
 
-    this.goTo(this.tab, 2);
+    this.goTo(this.tab, 3);
 
     if ((0,utils/* findAndClick */.Od)(text("开宝箱得金币"))) {
       (0,utils/* doFuncUntilPopupsGone */.PI)(this.buttonNameList, {
@@ -1798,7 +1804,7 @@ var YouShi = function (_super) {
   };
 
   YouShi.prototype.watchAds = function () {
-    this.goTo(this.tab, 2);
+    this.goTo(this.tab, 3);
 
     if ((0,utils/* findAndClick */.Od)(text("领福利"))) {
       this.watch(text("日常任务"));
@@ -1814,7 +1820,7 @@ var YouShi = function (_super) {
   };
 
   YouShi.prototype.reward = function () {
-    this.goTo(this.tab, 2);
+    this.goTo(this.tab, 3);
     var cycleCounts = 0;
 
     while (++cycleCounts < MAX_CYCLES_COUNTS && (0,utils/* findAndClick */.Od)(text("点击领取"))) {
@@ -1831,13 +1837,13 @@ var YouShi = function (_super) {
   YouShi.prototype.mealSupp = function () {
     var _this = this;
 
-    this.goTo(this.tab, 2);
+    this.goTo(this.tab, 3);
 
     if ((0,utils/* findAndClick */.Od)(text("吃饭补贴"))) {
       if ((0,utils/* findAndClick */.Od)(textMatches("领取.*补贴[0-9]+金币"))) {
         (0,utils/* doFuncUntilPopupsGone */.PI)(this.buttonNameList, {
           func: function func() {
-            _this.watch(text("就要开饭了! 再等等"));
+            _this.watch(text("日常任务"));
           }
         });
         (0,utils/* findAndClick */.Od)(text("开心收下"));
@@ -1848,7 +1854,7 @@ var YouShi = function (_super) {
   YouShi.prototype.walkEarn = function () {
     var _this = this;
 
-    this.goTo(this.tab, 2);
+    this.goTo(this.tab, 3);
 
     if ((0,utils/* findAndClick */.Od)(text("走路赚钱"))) {
       if ((0,utils/* findAndClick */.Od)(textMatches("领取[0-9]+金币"))) {
@@ -1865,7 +1871,7 @@ var YouShi = function (_super) {
   YouShi.prototype.sleepEarn = function () {
     var _this = this;
 
-    this.goTo(this.tab, 2);
+    this.goTo(this.tab, 3);
 
     if ((0,utils/* findAndClick */.Od)(text("睡觉赚钱"))) {
       if ((0,utils/* findAndClick */.Od)(text("我睡醒了"))) {
@@ -1884,7 +1890,7 @@ var YouShi = function (_super) {
   };
 
   YouShi.prototype.doubleEarn = function () {
-    this.goTo(this.tab, 2);
+    this.goTo(this.tab, 3);
 
     if ((0,utils/* findAndClick */.Od)(text("去翻倍"))) {
       (0,utils/* waitRandomTime */.DV)(2);
@@ -1973,7 +1979,7 @@ var AbstractFreeNovel = function (_super) {
   function AbstractFreeNovel(packageName) {
     var _this = _super.call(this) || this;
 
-    _this.buttonNameList = ['看小视频再领.+'];
+    _this.buttonNameList = ['看小视频再领.*'];
     _this.tab = id(packageName + ":id/home_activity_navigation_bar");
     _this.highEffEstimatedTime = _this.fetch(Base/* BaseKey.highEffEstimatedTime */.N.highEffEstimatedTime, BASE_ASSIMT_TIME);
     _this.medEffEstimatedTime = _this.fetch(Base/* BaseKey.medEffEstimatedTime */.N.medEffEstimatedTime, 15 * 60);
@@ -2058,10 +2064,15 @@ var AbstractFreeNovel = function (_super) {
     this.goTo(this.tab, 2);
 
     if ((0,utils/* findAndClick */.Od)(text("去观看"), {
-      bounds: RANGE_FOUR_FIFTHS_SCREEN
+      bounds: RANGE_FOUR_FIFTHS_SCREEN,
+      normalClickOptions: {
+        waitTimes: 10
+      }
     })) {
       this.watch(text("日常福利"));
-      (0,utils/* findAndClick */.Od)(text("领金币"));
+      (0,utils/* findAndClick */.Od)(text("领金币"), {
+        bounds: RANGE_FOUR_FIFTHS_SCREEN
+      });
     }
   };
 
@@ -2070,10 +2081,15 @@ var AbstractFreeNovel = function (_super) {
     var cycleCounts = 0;
 
     while (++cycleCounts < MAX_CYCLES_COUNTS && (0,utils/* findAndClick */.Od)(text("去逛逛"), {
-      bounds: RANGE_FOUR_FIFTHS_SCREEN
+      bounds: RANGE_FOUR_FIFTHS_SCREEN,
+      normalClickOptions: {
+        waitTimes: 10
+      }
     })) {
       this.watch(text("日常福利"));
-      (0,utils/* findAndClick */.Od)(text("领金币"));
+      (0,utils/* findAndClick */.Od)(text("领金币"), {
+        bounds: RANGE_FOUR_FIFTHS_SCREEN
+      });
     }
   };
 
@@ -2789,7 +2805,7 @@ var SevenCatsFree = function (_super) {
   function SevenCatsFree() {
     var _this = _super.call(this) || this;
 
-    _this.buttonNameList = ['看小视频再领.*'];
+    _this.buttonNameList = ['看小视频再领.*', "立得现金到账"];
     _this.appName = NAME_READ_SEVEN_CATS_FREE;
     _this.packageName = PACKAGE_READ_SEVEN_CATS_FREE;
     _this.tab = id(_this.packageName + ":id/home_activity_navigation_bar");
@@ -2841,16 +2857,34 @@ var SevenCatsFree = function (_super) {
   };
 
   SevenCatsFree.prototype.signIn = function () {
+    var _this = this;
+
     this.goTo(this.tab, 2);
-    this.clickPop();
+    (0,utils/* doFuncUntilPopupsGone */.PI)(this.buttonNameList, {
+      func: function func() {
+        _this.watch(text("日常福利"));
+      }
+    });
   };
 
   SevenCatsFree.prototype.openTreasure = function () {
+    var _this = this;
+
     this.goTo(this.tab, 2);
-    this.clickPop();
+    (0,utils/* doFuncUntilPopupsGone */.PI)(this.buttonNameList, {
+      func: function func() {
+        _this.watch(text("日常福利"));
+      },
+      ocrRecognizeText: "看小视频再领.*|立得现金到账"
+    });
 
     if ((0,utils/* findAndClick */.Od)(text("开宝箱得金币"))) {
-      this.clickPop();
+      (0,utils/* doFuncUntilPopupsGone */.PI)(this.buttonNameList, {
+        func: function func() {
+          _this.watch(text("日常福利"));
+        },
+        ocrRecognizeText: "看小视频再领.*|立得现金到账"
+      });
     }
   };
 
@@ -2901,29 +2935,6 @@ var SevenCatsFree = function (_super) {
             this.watch(id(this.packageName + ":id/activity_voice_play_bg"));
           }
         }
-      }
-    }
-  };
-
-  SevenCatsFree.prototype.clickPop = function () {
-    var _this = this;
-
-    var flag = true;
-    (0,utils/* doFuncUntilPopupsGone */.PI)(this.buttonNameList, {
-      func: function func() {
-        _this.watch(text("日常福利"));
-
-        flag = false;
-      }
-    });
-
-    if (flag) {
-      var str = (0,utils/* getStrByOcrRecognizeLimitBounds */.B)();
-      var match = str.match(/看小视频再领[0-9]+金币/);
-
-      if (match) {
-        (0,utils/* normalClick */.Uw)((0,utils/* resizeX */.wK)(random(350, 700)), (0,utils/* resizeY */.ov)(random(1250, 1300)));
-        this.watch(text("日常福利"));
       }
     }
   };
@@ -3665,7 +3676,7 @@ var TikTokLite = function (_super) {
         var tmp = text("开宝箱").findOne(3 * 65 * 1000);
 
         if (tmp != null) {
-          (0,utils/* randomClick */.vn)(tmp);
+          (0,utils/* randomClick */.vn)(tmp.bounds());
           back();
         }
       }
@@ -3752,7 +3763,7 @@ var _a;
 
 
 var PROJECT_NAME = "智能助手";
-var VERSION = "0.2.0";
+var VERSION = "0.2.2";
 var WX_PUSHER_URL = "https://wxpusher.zjiecode.com/api/send/message";
 var APP_TOKEN = "AT_2vEaUfXFmwMKybX7YeX3yCJFrmc7TFlD";
 var MAX_BACK_COUNTS = 10;
@@ -3764,7 +3775,7 @@ var REDUNDANCY_TIME = 3 * 60;
 var BASE_ASSIMT_TIME = 10 * 60;
 var WEIGHT_ASSIMT_TIME = (/* unused pure expression or super */ null && (5 * 60));
 var MAX_ASSIMT_TIME = 24 * 60 * 60;
-var STORAGE_WEIGHT_CONTAINER = "YWfjbEVp28";
+var STORAGE_WEIGHT_CONTAINER = "YWfjbEVp29";
 var STORAGE = storages.create(STORAGE_WEIGHT_CONTAINER);
 var DEVICE_WIDTH = 1080;
 var DEVICE_HEIGHT = 2340;
@@ -3841,6 +3852,7 @@ var filteredList = list.filter(function (item) {
 });
 logger/* Record.info */.WV.info("\u6B63\u5728\u542F\u52A8...\n\n\t\u5F53\u524D\u811A\u672C\u7248\u672C: ".concat(VERSION, "\n"));
 var _TOKEN = (_a = hamibot.env, _a._TOKEN),
+    _SHOW_CONSOLE = _a._SHOW_CONSOLE,
     APP_ENV = _a.APP_ENV,
     ROBOT_ID = _a.ROBOT_ID;
 
@@ -3850,6 +3862,7 @@ if (APP_ENV === 'production') {
   logger/* Record.debug */.WV.debug("处于开发环境");
 }
 
+var SHOW_CONSOLE = _SHOW_CONSOLE;
 events.on("exit", function () {
   threads.shutDownAll();
   logger/* Record.info */.WV.info("结束...");
@@ -3884,7 +3897,7 @@ logger/* Record.info */.WV.info("开始执行脚本");
 
 
 function functionLog(message) {
-  return function (_, __, descriptor) {
+  return function (_, key, descriptor) {
     var originalMethod = descriptor.value;
 
     descriptor.value = function () {
@@ -3894,9 +3907,49 @@ function functionLog(message) {
         args[_i] = arguments[_i];
       }
 
+      var instance = this;
       (0,_utils__WEBPACK_IMPORTED_MODULE_4__/* .waitRandomTime */ .DV)(4);
       _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.info */ .WV.info("\u6267\u884C\u4E0B\u4E00\u6B65\u4EFB\u52A1\uFF1A".concat(message));
-      originalMethod.apply(this, args);
+      var startTime = new Date();
+
+      try {
+        originalMethod.apply(this, args);
+      } catch (error) {
+        var retries = 1;
+
+        while (retries < _global__WEBPACK_IMPORTED_MODULE_0__/* .MAX_RETRY_COUNTS */ .CJ) {
+          if (key === "readBook" || key === "swipeVideo") {
+            var terminationTime = new Date();
+            args[0] = args[0] - (terminationTime.getTime() - startTime.getTime()) / 1000;
+
+            if (args[0] <= 0) {
+              break;
+            }
+          }
+
+          _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.warn */ .WV.warn("\u5C1D\u8BD5\u7B2C".concat(retries, "\u6B21\u91CD\u542F"));
+
+          try {
+            startTime = new Date();
+            (0,_utils__WEBPACK_IMPORTED_MODULE_4__/* .clearBackground */ .xB)();
+
+            if (instance.lauchApp()) {
+              instance.clear();
+              originalMethod.apply(this, args);
+            }
+
+            break;
+          } catch (error) {
+            retries++;
+          }
+        }
+
+        if (retries >= _global__WEBPACK_IMPORTED_MODULE_0__/* .MAX_RETRY_COUNTS */ .CJ) {
+          _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.error */ .WV.error("".concat(error));
+          throw new _exception__WEBPACK_IMPORTED_MODULE_2__/* .ExceedMaxNumberOfAttempts */ .fx(key);
+        }
+      }
+
       _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.info */ .WV.info("".concat(message, "\u4EFB\u52A1\u7ED3\u675F"));
     };
 
@@ -3946,32 +3999,21 @@ function startDecorator(_, __, descriptor) {
       args[_i] = arguments[_i];
     }
 
-    var retries = 0;
+    var startTime = new Date();
 
-    while (retries < _global__WEBPACK_IMPORTED_MODULE_0__/* .MAX_RETRY_COUNTS */ .CJ) {
-      var startTime = new Date();
-
-      try {
-        originalMethod.apply(this, args);
-        var endTime = new Date();
-        var executionTime = (endTime.getTime() - startTime.getTime()) / 1000;
-        _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.info */ .WV.info("即将执行下一个app");
-        _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.debug */ .WV.debug("\u5269\u4F59".concat((0,_utils__WEBPACK_IMPORTED_MODULE_4__/* .convertSecondsToMinutes */ .w1)(args[0] - executionTime), "\u5206\u949F"));
-        return args[0] - executionTime;
-      } catch (e) {
-        if ((0,_exception__WEBPACK_IMPORTED_MODULE_2__/* .isCurrentAppBanned */ .KI)(e)) {
-          _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.warn */ .WV.warn("账号异常");
-        } else {
-          retries++;
-          _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.error */ .WV.error("\u5F53\u524Dapp\u53D1\u751F\u5F02\u5E38: ".concat(e));
-          (0,_utils__WEBPACK_IMPORTED_MODULE_4__/* .sendErrorMessage */ .pl)();
-          _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.info */ .WV.info("\u5C1D\u8BD5\u7B2C".concat(retries, "\u6B21\u91CD\u542F"));
-          (0,_utils__WEBPACK_IMPORTED_MODULE_4__/* .clearBackground */ .xB)();
-          var terminationTime = new Date();
-          args[0] = args[0] - (terminationTime.getTime() - startTime.getTime()) / 1000;
-        }
-      }
+    try {
+      originalMethod.apply(this, args);
+    } catch (e) {
+      _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.error */ .WV.error("\u5F53\u524Dapp\u53D1\u751F\u5F02\u5E38: ".concat(e));
+      (0,_utils__WEBPACK_IMPORTED_MODULE_4__/* .sendErrorMessage */ .pl)();
     }
+
+    var endTime = new Date();
+    var executionTime = (endTime.getTime() - startTime.getTime()) / 1000;
+    _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.info */ .WV.info("即将执行下一个app");
+    _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.debug */ .WV.debug("\u5269\u4F59".concat((0,_utils__WEBPACK_IMPORTED_MODULE_4__/* .convertSecondsToMinutes */ .w1)(args[0] - executionTime), "\u5206\u949F"));
+    _logger__WEBPACK_IMPORTED_MODULE_3__/* .LOG_STACK.clear */ .FX.clear();
+    return args[0] - executionTime;
   };
 
   return descriptor;
@@ -3984,13 +4026,12 @@ function startDecorator(_, __, descriptor) {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Hm": () => (/* binding */ ConfigInvalidException),
-/* harmony export */   "KI": () => (/* binding */ isCurrentAppBanned),
 /* harmony export */   "R3": () => (/* binding */ ServiceNotEnabled),
 /* harmony export */   "fx": () => (/* binding */ ExceedMaxNumberOfAttempts),
 /* harmony export */   "rg": () => (/* binding */ PermissionException),
 /* harmony export */   "su": () => (/* binding */ CurrentAppBanned)
 /* harmony export */ });
-/* unused harmony exports BaseException, isBaseException, isPermissionException, isServiceNotEnabled, ValueException, isValueException, WidgetNotFoundException, isWidgetNotFoundException, isConfigInvalidException */
+/* unused harmony exports BaseException, isBaseException, isPermissionException, isServiceNotEnabled, ValueException, isValueException, isCurrentAppBanned, WidgetNotFoundException, isWidgetNotFoundException, isConfigInvalidException */
 /* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(437);
 var __extends = undefined && undefined.__extends || function () {
   var _extendStatics = function extendStatics(d, b) {
@@ -4756,6 +4797,7 @@ function defaultFormatter(line, callerName) {
 /* harmony export */   "DV": () => (/* binding */ waitRandomTime),
 /* harmony export */   "Ef": () => (/* binding */ randomClickChildInList),
 /* harmony export */   "MN": () => (/* binding */ matchAndJudge),
+/* harmony export */   "O": () => (/* binding */ toShowString),
 /* harmony export */   "Od": () => (/* binding */ findAndClick),
 /* harmony export */   "PI": () => (/* binding */ doFuncUntilPopupsGone),
 /* harmony export */   "TS": () => (/* binding */ merge),
@@ -4763,9 +4805,10 @@ function defaultFormatter(line, callerName) {
 /* harmony export */   "X5": () => (/* binding */ scrollTo),
 /* harmony export */   "bB": () => (/* binding */ closeByImageMatching),
 /* harmony export */   "d$": () => (/* binding */ doFuncAtGivenTime),
+/* harmony export */   "h3": () => (/* binding */ getScreenImage),
 /* harmony export */   "ov": () => (/* binding */ resizeY),
 /* harmony export */   "pl": () => (/* binding */ sendErrorMessage),
-/* harmony export */   "q1": () => (/* binding */ clickUntilGone),
+/* harmony export */   "tM": () => (/* binding */ sendIncomeMessageToWxPuher),
 /* harmony export */   "vi": () => (/* binding */ moveDown),
 /* harmony export */   "vn": () => (/* binding */ randomClick),
 /* harmony export */   "w1": () => (/* binding */ convertSecondsToMinutes),
@@ -4773,7 +4816,7 @@ function defaultFormatter(line, callerName) {
 /* harmony export */   "xB": () => (/* binding */ clearBackground),
 /* harmony export */   "xv": () => (/* binding */ close)
 /* harmony export */ });
-/* unused harmony exports sendIncomeMessageToWxPuher, toShowString, judgeFuncIsWorkByImg */
+/* unused harmony exports getTextBoundsByOcrRecognize, judgeFuncIsWorkByImg */
 /* harmony import */ var _global__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(921);
 /* harmony import */ var _scripts_abstract_Base__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(290);
 /* harmony import */ var _exception__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(564);
@@ -4790,10 +4833,15 @@ function resizeY(y) {
 }
 function normalClick(x, y, options) {
   var time = (options === null || options === void 0 ? void 0 : options.waitTimes) || _global__WEBPACK_IMPORTED_MODULE_0__/* .WAIT_TIME_AFTER_CLICK */ .cB;
-  console.hide();
-  sleep(100);
-  click(x, y);
-  console.show();
+
+  if (_global__WEBPACK_IMPORTED_MODULE_0__/* .SHOW_CONSOLE */ .wd) {
+    console.hide();
+    sleep(100);
+    click(x, y);
+    console.show();
+  } else {
+    click(x, y);
+  }
 
   if (options === null || options === void 0 ? void 0 : options.errorMsg) {
     waitRandomTime(1);
@@ -4808,33 +4856,44 @@ function normalClick(x, y, options) {
 
   waitRandomTime(time);
 }
-function randomClick(component, options) {
-  var left = component.bounds().left;
-  var right = component.bounds().right;
-  var top = component.bounds().top;
-  var bottom = component.bounds().bottom;
+function getScreenImage(left, top, right, bottom) {
+  var x1 = left || 0;
+  var y1 = top || 0;
+  var x2 = right || device.width;
+  var y2 = bottom || device.height;
 
-  if (component.text() !== "") {
-    _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.log */ .WV.log(component.text());
+  if (_global__WEBPACK_IMPORTED_MODULE_0__/* .SHOW_CONSOLE */ .wd) {
+    console.hide();
+    sleep(100);
   }
 
+  var img = captureScreen();
+  if (_global__WEBPACK_IMPORTED_MODULE_0__/* .SHOW_CONSOLE */ .wd) console.show();
+  waitRandomTime(1);
+  return images.clip(img, x1, y1, x2 - x1, y2 - y1);
+}
+function randomClick(bounds, options) {
+  var left = bounds.left || 0;
+  var right = bounds.right || device.width;
+  var top = bounds.top || 0;
+  var bottom = bounds.bottom || device.height;
   var randomX = random(left, right);
   var randomY = random(top, bottom);
 
   if (options === null || options === void 0 ? void 0 : options.avoid) {
     while (randomX > options.avoid.bounds().left && randomX < options.avoid.bounds().right && randomY > options.avoid.bounds().top && randomY < options.avoid.bounds().bottom) {
-      randomX = random(component.bounds().left, component.bounds().right);
-      randomY = random(component.bounds().top, component.bounds().bottom);
+      randomX = random(left, right);
+      randomY = random(top, bottom);
     }
   }
 
-  if (options === null || options === void 0 ? void 0 : options.check) {
-    _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.debug */ .WV.debug("check click");
+  _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.debug */ .WV.debug("(".concat(randomX, ", ").concat(randomY, ")"));
 
+  if (options === null || options === void 0 ? void 0 : options.check) {
     while (!judgeFuncIsWorkByImg(function () {
+      _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.debug */ .WV.debug("check click");
       normalClick(randomX, randomY, options.normalClickOptions);
     }, left, top, right, bottom)) {
-      _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.debug */ .WV.debug("continue");
       close(0);
     }
   } else {
@@ -4842,7 +4901,15 @@ function randomClick(component, options) {
     normalClick(randomX, randomY, options === null || options === void 0 ? void 0 : options.normalClickOptions);
   }
 }
-function findAndClick(component, options) {
+function findAndClick(component, options, times) {
+  if (times === void 0) {
+    times = 0;
+  }
+
+  if (times >= _global__WEBPACK_IMPORTED_MODULE_0__/* .MAX_CLICK_COUNTS */ .u2) {
+    throw new _exception__WEBPACK_IMPORTED_MODULE_2__/* .ExceedMaxNumberOfAttempts */ .fx("untilGone");
+  }
+
   var tmp = component;
 
   if (options === null || options === void 0 ? void 0 : options.searchByLeftRangeOption) {
@@ -4853,21 +4920,47 @@ function findAndClick(component, options) {
     var obj = scrollTo(component, options);
 
     if (obj != null) {
-      randomClick(obj, options);
+      if (obj.text() !== "") {
+        _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.log */ .WV.log(obj.text());
+      }
+
+      randomClick(obj.bounds(), options);
+    }
+
+    if (options === null || options === void 0 ? void 0 : options.untilGone) {
+      findAndClick(component, options, ++times);
     }
 
     return true;
   } else {
+    if (options === null || options === void 0 ? void 0 : options.ocrRecognizeText) {
+      var bounds_1 = getTextBoundsByOcrRecognize(options.ocrRecognizeText);
+
+      if (bounds_1) {
+        randomClick(bounds_1, options);
+
+        if (options.untilGone) {
+          findAndClick(component, options, ++times);
+        }
+
+        return true;
+      }
+    }
+
     return false;
   }
 }
 function scrollTo(sign, options, prePy, times) {
   var _a, _b;
 
+  if (times === void 0) {
+    times = 0;
+  }
+
   var top = ((_a = options === null || options === void 0 ? void 0 : options.bounds) === null || _a === void 0 ? void 0 : _a.top) || 0;
   var bottom = ((_b = options === null || options === void 0 ? void 0 : options.bounds) === null || _b === void 0 ? void 0 : _b.bottom) || device.height;
 
-  if (times && times >= 3) {
+  if (times >= 3) {
     throw new _exception__WEBPACK_IMPORTED_MODULE_2__/* .ExceedMaxNumberOfAttempts */ .fx("scrollTo");
   }
 
@@ -4885,12 +4978,7 @@ function scrollTo(sign, options, prePy, times) {
     if (prePy) {
       if (pointY == prePy) {
         close(0);
-
-        if (times) {
-          times++;
-        } else {
-          times = 1;
-        }
+        times++;
       }
     }
 
@@ -4920,10 +5008,12 @@ function scrollTo(sign, options, prePy, times) {
 }
 
 function searchByLeftRange(button, range, times) {
-  if (times && times > 3) {
+  if (times === void 0) {
+    times = 0;
+  }
+
+  if (times > 3) {
     throw new _exception__WEBPACK_IMPORTED_MODULE_2__/* .ExceedMaxNumberOfAttempts */ .fx("searchInRange");
-  } else {
-    times = 1;
   }
 
   var tmp = range.findOnce();
@@ -4934,30 +5024,6 @@ function searchByLeftRange(button, range, times) {
   } else {
     var result = eval(button.toString());
     return result.boundsInside(0, tmp.bounds().top - 60, resizeX(1080), tmp.bounds().bottom + 60);
-  }
-}
-
-function clickUntilGone(component, options) {
-  var button = component.findOnce();
-
-  if (button) {
-    untilGone(component, 0, options);
-    return true;
-  } else {
-    return false;
-  }
-}
-
-function untilGone(component, times, options) {
-  if (times >= _global__WEBPACK_IMPORTED_MODULE_0__/* .MAX_CLICK_COUNTS */ .u2) {
-    throw new _exception__WEBPACK_IMPORTED_MODULE_2__/* .ExceedMaxNumberOfAttempts */ .fx("untilGone");
-  }
-
-  var button = component.findOnce();
-
-  if (button) {
-    randomClick(button, options);
-    untilGone(component, ++times, options);
   }
 }
 
@@ -4992,7 +5058,11 @@ function doFuncUntilPopupsGone(buttonNameList, options) {
   var regex = merge(buttonNameList);
   var cycleCounts = 0;
 
-  while (++cycleCounts < _global__WEBPACK_IMPORTED_MODULE_0__/* .MAX_CYCLES_COUNTS */ .CD && (clickUntilGone(textMatches(regex), options) || clickUntilGone(descMatches(regex), options))) {
+  while (++cycleCounts < _global__WEBPACK_IMPORTED_MODULE_0__/* .MAX_CYCLES_COUNTS */ .CD && (findAndClick(textMatches(regex), {
+    untilGone: true
+  }) || findAndClick(descMatches(regex), {
+    untilGone: true
+  }))) {
     if (options === null || options === void 0 ? void 0 : options.func) {
       options.func();
     }
@@ -5012,7 +5082,7 @@ function randomClickChildInList(component, index, avoid) {
     var child = list.child(index);
 
     if (child != null) {
-      randomClick(child, {
+      randomClick(child.bounds(), {
         avoid: avoid
       });
     }
@@ -5048,7 +5118,7 @@ function close(times) {
   }
 
   findAndClick(text("跳过"));
-  doFuncUntilPopupsGone(['继续观看', '关闭', '抓住奖励机会', '(以后|下次)再说', '留下看看', '放弃奖励']);
+  doFuncUntilPopupsGone(['继续观看', '取消', '关闭', '抓住奖励机会', '(以后|下次)再说', '留下看看', '放弃奖励']);
 }
 function isGrayColor(red, green, blue) {
   if (red + green + blue > 200 && red + green + blue < 500) {
@@ -5058,10 +5128,7 @@ function isGrayColor(red, green, blue) {
   }
 }
 function closeByImageMatching() {
-  console.hide();
-  sleep(100);
-  var img = captureScreen();
-  console.show();
+  var img = getScreenImage();
   var threshold = 0.7;
   var close = images.read('/sdcard/exit-white.jpg');
 
@@ -5104,14 +5171,21 @@ function doFuncAtGivenTime(totalTime, maxTime, func) {
   }
 }
 function getStrByOcrRecognizeLimitBounds(options) {
-  var top = (options === null || options === void 0 ? void 0 : options.top) || 0;
-  var bottom = (options === null || options === void 0 ? void 0 : options.bottom) || device.height;
-  console.hide();
-  sleep(100);
-  var img = captureScreen();
-  console.show();
-  img = images.clip(img, 0, top, device.width, bottom);
+  var img = getScreenImage(0, options === null || options === void 0 ? void 0 : options.top, device.width, options === null || options === void 0 ? void 0 : options.bottom);
   return ocr.recognizeText(img);
+}
+function getTextBoundsByOcrRecognize(str) {
+  var img = getScreenImage();
+  var res = ocr.recognize(img);
+
+  for (var _i = 0, _a = res.results; _i < _a.length; _i++) {
+    var item = _a[_i];
+
+    if (item.text.match(str)) {
+      _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.log */ .WV.log(item.text);
+      return item.bounds;
+    }
+  }
 }
 function matchAndJudge(str) {
   var time = str.match(/[0-9]+[s秒]?/);
@@ -5119,7 +5193,7 @@ function matchAndJudge(str) {
 
   if (time) {
     _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.debug */ .WV.debug(time[0]);
-    var totalTime = parseInt(time[0]);
+    var totalTime = parseInt(time[0], 10);
 
     if (totalTime > 50 || totalTime < 3) {
       totalTime = 3;
@@ -5166,7 +5240,7 @@ function sendErrorMessage() {
   var collection = _logger__WEBPACK_IMPORTED_MODULE_3__/* .LOG_STACK.filter */ .FX.filter(function (frame) {
     return frame.getLevel() >= _logger__WEBPACK_IMPORTED_MODULE_3__/* .LogLevel.Info */ ["in"].Info;
   });
-  var img = captureScreen();
+  var img = getScreenImage();
   hamibot.postMessage(Date.now().toString(), {
     telemetry: true,
     data: {
@@ -5182,17 +5256,9 @@ function sendErrorMessage() {
   });
 }
 function judgeFuncIsWorkByImg(func, left, top, right, bottom) {
-  console.hide();
-  sleep(100);
-  var before = captureScreen();
-  before = images.clip(before, left, top, right - left, bottom - top);
-  console.show();
+  var before = getScreenImage(left, top, right, bottom);
   func();
-  console.hide();
-  sleep(100);
-  var after = captureScreen();
-  after = images.clip(after, left, top, right - left, bottom - top);
-  console.show();
+  var after = getScreenImage(left, top, right, bottom);
   var compare = findImage(before, after, {
     threshold: 1
   });
@@ -5248,7 +5314,6 @@ var Base = function () {
     this.preComponent = text("");
     this.preNum = -1;
     this.exitNum = 1;
-    this.backTimes = 1;
     this.highEffEstimatedTime = _global__WEBPACK_IMPORTED_MODULE_1__/* .BASE_ASSIMT_TIME */ .IS;
     this.medEffEstimatedTime = _global__WEBPACK_IMPORTED_MODULE_1__/* .MAX_ASSIMT_TIME */ .KD;
     this.lowEffEstimatedTime = _global__WEBPACK_IMPORTED_MODULE_1__/* .MAX_ASSIMT_TIME */ .KD;
@@ -5296,8 +5361,12 @@ var Base = function () {
     var isLauchApp = launchPackage(this.packageName);
 
     if (isLauchApp) {
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .waitRandomTime */ .DV)(5);
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .findAndClick */ .Od)(text("打开"), {
+        ocrRecognizeText: "打开"
+      });
       _lib_logger__WEBPACK_IMPORTED_MODULE_4__/* .Record.log */ .WV.log("".concat(this.appName, "\u5DF2\u542F\u52A8"));
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .waitRandomTime */ .DV)(15);
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .waitRandomTime */ .DV)(10);
     } else {
       _lib_logger__WEBPACK_IMPORTED_MODULE_4__/* .Record.log */ .WV.log("".concat(this.appName, "\u5E94\u7528\u672A\u5B89\u88C5"));
     }
@@ -5317,18 +5386,7 @@ var Base = function () {
       readTime += (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .waitRandomTime */ .DV)(10);
 
       if (this.verify) {
-        try {
-          this.backUntilFind(textMatches((0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .merge */ .TS)(["菜单", ".*[0-9]*[金]?币"])));
-        } catch (error) {
-          _lib_logger__WEBPACK_IMPORTED_MODULE_4__/* .Record.warn */ .WV.warn("阅读异常, 正在重试");
-          (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .clearBackground */ .xB)();
-
-          if (this.lauchApp()) {
-            this.readBook(totalTime - readTime);
-          }
-
-          return;
-        }
+        this.backUntilFind(textMatches((0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .merge */ .TS)(["菜单", ".*[0-9]*[金]?币"])));
       } else {
         var waitSign = ['.*后可领奖励', '.*后可领取奖励', '.*后领取观看奖励'];
 
@@ -5347,10 +5405,8 @@ var Base = function () {
   };
 
   Base.prototype.watch = function (exitSign, times) {
-    if (times == undefined) {
+    if (times === void 0) {
       times = this.exitNum;
-    } else {
-      times++;
     }
 
     if (exitSign.exists()) {
@@ -5382,17 +5438,17 @@ var Base = function () {
 
     if (text("该视频所提到的内容是").exists()) {
       back();
-      this.watch(exitSign, times);
+      this.watch(exitSign, ++times);
       return;
     }
 
     (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .close */ .xv)(times);
 
     if ((0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .findAndClick */ .Od)(text("领取奖励"))) {
-      times = undefined;
+      times = this.exitNum;
     }
 
-    this.watch(exitSign, times);
+    this.watch(exitSign, ++times);
   };
 
   Base.prototype.goTo = function (component, num) {
@@ -5416,9 +5472,9 @@ var Base = function () {
       }
 
       if (this.preComponent.toString() == component.toString() && this.preNum == num) {
-        (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .randomClick */ .vn)(tmp);
+        (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .randomClick */ .vn)(tmp.bounds());
       } else {
-        (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .randomClick */ .vn)(tmp, {
+        (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .randomClick */ .vn)(tmp.bounds(), {
           check: true
         });
       }
@@ -5455,6 +5511,10 @@ var Base = function () {
     } else {
       return tmp;
     }
+  };
+
+  Base.prototype.clear = function () {
+    this.preComponent = text("");
   };
 
   Base.prototype.store = function (key, value) {
@@ -5593,6 +5653,7 @@ var exception = __webpack_require__(564);
 
 
 
+
 function init() {
   if (auto.service === null) {
     if (!confirm('Please enable accessibility permission')) {
@@ -5626,8 +5687,11 @@ function init() {
   }
 
   device.keepScreenOn(3600 * 1000);
-  console.show();
-  (0,utils/* waitRandomTime */.DV)(1);
+
+  if (global/* SHOW_CONSOLE */.wd) {
+    console.show();
+    (0,utils/* waitRandomTime */.DV)(1);
+  }
 }
 // EXTERNAL MODULE: ./src/scripts/abstract/Base.ts
 var Base = __webpack_require__(290);
@@ -5639,36 +5703,36 @@ var Base = __webpack_require__(290);
 
 
 init();
-test();
+main();
 
 function test() {
-  global/* STORAGE.put */.P_.put("app", "DeJian");
+  launchPackage("com.huawei.contacts");
 }
 
 function main() {
   while (true) {
-    var runList = filteredList;
+    var runList = global/* filteredList */.C;
 
     if (runList.length == 0) {
-      throw new ConfigInvalidException("拿我这测试了?");
+      throw new exception/* ConfigInvalidException */.Hm("拿我这测试了?");
     }
 
     var startTime = new Date();
     var date = startTime.getMonth().toString() + "/" + startTime.getDate().toString();
 
-    if (date === STORAGE.get("date")) {
+    if (date === global/* STORAGE.get */.P_.get("date")) {
       var search = false;
 
-      for (var _i = 0, list_1 = list; _i < list_1.length; _i++) {
+      for (var _i = 0, list_1 = global/* list */.pb; _i < list_1.length; _i++) {
         var app_1 = list_1[_i];
 
-        if (search || app_1.constructor.name === STORAGE.get("app")) {
+        if (search || app_1.constructor.name === global/* STORAGE.get */.P_.get("app")) {
           var num = runList.indexOf(app_1);
 
           if (num == -1) {
             search = true;
           } else {
-            LogRecord.info("继续执行剩余app");
+            logger/* Record.info */.WV.info("继续执行剩余app");
             runList = runList.slice(num);
             break;
           }
@@ -5676,39 +5740,40 @@ function main() {
       }
     }
 
-    STORAGE.put("date", date);
+    global/* STORAGE.put */.P_.put("date", date);
     var endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate(), 23, 59, 59);
     var timeDifference = endTime.getTime() - startTime.getTime();
     var timePerMethod = timeDifference / 1000;
     var map = {};
     var sortedList = runList.slice().sort(function (a, b) {
-      return b.fetch(BaseKey.Weight) - a.fetch(BaseKey.Weight);
+      return b.fetch(Base/* BaseKey.Weight */.N.Weight) - a.fetch(Base/* BaseKey.Weight */.N.Weight);
     });
 
     for (var _a = 0, sortedList_1 = sortedList; _a < sortedList_1.length; _a++) {
       var app_2 = sortedList_1[_a];
       map[app_2.constructor.name] = 0;
-      LogRecord.debug("".concat(app_2.appName, ": ").concat(app_2.fetch(BaseKey.Weight)));
+      logger/* Record.debug */.WV.debug("".concat(app_2.appName, ": ").concat(app_2.fetch(Base/* BaseKey.Weight */.N.Weight)));
     }
 
     appTimeAllocation(map, timePerMethod, sortedList);
 
     for (var _b = 0, runList_1 = runList; _b < runList_1.length; _b++) {
       var app_3 = runList_1[_b];
-      LogRecord.debug("".concat(app_3.appName, ": ").concat(convertSecondsToMinutes(map[app_3.constructor.name]), "\u5206\u949F"));
+      logger/* Record.debug */.WV.debug("".concat(app_3.appName, ": ").concat((0,utils/* convertSecondsToMinutes */.w1)(map[app_3.constructor.name]), "\u5206\u949F"));
     }
 
     var surplus = 0;
-    LogRecord.info("进入主流程");
+    logger/* Record.info */.WV.info("进入主流程");
 
     for (var _c = 0, runList_2 = runList; _c < runList_2.length; _c++) {
       var app_4 = runList_2[_c];
-      clearBackground();
+      (0,utils/* clearBackground */.xB)();
       var executeTime = surplus + map[app_4.constructor.name];
-      app_4.store(BaseKey.Weight, 0);
+      app_4.store(Base/* BaseKey.Weight */.N.Weight, 0);
       map[app_4.constructor.name] = 0;
-      STORAGE.put("app", app_4.constructor.name);
+      global/* STORAGE.put */.P_.put("app", app_4.constructor.name);
       surplus = app_4.start(executeTime);
+      logger/* Record.debug */.WV.debug("surplus: ".concat(surplus));
       var remainingAllocation = 30 * 60;
 
       for (var _d = 0, sortedList_2 = sortedList; _d < sortedList_2.length; _d++) {
@@ -5727,21 +5792,21 @@ function main() {
       }
     }
 
-    clearBackground();
-    LogRecord.info("发送今日收益");
-    sendIncomeMessageToWxPuher(toShowString(filteredList));
+    (0,utils/* clearBackground */.xB)();
+    logger/* Record.info */.WV.info("发送今日收益");
+    (0,utils/* sendIncomeMessageToWxPuher */.tM)((0,utils/* toShowString */.O)(global/* filteredList */.C));
     var doneTime = new Date();
 
     if (endTime.getTime() > doneTime.getTime()) {
       var waitTime = endTime.getTime() - doneTime.getTime();
-      LogRecord.log("\u7B49\u5F85".concat(convertSecondsToMinutes(waitTime / 1000 + 5), "\u5206\u949F\u5F00\u542F\u65B0\u4E00\u5929\u4EFB\u52A1"));
+      logger/* Record.log */.WV.log("\u7B49\u5F85".concat((0,utils/* convertSecondsToMinutes */.w1)(waitTime / 1000 + 5), "\u5206\u949F\u5F00\u542F\u65B0\u4E00\u5929\u4EFB\u52A1"));
       sleep(waitTime + 10000);
     }
   }
 }
 
 function appTimeAllocation(map, timePerMethod, sortedList) {
-  LogRecord.info("分配执行时间");
+  logger/* Record.info */.WV.info("分配执行时间");
 
   for (var _i = 0, sortedList_3 = sortedList; _i < sortedList_3.length; _i++) {
     var app_5 = sortedList_3[_i];
@@ -5757,7 +5822,7 @@ function appTimeAllocation(map, timePerMethod, sortedList) {
   for (var _a = 0, sortedList_4 = sortedList; _a < sortedList_4.length; _a++) {
     var app_6 = sortedList_4[_a];
 
-    if (app_6.medEffEstimatedTime != MAX_ASSIMT_TIME) {
+    if (app_6.medEffEstimatedTime != global/* MAX_ASSIMT_TIME */.KD) {
       timePerMethod -= app_6.medEffEstimatedTime;
 
       if (timePerMethod > 0) {
@@ -5770,13 +5835,13 @@ function appTimeAllocation(map, timePerMethod, sortedList) {
 
   var count = 1;
 
-  while (timePerMethod >= BASE_ASSIMT_TIME) {
-    var time = count * BASE_ASSIMT_TIME;
+  while (timePerMethod >= global/* BASE_ASSIMT_TIME */.IS) {
+    var time = count * global/* BASE_ASSIMT_TIME */.IS;
 
     for (var _b = 0, sortedList_5 = sortedList; _b < sortedList_5.length; _b++) {
       var app_7 = sortedList_5[_b];
 
-      if (app_7.lowEffEstimatedTime != MAX_ASSIMT_TIME) {
+      if (app_7.lowEffEstimatedTime != global/* MAX_ASSIMT_TIME */.KD) {
         var allocaTime = Math.min(time * app_7.lowEffAssmitCount, timePerMethod);
         var key = app_7.constructor.name;
         map[key] += allocaTime;

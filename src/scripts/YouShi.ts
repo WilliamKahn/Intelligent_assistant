@@ -60,7 +60,7 @@ export class YouShi extends Base{
 
     @measureExecutionTime
     weight(): void {
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         if(findAndClick(textMatches("我的金币:.*"))) {
             let tmp = textMatches(/(\d+)/)
             .boundsInside(0, 0, resizeX(500), resizeY(600)).findOnce()
@@ -73,7 +73,7 @@ export class YouShi extends Base{
 
     @functionLog("签到")
     signIn(): void{
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         if(findAndClick(text("立即签到"), {bounds: RANGE_MIDDLE_SCREEN})){
             doFuncUntilPopupsGone(this.buttonNameList, {
                 func: ()=>{
@@ -86,7 +86,7 @@ export class YouShi extends Base{
 
     @functionLog("开宝箱")
     openTreasure(): void {
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         if (findAndClick(text("开宝箱得金币"))) {
             doFuncUntilPopupsGone(this.buttonNameList, {
                 func: ()=>{
@@ -99,7 +99,7 @@ export class YouShi extends Base{
 
     @functionLog("看广告")
     watchAds(): void {
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         if(findAndClick(text("领福利"))){
             this.watch(text("日常任务"))
             this.returnOfWatchAds = true
@@ -116,7 +116,7 @@ export class YouShi extends Base{
 
     @functionLog("领取所有奖励")
     reward(): void {
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS  && findAndClick(text("点击领取"))){
             if(findAndClick(text("开始抽奖"))){
@@ -130,12 +130,12 @@ export class YouShi extends Base{
 
     @functionLog("吃饭补贴")
     mealSupp(): void {
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         if(findAndClick(text("吃饭补贴"))){
             if(findAndClick(textMatches("领取.*补贴[0-9]+金币"))){
                 doFuncUntilPopupsGone(this.buttonNameList, {
                     func: ()=>{
-                        this.watch(text("就要开饭了! 再等等"))
+                        this.watch(text("日常任务"))
                     }
                 })
                 findAndClick(text("开心收下"))
@@ -145,7 +145,7 @@ export class YouShi extends Base{
 
     @functionLog("走路赚钱")
     walkEarn(): void{
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         if(findAndClick(text("走路赚钱"))){
             if(findAndClick(textMatches("领取[0-9]+金币"))){
                 doFuncUntilPopupsGone(this.buttonNameList, {
@@ -160,7 +160,7 @@ export class YouShi extends Base{
 
     @functionLog("睡觉赚钱")
     sleepEarn(): void{
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         if(findAndClick(text("睡觉赚钱"))){
             if(findAndClick(text("我睡醒了"))){
                 if(findAndClick(textMatches("领取[0-9]+金币"))){
@@ -177,7 +177,7 @@ export class YouShi extends Base{
     }
 
     doubleEarn(): void{
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         if(findAndClick(text("去翻倍"))){
             waitRandomTime(2)
             findAndClick(text("我知道了"))

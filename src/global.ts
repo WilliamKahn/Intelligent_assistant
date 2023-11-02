@@ -36,7 +36,7 @@ export const PROJECT_NAME = "智能助手"
 /**
  * @description: 脚本版本号。建议根据 [语义化版本号] 迭代
  */
-export const VERSION = "0.2.0";
+export const VERSION = "0.2.2";
 
 // export const LISTENER_INTERVAL = 100
 // export const EVENT = events.emitter()
@@ -64,7 +64,7 @@ export const WEIGHT_ASSIMT_TIME = 5 * 60
 //最大时间
 export const MAX_ASSIMT_TIME = 24 * 60 * 60
 //存储名称
-export const STORAGE_WEIGHT_CONTAINER = "YWfjbEVp28"
+export const STORAGE_WEIGHT_CONTAINER = "YWfjbEVp29"
 //存储
 export const STORAGE = storages.create(STORAGE_WEIGHT_CONTAINER);
 //基于设备分辨率
@@ -216,6 +216,7 @@ Record.info(`正在启动...\n\n\t当前脚本版本: ${VERSION}\n`);
 
 export const {
     _TOKEN,
+    _SHOW_CONSOLE,
     APP_ENV,
     ROBOT_ID
 } = hamibot.env;
@@ -225,6 +226,8 @@ if(APP_ENV === 'production'){
 } else if(APP_ENV === 'development') {
     Record.debug("处于开发环境")
 }
+//是否显示控制台
+export const SHOW_CONSOLE = _SHOW_CONSOLE
 // -------------------- register listener -----------------------
 
 // register exit listener

@@ -1,4 +1,5 @@
-import { APP_TOKEN, DEVICE_HEIGHT, DEVICE_WIDTH, MAX_CLICK_COUNTS, MAX_CYCLES_COUNTS, ROBOT_ID, STORAGE_WEIGHT_CONTAINER, WAIT_TIME_AFTER_CLICK, WX_PUSHER_URL, _TOKEN } from "../global"
+import { CaptureImage } from "images"
+import { APP_TOKEN, DEVICE_HEIGHT, DEVICE_WIDTH, MAX_CLICK_COUNTS, MAX_CYCLES_COUNTS, ROBOT_ID, SHOW_CONSOLE, STORAGE_WEIGHT_CONTAINER, WAIT_TIME_AFTER_CLICK, WX_PUSHER_URL, _TOKEN } from "../global"
 import { BaseKey } from "../scripts/abstract/Base"
 import { CurrentAppBanned, ExceedMaxNumberOfAttempts } from "./exception"
 import { LOG_STACK, LogLevel, Record } from "./logger"
@@ -12,21 +13,29 @@ export interface Bounds{
 }
 
 interface ScrollToOptions{
+    //滑动显示区域
     bounds?: Bounds,
+    //通过左侧查找控件
     searchByLeftRangeOption?: UiSelector
 }
+interface NormalClickOptions{
+    //点击后等待时间
+    waitTimes?: number
+    //错误信息
+    errorMsg?: string
+}
 interface RandomClickOptions{
+    //不点击控件
     avoid?: UiObject|null,
+    //点击是否改变
     check?: boolean,
     normalClickOptions?: NormalClickOptions
 }
-interface NormalClickOptions{
-    waitTimes?: number
-    errorMsg?: string
+type FindAndClickOptions = ScrollToOptions & RandomClickOptions & {
+    untilGone?: boolean
+    ocrRecognizeText?: string
 }
-type FindAndClickOptions = ScrollToOptions & RandomClickOptions
-type ClickUntilGoneOptions = RandomClickOptions
-type DoFuncUntilPopupsGone = ClickUntilGoneOptions & {
+type DoFuncUntilPopupsGone = FindAndClickOptions & {
     func?: ()=> void
 }
 
@@ -46,10 +55,14 @@ export function resizeY(y: number): number {
  */
 export function normalClick(x: number, y: number, options?: NormalClickOptions){
     const time = options?.waitTimes || WAIT_TIME_AFTER_CLICK
-    console.hide()
-    sleep(100)
-    click(x, y)
-    console.show()
+    if(SHOW_CONSOLE){
+        console.hide()
+        sleep(100)
+        click(x, y)
+        console.show()
+    } else {
+        click(x, y)
+    }
     if(options?.errorMsg){
         waitRandomTime(1)
         const str = getStrByOcrRecognizeLimitBounds()
@@ -61,6 +74,20 @@ export function normalClick(x: number, y: number, options?: NormalClickOptions){
     }
     waitRandomTime(time)
 }
+export function getScreenImage(left?: number, top?: number, right?: number, bottom?: number){
+    const x1 = left || 0
+    const y1 = top || 0
+    const x2 = right || device.width
+    const y2 = bottom || device.height
+    if(SHOW_CONSOLE){
+        console.hide()
+        sleep(100)
+    }
+    let img = captureScreen()
+    if(SHOW_CONSOLE) console.show()
+    waitRandomTime(1)
+    return images.clip(img, x1, y1, x2-x1, y2-y1)
+}
 
 /**
  * @description 根据控件随机点击范围位置
@@ -68,31 +95,28 @@ export function normalClick(x: number, y: number, options?: NormalClickOptions){
  * @param avoid 避免误触到上方遮挡物
  * @param comfirm 用于确定点击是否起作用
  */
-export function randomClick(component: UiObject, options?: RandomClickOptions) {
-    const left = component.bounds().left
-    const right = component.bounds().right
-    const top = component.bounds().top
-    const bottom = component.bounds().bottom
-    if(component.text() !== ""){
-        Record.log(component.text())
-    }
+export function randomClick(bounds: Bounds, options?: RandomClickOptions) {
+    const left = bounds.left||0
+    const right = bounds.right||device.width
+    const top = bounds.top||0
+    const bottom = bounds.bottom||device.height
     let randomX = random(left, right)
     let randomY = random(top, bottom)
     if(options?.avoid) {
         while(randomX > options.avoid.bounds().left 
-        && randomX < options.avoid.bounds().right 
-        && randomY > options.avoid.bounds().top
-        && randomY < options.avoid.bounds().bottom){
-            randomX = random(component.bounds().left, component.bounds().right)
-            randomY = random(component.bounds().top, component.bounds().bottom)
+            && randomX < options.avoid.bounds().right 
+            && randomY > options.avoid.bounds().top
+            && randomY < options.avoid.bounds().bottom){
+                randomX = random(left, right)
+                randomY = random(top, bottom)
         }
     }
-    if(options?.check){
-        Record.debug("check click")
+    Record.debug(`(${randomX}, ${randomY})`)
+    if (options?.check) {
         while(!judgeFuncIsWorkByImg(()=>{
+            Record.debug("check click")
             normalClick(randomX, randomY, options.normalClickOptions)
         }, left, top, right, bottom)){
-            Record.debug("continue")
             close(0)
         }
     } else {
@@ -109,19 +133,38 @@ export function randomClick(component: UiObject, options?: RandomClickOptions) {
  * @param avoid 点击时防止误触到其他控件
  * @returns true or false
  */
-export function findAndClick(component: UiSelector, options?:FindAndClickOptions){
+export function findAndClick(component: UiSelector, options?:FindAndClickOptions, times: number = 0){
+    if (times >= MAX_CLICK_COUNTS) {
+        throw new ExceedMaxNumberOfAttempts("untilGone")
+    }
     let tmp = component
     if(options?.searchByLeftRangeOption) {
         tmp = searchByLeftRange(component, options?.searchByLeftRangeOption)
     }
     if(tmp.exists()) {
         let obj = scrollTo(component, options)
-        //boundsInside(0, 0, resizeX(1080), resizeY(2340)).
         if (obj != null) {
-            randomClick(obj, options)
+            if(obj.text() !== ""){
+                Record.log(obj.text())
+            }
+            randomClick(obj.bounds(), options)
         }
+        if (options?.untilGone) {
+            findAndClick(component, options, ++times)
+        }
+        //boundsInside(0, 0, resizeX(1080), resizeY(2340)).
         return true
     } else {
+        if(options?.ocrRecognizeText){
+            let bounds = getTextBoundsByOcrRecognize(options.ocrRecognizeText)
+            if(bounds){
+                randomClick(bounds, options)
+                if (options.untilGone){
+                    findAndClick(component, options, ++times)
+                }
+                return true
+            }
+        }
         return false
     }
 }
@@ -134,11 +177,11 @@ export function findAndClick(component: UiSelector, options?:FindAndClickOptions
  * @param times 自身递归所用，当无法移动时且尝试三次返回无效后则退出当前app
  * @returns void
 */
-export function scrollTo(sign: UiSelector, options?: ScrollToOptions,prePy?: number, times?: number){
+export function scrollTo(sign: UiSelector, options?: ScrollToOptions,prePy?: number, times: number = 0){
     const top = options?.bounds?.top || 0
     const bottom = options?.bounds?.bottom || device.height
     //返回超过三次则异常
-    if (times && times >= 3) {
+    if (times >= 3) {
         throw new ExceedMaxNumberOfAttempts("scrollTo")
     }
     let nSign = sign
@@ -152,11 +195,7 @@ export function scrollTo(sign: UiSelector, options?: ScrollToOptions,prePy?: num
         if(prePy) {
             if(pointY == prePy) {
                 close(0)
-                if(times) {
-                    times++
-                } else {
-                    times = 1
-                }
+                times++
             }
         }
         if(pointY < top) {
@@ -201,11 +240,9 @@ export function scrollTo(sign: UiSelector, options?: ScrollToOptions,prePy?: num
  * @param range 左侧文字范围
  * @returns reg存在返回限制区域，不存在返回原控件 不要跟上面的重写
  */
-function searchByLeftRange(button: UiSelector, range: UiSelector, times?: number): UiSelector {
-    if(times && times > 3) {
+function searchByLeftRange(button: UiSelector, range: UiSelector, times: number = 0): UiSelector {
+    if(times > 3) {
         throw new ExceedMaxNumberOfAttempts("searchInRange")
-    } else {
-        times = 1
     }
     let tmp = range.findOnce()
     if (tmp == null) {
@@ -214,31 +251,6 @@ function searchByLeftRange(button: UiSelector, range: UiSelector, times?: number
     } else {
         let result = eval(button.toString())
         return result.boundsInside(0, tmp.bounds().top - 60, resizeX(1080), tmp.bounds().bottom + 60)
-    }
-}
-
-/**
- * @description 持续点击,直到目标消失在屏幕 
- * @param component 控件
- * @returns 第一次查找未发现控件则返回false
- */
-export function clickUntilGone(component: UiSelector, options?: ClickUntilGoneOptions){
-    let button = component.findOnce()
-    if (button) {
-        untilGone(component, 0, options)
-        return true
-    } else {
-        return false
-    }
-}
-function untilGone(component: UiSelector, times: number, options?: RandomClickOptions){
-    if(times >= MAX_CLICK_COUNTS) {
-        throw new ExceedMaxNumberOfAttempts("untilGone")
-    }
-    let button = component.findOnce()
-    if (button) {
-        randomClick(button, options)
-        untilGone(component, ++times, options)
     }
 }
 
@@ -294,7 +306,7 @@ export function doFuncUntilPopupsGone(buttonNameList: string[], options?: DoFunc
     const regex = merge(buttonNameList)
     let cycleCounts = 0
     while(++cycleCounts < MAX_CYCLES_COUNTS && 
-        (clickUntilGone(textMatches(regex), options) || clickUntilGone(descMatches(regex), options))) {
+        (findAndClick(textMatches(regex), {untilGone: true}) || findAndClick(descMatches(regex), {untilGone: true}))) {
         if(options?.func) {
             options.func()
         }
@@ -328,7 +340,7 @@ export function randomClickChildInList(component: UiSelector, index: number, avo
     if (list != null) {
         let child = list.child(index)
         if(child != null) {
-            randomClick(child, {avoid: avoid})
+            randomClick(child.bounds(), {avoid: avoid})
         }
     }
 }
@@ -363,7 +375,7 @@ export function close(times: number){
     }
     findAndClick(text("跳过"))
     //坚持退出 检测
-    doFuncUntilPopupsGone(['继续观看', '关闭', '抓住奖励机会', '(以后|下次)再说', '留下看看', '放弃奖励'])
+    doFuncUntilPopupsGone(['继续观看', '取消', '关闭', '抓住奖励机会', '(以后|下次)再说', '留下看看', '放弃奖励'])
 }
 
 
@@ -384,10 +396,7 @@ export function isGrayColor(red:number, green:number, blue:number): number {
  * @returns true: 关闭成功, false: 未发现控件
  */
 export function closeByImageMatching(): boolean {
-    console.hide()
-    sleep(100)
-    let img = captureScreen()
-    console.show()
+    let img = getScreenImage()
     let threshold = 0.7
     //需要从网络远程获取
     let close = images.read('/sdcard/exit-white.jpg')
@@ -440,14 +449,18 @@ export function doFuncAtGivenTime(totalTime: number, maxTime: number, func:(perT
 }
 
 export function getStrByOcrRecognizeLimitBounds(options?: Bounds){
-    const top = options?.top || 0
-    const bottom = options?.bottom || device.height
-    console.hide()
-    sleep(100)
-    let img = captureScreen()
-    console.show()
-    img = images.clip(img, 0, top, device.width, bottom)
+    let img = getScreenImage(0, options?.top, device.width, options?.bottom)
     return ocr.recognizeText(img)
+}
+export function getTextBoundsByOcrRecognize(str: string){
+    const img = getScreenImage()
+    const res = ocr.recognize(img)
+    for(let item of res.results){
+        if(item.text.match(str)){
+            Record.log(item.text)
+            return item.bounds
+        }
+    }
 }
 
 export function matchAndJudge(str: string){
@@ -456,7 +469,7 @@ export function matchAndJudge(str: string){
     const swipe = str.match(/(滑动)?浏览/)
     if(time) {
         Record.debug(time[0])
-        let totalTime = parseInt(time[0])
+        let totalTime = parseInt(time[0], 10)
         if(totalTime > 50 || totalTime < 3){
             totalTime = 3
         }
@@ -504,7 +517,7 @@ export function sendErrorMessage(){
     let collection = LOG_STACK.filter((frame) => {
         return frame.getLevel() >= LogLevel.Info;
     });
-    const img = captureScreen()
+    const img = getScreenImage()
     hamibot.postMessage(Date.now().toString(), {
         telemetry: true,
         data: {
@@ -529,17 +542,9 @@ export function sendErrorMessage(){
  * @returns true:图片不一致, 代表操作成功, false:图片一致代表操作失败
  */
 export function judgeFuncIsWorkByImg(func: ()=>void, left: number, top: number, right: number, bottom: number){
-    console.hide()
-    sleep(100)
-    let before = captureScreen()
-    before = images.clip(before, left, top, right-left, bottom-top)
-    console.show()
+    const before = getScreenImage(left, top, right, bottom)
     func()
-    console.hide()
-    sleep(100)
-    let after = captureScreen()
-    after = images.clip(after, left, top, right-left, bottom-top)
-    console.show()
+    const after = getScreenImage(left, top, right, bottom)
     const compare = findImage(before, after, {
         threshold: 1
     });

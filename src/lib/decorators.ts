@@ -1,7 +1,7 @@
 import { MAX_RETRY_COUNTS, REDUNDANCY_TIME } from "../global";
 import { BaseKey } from "../scripts/abstract/Base";
-import { isCurrentAppBanned } from "./exception";
-import { Record } from "./logger";
+import { ExceedMaxNumberOfAttempts, isCurrentAppBanned } from "./exception";
+import { LOG_STACK, Record } from "./logger";
 import { clearBackground, convertSecondsToMinutes, sendErrorMessage, waitRandomTime } from "./utils";
 
 /**
@@ -10,13 +10,45 @@ import { clearBackground, convertSecondsToMinutes, sendErrorMessage, waitRandomT
  * @returns 
  */
 export function functionLog(message: string) {
-    return function (_: any, __: string, descriptor: PropertyDescriptor) {
+    return function (_: any, key: string, descriptor: PropertyDescriptor) {
       const originalMethod = descriptor.value;
-  
+      
       descriptor.value = function (...args: any[]) {
+        const instance = this as any;
         waitRandomTime(4)
         Record.info(`执行下一步任务：${message}`)
-        originalMethod.apply(this, args);
+        let startTime = new Date();
+        try {
+          originalMethod.apply(this, args);
+        } catch (error) {
+          let retries = 1;
+          while (retries < MAX_RETRY_COUNTS) {
+            if(key === "readBook" || key === "swipeVideo") {
+              const terminationTime = new Date();
+              args[0] = args[0] - (terminationTime.getTime() - startTime.getTime())/1000
+              if(args[0] <= 0) {
+                break
+              }
+            }
+            Record.warn(`尝试第${retries}次重启`)
+            try {
+              startTime = new Date()
+              clearBackground()
+              if(instance.lauchApp()){
+                instance.clear()
+                originalMethod.apply(this, args)
+              }
+              break
+            } catch (error) {
+              retries++
+            }
+          }
+          if(retries >= MAX_RETRY_COUNTS) {
+            Record.error(`${error}`)
+            throw new ExceedMaxNumberOfAttempts(key)
+          }
+        }
+        
         Record.info(`${message}任务结束`)
       };
       return descriptor;
@@ -66,32 +98,20 @@ export function startDecorator(_: any, __: string, descriptor: PropertyDescripto
     const originalMethod = descriptor.value;
     
     descriptor.value = function (...args: any[]) {
-      let retries = 0;
-      while (retries < MAX_RETRY_COUNTS) {
-        const startTime = new Date();
-        try{
-            originalMethod.apply(this, args)
-            const endTime = new Date();
-            //执行时间
-            const executionTime = (endTime.getTime() - startTime.getTime())/1000;
-            Record.info("即将执行下一个app")
-            Record.debug(`剩余${convertSecondsToMinutes(args[0] - executionTime)}分钟`)
-            //返回剩余时间
-            return args[0] - executionTime
-        } catch(e) {
-          if(isCurrentAppBanned(e)){
-            Record.warn("账号异常")
-          } else {
-            retries++
-            Record.error(`当前app发生异常: ${e}`)
-            sendErrorMessage()
-            Record.info(`尝试第${retries}次重启`)
-            clearBackground()
-            const terminationTime = new Date();
-            args[0] = args[0] - (terminationTime.getTime() - startTime.getTime())/1000
-          }
-        }
+      const startTime = new Date();
+      try{
+        originalMethod.apply(this, args)
+      }catch(e) {
+        Record.error(`当前app发生异常: ${e}`)
+        sendErrorMessage()
       }
+      const endTime = new Date();
+      const executionTime = (endTime.getTime() - startTime.getTime())/1000;
+      Record.info("即将执行下一个app")
+      Record.debug(`剩余${convertSecondsToMinutes(args[0] - executionTime)}分钟`)
+      LOG_STACK.clear()
+      //返回剩余时间
+      return args[0] - executionTime
     }
 
     return descriptor; 
