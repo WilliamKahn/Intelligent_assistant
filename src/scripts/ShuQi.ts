@@ -13,6 +13,7 @@ export class ShuQi extends Base{
         this.appName = NAME_READ_SHUQI
         this.packageName = PACKAGE_READ_SHUQI
         this.tab = id("android:id/tabs")
+        this.exitNum = 0
         this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, BASE_ASSIMT_TIME)
         this.medEffEstimatedTime = this.fetch(BaseKey.medEffEstimatedTime, 10 * 60)
         this.lowEffEstimatedTime = 0

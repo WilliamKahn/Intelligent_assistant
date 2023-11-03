@@ -60,6 +60,8 @@ __webpack_require__.d(__webpack_exports__, {
   "mr": () => (/* binding */ ROBOT_ID),
   "wd": () => (/* binding */ SHOW_CONSOLE),
   "P_": () => (/* binding */ STORAGE),
+  "mJ": () => (/* binding */ STORAGE_APP),
+  "Z2": () => (/* binding */ STORAGE_DATE),
   "cB": () => (/* binding */ WAIT_TIME_AFTER_CLICK),
   "b1": () => (/* binding */ WX_PUSHER_URL),
   "g$": () => (/* binding */ _TOKEN),
@@ -850,7 +852,7 @@ var Tomato = function (_super) {
     _this.packageName = PACKAGE_READ_TOMATO;
     _this.tab = id(_this.packageName + ":id/c6");
     _this.highEffEstimatedTime = _this.fetch(Base/* BaseKey.highEffEstimatedTime */.N.highEffEstimatedTime, BASE_ASSIMT_TIME);
-    _this.medEffEstimatedTime = _this.fetch(Base/* BaseKey.medEffEstimatedTime */.N.medEffEstimatedTime, 45 * 60);
+    _this.medEffEstimatedTime = _this.fetch(Base/* BaseKey.medEffEstimatedTime */.N.medEffEstimatedTime, 90 * 60);
     _this.lowEffEstimatedTime = 0;
     return _this;
   }
@@ -2047,16 +2049,35 @@ var AbstractFreeNovel = function (_super) {
   };
 
   AbstractFreeNovel.prototype.signIn = function () {
+    var _this = this;
+
     this.goTo(this.tab, 2);
-    this.clickPop();
+    (0,utils/* doFuncUntilPopupsGone */.PI)(this.buttonNameList, {
+      func: function func() {
+        _this.watch(text("日常福利"));
+      },
+      ocrRecognizeText: "看小视频再领[0-9]+金币"
+    });
   };
 
   AbstractFreeNovel.prototype.openTreasure = function () {
+    var _this = this;
+
     this.goTo(this.tab, 2);
-    this.clickPop();
+    (0,utils/* doFuncUntilPopupsGone */.PI)(this.buttonNameList, {
+      func: function func() {
+        _this.watch(text("日常福利"));
+      },
+      ocrRecognizeText: "看小视频再领[0-9]+金币"
+    });
 
     if ((0,utils/* findAndClick */.Od)(textMatches((0,utils/* merge */.TS)(['开宝箱得金币', '[0-9]+分[0-9]+秒'])))) {
-      this.clickPop();
+      (0,utils/* doFuncUntilPopupsGone */.PI)(this.buttonNameList, {
+        func: function func() {
+          _this.watch(text("日常福利"));
+        },
+        ocrRecognizeText: "看小视频再领[0-9]+金币"
+      });
     }
   };
 
@@ -2067,11 +2088,13 @@ var AbstractFreeNovel = function (_super) {
       bounds: RANGE_FOUR_FIFTHS_SCREEN,
       normalClickOptions: {
         waitTimes: 10
-      }
+      },
+      untilGone: true
     })) {
       this.watch(text("日常福利"));
       (0,utils/* findAndClick */.Od)(text("领金币"), {
-        bounds: RANGE_FOUR_FIFTHS_SCREEN
+        bounds: RANGE_FOUR_FIFTHS_SCREEN,
+        untilGone: true
       });
     }
   };
@@ -2084,11 +2107,13 @@ var AbstractFreeNovel = function (_super) {
       bounds: RANGE_FOUR_FIFTHS_SCREEN,
       normalClickOptions: {
         waitTimes: 10
-      }
+      },
+      untilGone: true
     })) {
       this.watch(text("日常福利"));
       (0,utils/* findAndClick */.Od)(text("领金币"), {
-        bounds: RANGE_FOUR_FIFTHS_SCREEN
+        bounds: RANGE_FOUR_FIFTHS_SCREEN,
+        untilGone: true
       });
     }
   };
@@ -2147,29 +2172,6 @@ var AbstractFreeNovel = function (_super) {
 
     if ((0,utils/* findAndClick */.Od)(text("完整榜单"))) {
       (0,utils/* randomClickChildInList */.Ef)(id(this.packageName + ":id/right_content_view"), random(0, 8));
-    }
-  };
-
-  AbstractFreeNovel.prototype.clickPop = function () {
-    var _this = this;
-
-    var flag = true;
-    (0,utils/* doFuncUntilPopupsGone */.PI)(this.buttonNameList, {
-      func: function func() {
-        _this.watch(text("日常福利"));
-
-        flag = false;
-      }
-    });
-
-    if (flag) {
-      var str = (0,utils/* getStrByOcrRecognizeLimitBounds */.B)();
-      var match = str.match(/看小视频再领[0-9]+金币/);
-
-      if (match) {
-        (0,utils/* normalClick */.Uw)((0,utils/* resizeX */.wK)(random(350, 700)), (0,utils/* resizeY */.ov)(random(1250, 1300)));
-        this.watch(text("日常福利"));
-      }
     }
   };
 
@@ -2496,6 +2498,10 @@ var SpeedFree = function (_super) {
     (0,utils/* randomClickChildInList */.Ef)(className("android.view.ViewGroup").depth(16).drawingOrder(2).boundsInside((0,utils/* resizeX */.wK)(36), (0,utils/* resizeY */.ov)(648), (0,utils/* resizeX */.wK)(1044), (0,utils/* resizeY */.ov)(1037)), random(0, 3));
 
     if ((0,utils/* findAndClick */.Od)(text("立即收听"))) {
+      if ((0,utils/* findAndClick */.Od)(text("看视频"))) {
+        this.watch(id("com.zhangyue.iReader.bookStore:id/listen_add_bk_tv"));
+      }
+
       back();
       (0,utils/* waitRandomTime */.DV)(4);
     }
@@ -3020,6 +3026,7 @@ var ShuQi = function (_super) {
     _this.appName = NAME_READ_SHUQI;
     _this.packageName = PACKAGE_READ_SHUQI;
     _this.tab = id("android:id/tabs");
+    _this.exitNum = 0;
     _this.highEffEstimatedTime = _this.fetch(Base/* BaseKey.highEffEstimatedTime */.N.highEffEstimatedTime, BASE_ASSIMT_TIME);
     _this.medEffEstimatedTime = _this.fetch(Base/* BaseKey.medEffEstimatedTime */.N.medEffEstimatedTime, 10 * 60);
     _this.lowEffEstimatedTime = 0;
@@ -3763,7 +3770,7 @@ var _a;
 
 
 var PROJECT_NAME = "智能助手";
-var VERSION = "0.2.2";
+var VERSION = "0.2.3";
 var WX_PUSHER_URL = "https://wxpusher.zjiecode.com/api/send/message";
 var APP_TOKEN = "AT_2vEaUfXFmwMKybX7YeX3yCJFrmc7TFlD";
 var MAX_BACK_COUNTS = 10;
@@ -3775,6 +3782,8 @@ var REDUNDANCY_TIME = 3 * 60;
 var BASE_ASSIMT_TIME = 10 * 60;
 var WEIGHT_ASSIMT_TIME = (/* unused pure expression or super */ null && (5 * 60));
 var MAX_ASSIMT_TIME = 24 * 60 * 60;
+var STORAGE_APP = "app";
+var STORAGE_DATE = "date";
 var STORAGE_WEIGHT_CONTAINER = "YWfjbEVp29";
 var STORAGE = storages.create(STORAGE_WEIGHT_CONTAINER);
 var DEVICE_WIDTH = 1080;
@@ -4873,27 +4882,28 @@ function getScreenImage(left, top, right, bottom) {
   return images.clip(img, x1, y1, x2 - x1, y2 - y1);
 }
 function randomClick(bounds, options) {
-  var left = bounds.left || 0;
-  var right = bounds.right || device.width;
-  var top = bounds.top || 0;
-  var bottom = bounds.bottom || device.height;
-  var randomX = random(left, right);
-  var randomY = random(top, bottom);
+  var sbounds = boundsScaling(bounds, 0.8);
+  var randomX = random(sbounds.left, sbounds.right);
+  var randomY = random(sbounds.top, sbounds.bottom);
 
   if (options === null || options === void 0 ? void 0 : options.avoid) {
     while (randomX > options.avoid.bounds().left && randomX < options.avoid.bounds().right && randomY > options.avoid.bounds().top && randomY < options.avoid.bounds().bottom) {
-      randomX = random(left, right);
-      randomY = random(top, bottom);
+      randomX = random(sbounds.left, sbounds.right);
+      randomY = random(sbounds.top, sbounds.bottom);
     }
   }
 
   _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.debug */ .WV.debug("(".concat(randomX, ", ").concat(randomY, ")"));
 
   if (options === null || options === void 0 ? void 0 : options.check) {
-    while (!judgeFuncIsWorkByImg(function () {
+    var cycleCounts = 0;
+
+    while (++cycleCounts < 3 && !judgeFuncIsWorkByImg(function () {
       _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.debug */ .WV.debug("check click");
       normalClick(randomX, randomY, options.normalClickOptions);
-    }, left, top, right, bottom)) {
+      randomX = random(sbounds.left, sbounds.right);
+      randomY = random(sbounds.top, sbounds.bottom);
+    }, sbounds.left, sbounds.top, sbounds.right, sbounds.bottom)) {
       close(0);
     }
   } else {
@@ -4901,6 +4911,28 @@ function randomClick(bounds, options) {
     normalClick(randomX, randomY, options === null || options === void 0 ? void 0 : options.normalClickOptions);
   }
 }
+
+function boundsScaling(bounds, scaling) {
+  var left = bounds.left || 0;
+  var right = bounds.right || device.width;
+  var top = bounds.top || 0;
+  var bottom = bounds.bottom || device.height;
+  var width = right - left;
+  var height = bottom - top;
+  var newHeight = height * scaling;
+  var newWidth = width * scaling;
+  left = left + (width - newWidth) / 2;
+  top = top + (height - newHeight) / 2;
+  right = right - (width - newWidth) / 2;
+  bottom = bottom - (height - newHeight) / 2;
+  return {
+    left: left,
+    top: top,
+    right: right,
+    bottom: bottom
+  };
+}
+
 function findAndClick(component, options, times) {
   if (times === void 0) {
     times = 0;
@@ -5023,7 +5055,7 @@ function searchByLeftRange(button, range, times) {
     return searchByLeftRange(button, range, ++times);
   } else {
     var result = eval(button.toString());
-    return result.boundsInside(0, tmp.bounds().top - 60, resizeX(1080), tmp.bounds().bottom + 60);
+    return result.boundsInside(0, tmp.bounds().top, resizeX(1080), tmp.bounds().bottom + 80);
   }
 }
 
@@ -5039,7 +5071,7 @@ function clearBackground() {
     if (recents()) {
       waitRandomTime(4);
 
-      if (findAndClick(idContains("clearbox"))) {
+      if (findAndClick(idContains("clear"))) {
         waitRandomTime(4);
       }
     }
@@ -5136,21 +5168,30 @@ function closeByImageMatching() {
     img = images.cvtColor(img, "BGR2GRAY");
     var closeWhite = images.cvtColor(close, "BGR2GRAY");
     var closeBlack = images.threshold(closeWhite, 100, 255, "BINARY_INV");
+    var closeBlackLarge = images.resize(closeBlack, 60);
 
     for (var i = 80; i < 255; i += 50) {
       var nimg = images.threshold(img, i, 255, "BINARY");
       var p1 = findImage(nimg, closeWhite, {
         threshold: threshold
       });
-      var p2 = findImage(nimg, closeBlack, {
+      var p2 = findImage(nimg, closeBlackLarge, {
+        threshold: threshold
+      });
+      var p3 = findImage(nimg, closeBlack, {
         threshold: threshold
       });
 
-      if (p1 || p2) {
+      if (p1 || p2 || p3) {
         if (p1) {
+          _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.debug */ .WV.debug("find(".concat(p1.x, ",").concat(p1.y, ")"));
           normalClick(p1.x, p1.y);
         } else if (p2) {
+          _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.debug */ .WV.debug("find(".concat(p2.x, ",").concat(p2.y, ")"));
           normalClick(p2.x, p2.y);
+        } else if (p3) {
+          _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.debug */ .WV.debug("find(".concat(p3.x, ",").concat(p3.y, ")"));
+          normalClick(p3.x, p3.y);
         }
 
         waitRandomTime(4);
@@ -5182,7 +5223,6 @@ function getTextBoundsByOcrRecognize(str) {
     var item = _a[_i];
 
     if (item.text.match(str)) {
-      _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.log */ .WV.log(item.text);
       return item.bounds;
     }
   }
@@ -5390,7 +5430,9 @@ var Base = function () {
       } else {
         var waitSign = ['.*后可领奖励', '.*后可领取奖励', '.*后领取观看奖励'];
 
-        if (textMatches((0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .merge */ .TS)(waitSign)).exists()) {}
+        if (textMatches((0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .merge */ .TS)(waitSign)).exists()) {
+          this.watch(textMatches("第[0-9]+章.*"));
+        }
       }
 
       (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .findAndClick */ .Od)(textMatches((0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__/* .merge */ .TS)([".*不再提示", "我知道了", "放弃下载"])));
@@ -5706,7 +5748,7 @@ init();
 main();
 
 function test() {
-  launchPackage("com.huawei.contacts");
+  shuQi.start(60 * 60);
 }
 
 function main() {
@@ -5720,13 +5762,13 @@ function main() {
     var startTime = new Date();
     var date = startTime.getMonth().toString() + "/" + startTime.getDate().toString();
 
-    if (date === global/* STORAGE.get */.P_.get("date")) {
+    if (date === global/* STORAGE.get */.P_.get(global/* STORAGE_DATE */.Z2)) {
       var search = false;
 
       for (var _i = 0, list_1 = global/* list */.pb; _i < list_1.length; _i++) {
         var app_1 = list_1[_i];
 
-        if (search || app_1.constructor.name === global/* STORAGE.get */.P_.get("app")) {
+        if (search || app_1.constructor.name === global/* STORAGE.get */.P_.get(global/* STORAGE_APP */.mJ)) {
           var num = runList.indexOf(app_1);
 
           if (num == -1) {
@@ -5740,7 +5782,7 @@ function main() {
       }
     }
 
-    global/* STORAGE.put */.P_.put("date", date);
+    global/* STORAGE.put */.P_.put(global/* STORAGE_DATE */.Z2, date);
     var endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate(), 23, 59, 59);
     var timeDifference = endTime.getTime() - startTime.getTime();
     var timePerMethod = timeDifference / 1000;
@@ -5771,7 +5813,7 @@ function main() {
       var executeTime = surplus + map[app_4.constructor.name];
       app_4.store(Base/* BaseKey.Weight */.N.Weight, 0);
       map[app_4.constructor.name] = 0;
-      global/* STORAGE.put */.P_.put("app", app_4.constructor.name);
+      global/* STORAGE.put */.P_.put(global/* STORAGE_APP */.mJ, app_4.constructor.name);
       surplus = app_4.start(executeTime);
       logger/* Record.debug */.WV.debug("surplus: ".concat(surplus));
       var remainingAllocation = 30 * 60;

@@ -13,7 +13,7 @@ export class Tomato extends AbstractTomato {
         this.packageName = PACKAGE_READ_TOMATO
         this.tab = id(this.packageName+":id/c6")
         this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, BASE_ASSIMT_TIME)
-        this.medEffEstimatedTime = this.fetch(BaseKey.medEffEstimatedTime, 45 * 60)
+        this.medEffEstimatedTime = this.fetch(BaseKey.medEffEstimatedTime, 90 * 60)
         this.lowEffEstimatedTime = 0
     }
 

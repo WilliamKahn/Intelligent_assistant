@@ -1,6 +1,6 @@
 import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, MAX_BACK_COUNTS, STORAGE, STORAGE_WEIGHT_CONTAINER, WEIGHT_ASSIMT_TIME } from "../../global"
 import { startDecorator } from "../../lib/decorators"
-import { clearBackground, close, convertSecondsToMinutes, doFuncUntilPopupsGone, findAndClick, getStrByOcrRecognizeLimitBounds, matchAndJudge, merge, normalClick, randomClick, resizeX, resizeY, waitRandomTime, } from "../../lib/utils"
+import { clearBackground, close, convertSecondsToMinutes, doFuncUntilPopupsGone, findAndClick, getStrByOcrRecognizeLimitBounds, getTextBoundsByOcrRecognize, matchAndJudge, merge, normalClick, randomClick, resizeX, resizeY, waitRandomTime, } from "../../lib/utils"
 import { Record } from "../../lib/logger"
 import { ExceedMaxNumberOfAttempts } from "../../lib/exception"
 
@@ -113,7 +113,7 @@ export abstract class Base {
             } else {
                 let waitSign = ['.*后可领奖励','.*后可领取奖励', '.*后领取观看奖励']
                 if(textMatches(merge(waitSign)).exists()){
-                    // this.watch(text("日常任务"))
+                    this.watch(textMatches("第[0-9]+章.*"))
                 }
             }
             //阅读页面弹窗

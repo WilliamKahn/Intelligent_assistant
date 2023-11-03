@@ -6,8 +6,8 @@
  * @FilePath: \\src\\index.ts
  * @Description: 脚本入口
  */
-import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, RANGE_FOUR_FIFTHS_SCREEN, RANGE_MIDDLE_SCREEN, STORAGE, deJian, eggplantFree, filteredList, kuaiShouFree, list, marvelFree, pandaBrain, redFruits, sevenCatsFree, shuQi, speedFree, starrySky, tomato, tomatoFree, tomatoLite, wanChao, youShi } from "./global";
-import { clearBackground, convertSecondsToMinutes, doFuncUntilPopupsGone, findAndClick, normalClick, resizeX, resizeY, scrollTo, sendErrorMessage, sendIncomeMessageToWxPuher, toShowString } from "./lib/utils";
+import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, RANGE_FOUR_FIFTHS_SCREEN, RANGE_MIDDLE_SCREEN, STORAGE, STORAGE_APP, STORAGE_DATE, deJian, eggplantFree, filteredList, kuaiShouFree, list, marvelFree, pandaBrain, redFruits, sevenCatsFree, shuQi, speedFree, starrySky, tomato, tomatoFree, tomatoLite, wanChao, youShi } from "./global";
+import { clearBackground, closeByImageMatching, convertSecondsToMinutes, doFuncUntilPopupsGone, findAndClick, getScreenImage, getStrByOcrRecognizeLimitBounds, getTextBoundsByOcrRecognize, normalClick, resizeX, resizeY, scrollTo, sendErrorMessage, sendIncomeMessageToWxPuher, toShowString } from "./lib/utils";
 import { init } from "./lib/init";
 import { Record as LogRecord } from "./lib/logger";
 import { ConfigInvalidException } from "./lib/exception";
@@ -22,8 +22,7 @@ function test() {
     // for(let app of list){
     //     log(`${app.appName}: ${app.fetch(BaseKey.Weight)}`)
     // }
-    //sevenCatsFree.start(60 * 60)
-    launchPackage("com.huawei.contacts")
+    shuQi.start(60 * 60)
 }
 
 function main() {
@@ -37,11 +36,11 @@ function main() {
         const startTime = new Date();
         const date = startTime.getMonth().toString()+"/"+startTime.getDate().toString()
         //断开重连
-        if(date === STORAGE.get("date")){
+        if(date === STORAGE.get(STORAGE_DATE)){
             let search = false
             for(let app of list){
                 //肯定查找到
-                if(search || app.constructor.name === STORAGE.get("app")){
+                if(search || app.constructor.name === STORAGE.get(STORAGE_APP)){
                     let num = runList.indexOf(app)
                     if(num == -1){
                         search = true
@@ -53,7 +52,7 @@ function main() {
                 }
             }
         }
-        STORAGE.put("date", date)
+        STORAGE.put(STORAGE_DATE, date)
 
         const endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate(), 23, 59, 59);
         const timeDifference = endTime.getTime() - startTime.getTime();
@@ -86,7 +85,7 @@ function main() {
             app.store(BaseKey.Weight, 0)
             map[app.constructor.name] = 0
             //执行流程
-            STORAGE.put("app", app.constructor.name)
+            STORAGE.put(STORAGE_APP, app.constructor.name)
             surplus = app.start(executeTime)
             LogRecord.debug(`surplus: ${surplus}`)
             //surplus分配算法

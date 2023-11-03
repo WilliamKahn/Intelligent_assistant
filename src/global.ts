@@ -36,7 +36,7 @@ export const PROJECT_NAME = "智能助手"
 /**
  * @description: 脚本版本号。建议根据 [语义化版本号] 迭代
  */
-export const VERSION = "0.2.2";
+export const VERSION = "0.2.3";
 
 // export const LISTENER_INTERVAL = 100
 // export const EVENT = events.emitter()
@@ -63,6 +63,10 @@ export const BASE_ASSIMT_TIME = 10 * 60
 export const WEIGHT_ASSIMT_TIME = 5 * 60
 //最大时间
 export const MAX_ASSIMT_TIME = 24 * 60 * 60
+//中止app记录
+export const STORAGE_APP = "app"
+//中止日期（月/日）
+export const STORAGE_DATE = "date"
 //存储名称
 export const STORAGE_WEIGHT_CONTAINER = "YWfjbEVp29"
 //存储

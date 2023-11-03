@@ -96,33 +96,51 @@ export function getScreenImage(left?: number, top?: number, right?: number, bott
  * @param comfirm 用于确定点击是否起作用
  */
 export function randomClick(bounds: Bounds, options?: RandomClickOptions) {
-    const left = bounds.left||0
-    const right = bounds.right||device.width
-    const top = bounds.top||0
-    const bottom = bounds.bottom||device.height
-    let randomX = random(left, right)
-    let randomY = random(top, bottom)
+    
+    const sbounds = boundsScaling(bounds, 0.8)
+    
+    let randomX = random(sbounds.left, sbounds.right)
+    let randomY = random(sbounds.top, sbounds.bottom)
     if(options?.avoid) {
         while(randomX > options.avoid.bounds().left 
             && randomX < options.avoid.bounds().right 
             && randomY > options.avoid.bounds().top
             && randomY < options.avoid.bounds().bottom){
-                randomX = random(left, right)
-                randomY = random(top, bottom)
+                randomX = random(sbounds.left, sbounds.right)
+                randomY = random(sbounds.top, sbounds.bottom)
         }
     }
     Record.debug(`(${randomX}, ${randomY})`)
     if (options?.check) {
-        while(!judgeFuncIsWorkByImg(()=>{
+        let cycleCounts = 0
+        while(++cycleCounts < 3 && !judgeFuncIsWorkByImg(()=>{
             Record.debug("check click")
             normalClick(randomX, randomY, options.normalClickOptions)
-        }, left, top, right, bottom)){
+            randomX = random(sbounds.left, sbounds.right)
+            randomY = random(sbounds.top, sbounds.bottom)
+        }, sbounds.left, sbounds.top, sbounds.right, sbounds.bottom)){
             close(0)
         }
     } else {
         Record.debug("normal click")
         normalClick(randomX, randomY, options?.normalClickOptions)
     }
+}
+
+function boundsScaling(bounds: Bounds, scaling: number){
+    let left = bounds.left||0
+    let right = bounds.right||device.width
+    let top = bounds.top||0
+    let bottom = bounds.bottom||device.height
+    const width  = right - left
+    const height = bottom - top
+    const newHeight = height * scaling
+    const newWidth = width * scaling
+    left = left + (width-newWidth)/2
+    top = top + (height - newHeight)/2
+    right = right - (width-newWidth)/2
+    bottom = bottom - (height - newHeight)/2
+    return {left:left, top:top, right:right, bottom:bottom}
 }
 
 
@@ -250,9 +268,10 @@ function searchByLeftRange(button: UiSelector, range: UiSelector, times: number 
         return searchByLeftRange(button, range, ++times)
     } else {
         let result = eval(button.toString())
-        return result.boundsInside(0, tmp.bounds().top - 60, resizeX(1080), tmp.bounds().bottom + 60)
+        return result.boundsInside(0, tmp.bounds().top, resizeX(1080), tmp.bounds().bottom + 80)
     }
 }
+
 
 /**
  * @description 随机等待一定时间
@@ -273,7 +292,7 @@ export function clearBackground(){
         waitRandomTime(4)
         if(recents()){
             waitRandomTime(4)
-            if(findAndClick(idContains("clearbox"))){
+            if(findAndClick(idContains("clear"))){
                 waitRandomTime(4)
             }
         }
@@ -407,22 +426,31 @@ export function closeByImageMatching(): boolean {
         //验证图片
         let closeWhite = images.cvtColor(close, "BGR2GRAY")
         let closeBlack = images.threshold(closeWhite, 100, 255, "BINARY_INV")
+        let closeBlackLarge = images.resize(closeBlack, 60)
 
         for (let i = 80;i< 255; i+=50){//80
             let nimg = images.threshold(img, i, 255, "BINARY")
-            // nimg.saveTo("/sdcard/Pictures/Screenshots/result.jpg")
+            // closeBlack.saveTo("/sdcard/Pictures/Screenshots/result.jpg")
             // app.viewFile("/sdcard/Pictures/Screenshots/result.jpg")
             let p1 = findImage(nimg, closeWhite, {
+                threshold: threshold,
+            })
+            let p2 = findImage(nimg, closeBlackLarge, {
                 threshold: threshold
             })
-            let p2 = findImage(nimg, closeBlack, {
-                threshold: threshold
+            let p3 = findImage(nimg, closeBlack, {
+                threshold: threshold,
             })
-            if (p1 || p2) {
+            if (p1 || p2 || p3) {
                 if(p1){
+                    Record.debug(`find(${p1.x},${p1.y})`)
                     normalClick(p1.x, p1.y)
                 } else if(p2){
+                    Record.debug(`find(${p2.x},${p2.y})`)
                     normalClick(p2.x, p2.y)
+                } else if(p3) {
+                    Record.debug(`find(${p3.x},${p3.y})`)
+                    normalClick(p3.x, p3.y)
                 }
                 //页面加载等待
                 waitRandomTime(4)
@@ -457,7 +485,6 @@ export function getTextBoundsByOcrRecognize(str: string){
     const res = ocr.recognize(img)
     for(let item of res.results){
         if(item.text.match(str)){
-            Record.log(item.text)
             return item.bounds
         }
     }

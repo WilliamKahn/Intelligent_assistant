@@ -118,6 +118,9 @@ export class SpeedFree extends Base {
             .boundsInside(resizeX(36),resizeY(648),resizeX(1044), resizeY(1037)), 
             random(0, 3))
         if(findAndClick(text("立即收听"))){
+            if(findAndClick(text("看视频"))){
+                this.watch(id("com.zhangyue.iReader.bookStore:id/listen_add_bk_tv"))
+            }
             back()
             waitRandomTime(4)
         }
