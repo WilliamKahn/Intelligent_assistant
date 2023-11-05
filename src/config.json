@@ -6,6 +6,12 @@
         "help": "微信推送每日收益(24点), 无需则不用填写"
     },
     {
+        "label": "执行顺序",
+        "name": "ORDER",
+        "placeholder": "1 2 3 4 (后续未填的将按照默认顺序)",
+        "help": "不填写则按照默认顺序(1 2 3 4)执行, 执行顺序先后并不影响执行时间长短, 以空格分隔"
+    },
+    {
         "label": "是否显示控制台",
         "help": "日志信息在hamibot中可查看, 关闭后可提高效率",
         "name": "_SHOW_CONSOLE",
@@ -13,91 +19,91 @@
         "default": false
     },
     {
-        "label": "有柿",
+        "label": "1.有柿",
         "type": "checkbox",
         "name": "YouShi",
         "default": true
     },
     {
-        "label": "书旗小说",
+        "label": "2.书旗小说",
         "type": "checkbox",
         "name": "ShuQi",
         "default": true
     },
     {
-        "label": "星空免费小说",
+        "label": "3.星空免费小说",
         "type": "checkbox",
         "name": "StarrySky",
         "default": true
     },
     {
-        "label": "奇迹免费小说",
+        "label": "4.奇迹免费小说",
         "type": "checkbox",
         "name": "MarvelFree",
         "default": true
     },
     {
-        "label": "茄子免费小说",
+        "label": "5.茄子免费小说",
         "type": "checkbox",
         "name": "EggplantFree",
         "default": true
     },
     {
-        "label": "七猫免费小说",
+        "label": "6.七猫免费小说",
         "type": "checkbox",
         "name": "SevenCatsFree",
         "default": true
     },
     {
-        "label": "熊猫脑洞小说",
+        "label": "7.熊猫脑洞小说",
         "type": "checkbox",
         "name": "PandaBrain",
         "default": true
     },
     {
-        "label": "番茄畅听",
+        "label": "8.番茄畅听",
         "type": "checkbox",
         "name": "Tomato",
         "default": true
     },
     {
-        "label": "番茄免费小说",
+        "label": "9.番茄免费小说",
         "type": "checkbox",
         "name": "TomatoFree",
         "default": true
     },
     {
-        "label": "番茄畅听音乐版",
+        "label": "10.番茄畅听音乐版",
         "type": "checkbox",
         "name": "TomatoLite",
         "default": true
     },
     {
-        "label": "红果免费短剧",
+        "label": "11.番茄免费短剧",
         "type": "checkbox",
         "name": "RedFruits",
         "default": true
     },
     {
-        "label": "快手免费小说",
+        "label": "12.快手免费小说",
         "type": "checkbox",
         "name": "KuaiShouFree",
         "default": true
     },
     {
-        "label": "速读免费小说",
+        "label": "13.速读免费小说",
         "type": "checkbox",
         "name": "SpeedFree",
         "default": true
     },
     {
-        "label": "得间小说",
+        "label": "14.得间小说",
         "type": "checkbox",
         "name": "DeJian",
         "default": true
     },
     {
-        "label": "望潮",
+        "label": "15.望潮",
         "type": "checkbox",
         "name": "WanChao",
         "default": true

@@ -1,7 +1,7 @@
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_VEDIO_YOUSHI, PACKAGE_VEDIO_YOUSHI, RANGE_FOUR_FIFTHS_SCREEN, RANGE_MIDDLE_SCREEN } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
-import { findAndClick, moveDown, doFuncAtGivenTime, doFuncUntilPopupsGone, waitRandomTime, resizeX, resizeY, normalClick } from "../lib/utils";
+import { findAndClick, moveDown, doFuncAtGivenTime, doFuncUntilPopupsGone, waitRandomTime, resizeX, resizeY, normalClick, close } from "../lib/utils";
 import { Base, BaseKey } from "./abstract/Base"
 
 export class YouShi extends Base{
@@ -41,7 +41,7 @@ export class YouShi extends Base{
                 break
             }
             this.openTreasure()
-            this.readBook(10 * 60)
+            this.swipeVideo(10 * 60)
         }
         this.reward()
     }
@@ -100,7 +100,7 @@ export class YouShi extends Base{
     @functionLog("看广告")
     watchAds(): void {
         this.goTo(this.tab, 3)
-        if(findAndClick(text("领福利"))){
+        if(findAndClick(text("领福利")), {bounds: RANGE_FOUR_FIFTHS_SCREEN}){
             this.watch(text("日常任务"))
             this.returnOfWatchAds = true
         } else {
@@ -131,7 +131,7 @@ export class YouShi extends Base{
     @functionLog("吃饭补贴")
     mealSupp(): void {
         this.goTo(this.tab, 3)
-        if(findAndClick(text("吃饭补贴"))){
+        if(findAndClick(text("吃饭补贴")), {bounds: RANGE_MIDDLE_SCREEN}){
             if(findAndClick(textMatches("领取.*补贴[0-9]+金币"))){
                 doFuncUntilPopupsGone(this.buttonNameList, {
                     func: ()=>{
@@ -146,7 +146,7 @@ export class YouShi extends Base{
     @functionLog("走路赚钱")
     walkEarn(): void{
         this.goTo(this.tab, 3)
-        if(findAndClick(text("走路赚钱"))){
+        if(findAndClick(text("走路赚钱")), {bounds: RANGE_MIDDLE_SCREEN}){
             if(findAndClick(textMatches("领取[0-9]+金币"))){
                 doFuncUntilPopupsGone(this.buttonNameList, {
                     func: ()=>{
@@ -161,7 +161,7 @@ export class YouShi extends Base{
     @functionLog("睡觉赚钱")
     sleepEarn(): void{
         this.goTo(this.tab, 3)
-        if(findAndClick(text("睡觉赚钱"))){
+        if(findAndClick(text("睡觉赚钱")), {bounds: RANGE_MIDDLE_SCREEN}){
             if(findAndClick(text("我睡醒了"))){
                 if(findAndClick(textMatches("领取[0-9]+金币"))){
                     doFuncUntilPopupsGone(this.buttonNameList, {

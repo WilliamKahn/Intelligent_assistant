@@ -8,7 +8,7 @@
  */
 
 import { ConfigInvalidException } from "./lib/exception";
-import { LogLevel, LOG_STACK, Record, sendLog, setToken } from "./lib/logger";
+import { LogLevel, LOG_STACK, Record as LogRecord, sendLog, setToken } from "./lib/logger";
 import { Bounds, resizeX, resizeY, waitRandomTime } from "./lib/utils";
 import { DeJian } from "./scripts/DeJian";
 import { KuaiShouLite } from "./scripts/KuaiShouLite";
@@ -36,7 +36,7 @@ export const PROJECT_NAME = "智能助手"
 /**
  * @description: 脚本版本号。建议根据 [语义化版本号] 迭代
  */
-export const VERSION = "0.2.3";
+export const VERSION = "0.2.4";
 
 // export const LISTENER_INTERVAL = 100
 // export const EVENT = events.emitter()
@@ -98,7 +98,7 @@ export const PACKAGE_READ_TOMATO_FREE = "com.dragon.read"
 export const NAME_READ_TOMATO_LITE = "番茄畅听音乐版"
 export const PACKAGE_READ_TOMATO_LITE = "com.xs.fm.lite"
 
-export const NAME_READ_RED_FRUITS = "红果免费短剧"
+export const NAME_READ_RED_FRUITS = "番茄免费短剧"
 export const PACKAGE_READ_RED_FRUITS = "com.phoenix.read"
 
 export const NAME_READ_DEJIAN = "得间小说"
@@ -185,59 +185,74 @@ export const deJian = new DeJian()
 //望潮
 export const wanChao = new WanChao()
 
-//执行顺序
-export const list = [
-    youShi,
-    shuQi,
-
-    starrySky,  
-    marvelFree,
-    eggplantFree, 
-    sevenCatsFree,
-    pandaBrain,
-
-    tomato, 
-    tomatoFree, 
-    tomatoLite, 
-    redFruits, 
-
-    kuaiShouFree,
-
-    speedFree, 
-    deJian, 
-    wanChao, 
-]
-Record.info("加载配置");
-//配置筛选后
+const map:Record<string, any> = {
+    "1" : youShi,
+    "2" : shuQi,
+    "3" : starrySky,
+    "4" : marvelFree,
+    "5" : eggplantFree,
+    "6" : sevenCatsFree,
+    "7" : pandaBrain,
+    "8" : tomato,
+    "9" : tomatoFree,
+    "10": tomatoLite,
+    "11": redFruits,
+    "12": kuaiShouFree,
+    "13": speedFree,
+    "14": deJian,
+    "15": wanChao
+}
+LogRecord.info("加载配置");
+export const {
+    _TOKEN,
+    _SHOW_CONSOLE,
+    APP_ENV,
+    ROBOT_ID,
+    ORDER
+} = hamibot.env;
+//是否显示控制台
+export const SHOW_CONSOLE = _SHOW_CONSOLE
+//执行列表
+export let list:any = []
+if(ORDER != undefined){
+    LogRecord.info("调整执行顺序")
+    let orderList = ORDER.split(" ")
+    if(orderList.length > 0) {
+        //去重复
+        orderList = orderList.filter((value:string, index: number, self:string) => self.indexOf(value) === index)
+        for(let i of orderList){
+            let app = map[i]
+            if(app != undefined) list.push(app)
+        }
+    }
+}
+if(list.length != 15){
+    for(let key in map){
+        if(list.indexOf(map[key]) == -1){
+            list.push(map[key])
+        }
+    }
+}
 export const filteredList = list.filter(
     item => hamibot.env[item.constructor.name] !== false
 )
 
 
-Record.info(`正在启动...\n\n\t当前脚本版本: ${VERSION}\n`);
+LogRecord.info(`正在启动...\n\n\t当前脚本版本: ${VERSION}\n`);
 
 // ---------------------- configuration -------------------------
 
-export const {
-    _TOKEN,
-    _SHOW_CONSOLE,
-    APP_ENV,
-    ROBOT_ID
-} = hamibot.env;
-
 if(APP_ENV === 'production'){
-    Record.setDisplayLevel(LogLevel.Log)
+    LogRecord.setDisplayLevel(LogLevel.Log)
 } else if(APP_ENV === 'development') {
-    Record.debug("处于开发环境")
+    LogRecord.debug("处于开发环境")
 }
-//是否显示控制台
-export const SHOW_CONSOLE = _SHOW_CONSOLE
 // -------------------- register listener -----------------------
 
 // register exit listener
 events.on("exit", () => {
     threads.shutDownAll()
-    Record.info("结束...")
+    LogRecord.info("结束...")
     waitRandomTime(5)
     console.hide()
 });
@@ -249,5 +264,5 @@ if (_TOKEN && _TOKEN !== "" && setToken(_TOKEN) == false) {
     throw new ConfigInvalidException("pushplus token", "needs to be a 32-bit hexadecimal number");
 }
 
-Record.info("开始执行脚本");
+LogRecord.info("开始执行脚本");
 

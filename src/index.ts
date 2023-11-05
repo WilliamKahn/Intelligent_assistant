@@ -15,14 +15,16 @@ import { BaseKey } from "./scripts/abstract/Base";
 
 init()
 
-// test()
-main()
+test()
+// main()
 
 function test() {
+    youShi.start(120 * 60)
     // for(let app of list){
     //     log(`${app.appName}: ${app.fetch(BaseKey.Weight)}`)
     // }
-    shuQi.start(60 * 60)
+    //STORAGE.put(STORAGE_APP, "DeJian")
+    //shuQi.weight()
 }
 
 function main() {

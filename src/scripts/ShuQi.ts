@@ -1,4 +1,4 @@
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_SHUQI, PACKAGE_READ_SHUQI, RANGE_FOUR_FIFTHS_SCREEN } from "../global";
+import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_SHUQI, PACKAGE_READ_SHUQI, RANGE_FIXED_SCREEN, RANGE_FOUR_FIFTHS_SCREEN } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { findAndClick, closeByImageMatching, doFuncUntilPopupsGone, randomClickChildInList, resizeX, resizeY } from "../lib/utils";
@@ -85,7 +85,7 @@ export class ShuQi extends Base{
         while(++cycleCounts < MAX_CYCLES_COUNTS 
             && findAndClick(text("领取奖励"), {bounds:RANGE_FOUR_FIFTHS_SCREEN})) {
         }
-        if(findAndClick(text("一键收取"))){
+        if(findAndClick(text("一键收取")),{bounds:RANGE_FIXED_SCREEN}){
             closeByImageMatching()
         }
     }

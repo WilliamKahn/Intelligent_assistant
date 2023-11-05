@@ -271,6 +271,7 @@ export abstract class Base {
     }
 
     //*****************空方法*******************
+    fresh() {}
     signIn() {}
     openTreasure() {}
     watchAds() {}

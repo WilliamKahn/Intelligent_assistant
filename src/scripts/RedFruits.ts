@@ -79,7 +79,7 @@ export class RedFruits extends AbstractTomato {
     @functionLog("阅读")
     readBook(totalTime: number): void {
         this.goTo(text("首页"), -1)
-        if(findAndClick(text("小说"))){
+        if(findAndClick(text("经典"))){
             randomClickChildInList(
                 className("android.widget.LinearLayout").depth(23).drawingOrder(1),
                 random(0,3)

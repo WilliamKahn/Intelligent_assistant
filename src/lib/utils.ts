@@ -126,7 +126,12 @@ export function randomClick(bounds: Bounds, options?: RandomClickOptions) {
         normalClick(randomX, randomY, options?.normalClickOptions)
     }
 }
-
+/**
+ * 
+ * @param bounds 原边界
+ * @param scaling 缩小系数
+ * @returns 缩小后边界
+ */
 function boundsScaling(bounds: Bounds, scaling: number){
     let left = bounds.left||0
     let right = bounds.right||device.width
@@ -143,7 +148,6 @@ function boundsScaling(bounds: Bounds, scaling: number){
     return {left:left, top:top, right:right, bottom:bottom}
 }
 
-
 /**
  * @description 滑动到指定位置并点击
  * @param component 目标
@@ -153,24 +157,14 @@ function boundsScaling(bounds: Bounds, scaling: number){
  */
 export function findAndClick(component: UiSelector, options?:FindAndClickOptions, times: number = 0){
     if (times >= MAX_CLICK_COUNTS) {
-        throw new ExceedMaxNumberOfAttempts("untilGone")
+        throw new ExceedMaxNumberOfAttempts("findAndClick")
     }
-    let tmp = component
-    if(options?.searchByLeftRangeOption) {
-        tmp = searchByLeftRange(component, options?.searchByLeftRangeOption)
-    }
-    if(tmp.exists()) {
-        let obj = scrollTo(component, options)
-        if (obj != null) {
-            if(obj.text() !== ""){
-                Record.log(obj.text())
-            }
-            randomClick(obj.bounds(), options)
-        }
+    let bounds = scrollTo(component, options)
+    if(bounds) {
+        randomClick(bounds, options)
         if (options?.untilGone) {
             findAndClick(component, options, ++times)
         }
-        //boundsInside(0, 0, resizeX(1080), resizeY(2340)).
         return true
     } else {
         if(options?.ocrRecognizeText){
@@ -247,7 +241,10 @@ export function scrollTo(sign: UiSelector, options?: ScrollToOptions,prePy?: num
         } else {
             //确定位置等待
             waitRandomTime(2)
-            return tmp
+            if(tmp.text() !== "") {
+                Record.log(`${tmp.text()}`)
+            }
+            return tmp.bounds()
         }
     }
 }
@@ -325,7 +322,7 @@ export function doFuncUntilPopupsGone(buttonNameList: string[], options?: DoFunc
     const regex = merge(buttonNameList)
     let cycleCounts = 0
     while(++cycleCounts < MAX_CYCLES_COUNTS && 
-        (findAndClick(textMatches(regex), {untilGone: true}) || findAndClick(descMatches(regex), {untilGone: true}))) {
+        (findAndClick(textMatches(regex), options || {untilGone: true}) || findAndClick(descMatches(regex), options || {untilGone: true}))) {
         if(options?.func) {
             options.func()
         }
@@ -480,11 +477,12 @@ export function getStrByOcrRecognizeLimitBounds(options?: Bounds){
     let img = getScreenImage(0, options?.top, device.width, options?.bottom)
     return ocr.recognizeText(img)
 }
-export function getTextBoundsByOcrRecognize(str: string){
+export function getTextBoundsByOcrRecognize(str: string, show:boolean = false){
     const img = getScreenImage()
     const res = ocr.recognize(img)
     for(let item of res.results){
         if(item.text.match(str)){
+            if(show) Record.log(`${item.text}`)
             return item.bounds
         }
     }

@@ -60,16 +60,13 @@ __webpack_require__.d(__webpack_exports__, {
   "mr": () => (/* binding */ ROBOT_ID),
   "wd": () => (/* binding */ SHOW_CONSOLE),
   "P_": () => (/* binding */ STORAGE),
-  "mJ": () => (/* binding */ STORAGE_APP),
-  "Z2": () => (/* binding */ STORAGE_DATE),
   "cB": () => (/* binding */ WAIT_TIME_AFTER_CLICK),
   "b1": () => (/* binding */ WX_PUSHER_URL),
   "g$": () => (/* binding */ _TOKEN),
-  "C": () => (/* binding */ filteredList),
-  "pb": () => (/* binding */ list)
+  "xE": () => (/* binding */ youShi)
 });
 
-// UNUSED EXPORTS: APP_ENV, PROJECT_NAME, STORAGE_WEIGHT_CONTAINER, VERSION, WEIGHT_ASSIMT_TIME, _SHOW_CONSOLE, deJian, eggplantFree, kuaiShou, kuaiShouFree, kuaiShouLite, marvelFree, pandaBrain, redFruits, sevenCatsFree, shuQi, speedFree, starrySky, tikTokLite, tomato, tomatoFree, tomatoLite, wanChao, youShi
+// UNUSED EXPORTS: APP_ENV, ORDER, PROJECT_NAME, STORAGE_APP, STORAGE_DATE, STORAGE_WEIGHT_CONTAINER, VERSION, WEIGHT_ASSIMT_TIME, _SHOW_CONSOLE, deJian, eggplantFree, filteredList, kuaiShou, kuaiShouFree, kuaiShouLite, list, marvelFree, pandaBrain, redFruits, sevenCatsFree, shuQi, speedFree, starrySky, tikTokLite, tomato, tomatoFree, tomatoLite, wanChao
 
 // EXTERNAL MODULE: ./src/lib/exception.ts
 var exception = __webpack_require__(564);
@@ -719,7 +716,7 @@ var RedFruits = function (_super) {
   RedFruits.prototype.readBook = function (totalTime) {
     this.goTo(text("首页"), -1);
 
-    if ((0,utils/* findAndClick */.Od)(text("小说"))) {
+    if ((0,utils/* findAndClick */.Od)(text("经典"))) {
       (0,utils/* randomClickChildInList */.Ef)(className("android.widget.LinearLayout").depth(23).drawingOrder(1), random(0, 3));
       this.read(totalTime);
     }
@@ -1740,7 +1737,7 @@ var YouShi = function (_super) {
       }
 
       this.openTreasure();
-      this.readBook(10 * 60);
+      this.swipeVideo(10 * 60);
     }
 
     this.reward();
@@ -1808,7 +1805,9 @@ var YouShi = function (_super) {
   YouShi.prototype.watchAds = function () {
     this.goTo(this.tab, 3);
 
-    if ((0,utils/* findAndClick */.Od)(text("领福利"))) {
+    if ((0,utils/* findAndClick */.Od)(text("领福利")), {
+      bounds: RANGE_FOUR_FIFTHS_SCREEN
+    }) {
       this.watch(text("日常任务"));
       this.returnOfWatchAds = true;
     } else {
@@ -1841,7 +1840,9 @@ var YouShi = function (_super) {
 
     this.goTo(this.tab, 3);
 
-    if ((0,utils/* findAndClick */.Od)(text("吃饭补贴"))) {
+    if ((0,utils/* findAndClick */.Od)(text("吃饭补贴")), {
+      bounds: RANGE_MIDDLE_SCREEN
+    }) {
       if ((0,utils/* findAndClick */.Od)(textMatches("领取.*补贴[0-9]+金币"))) {
         (0,utils/* doFuncUntilPopupsGone */.PI)(this.buttonNameList, {
           func: function func() {
@@ -1858,7 +1859,9 @@ var YouShi = function (_super) {
 
     this.goTo(this.tab, 3);
 
-    if ((0,utils/* findAndClick */.Od)(text("走路赚钱"))) {
+    if ((0,utils/* findAndClick */.Od)(text("走路赚钱")), {
+      bounds: RANGE_MIDDLE_SCREEN
+    }) {
       if ((0,utils/* findAndClick */.Od)(textMatches("领取[0-9]+金币"))) {
         (0,utils/* doFuncUntilPopupsGone */.PI)(this.buttonNameList, {
           func: function func() {
@@ -1875,7 +1878,9 @@ var YouShi = function (_super) {
 
     this.goTo(this.tab, 3);
 
-    if ((0,utils/* findAndClick */.Od)(text("睡觉赚钱"))) {
+    if ((0,utils/* findAndClick */.Od)(text("睡觉赚钱")), {
+      bounds: RANGE_MIDDLE_SCREEN
+    }) {
       if ((0,utils/* findAndClick */.Od)(text("我睡醒了"))) {
         if ((0,utils/* findAndClick */.Od)(textMatches("领取[0-9]+金币"))) {
           (0,utils/* doFuncUntilPopupsGone */.PI)(this.buttonNameList, {
@@ -3099,7 +3104,9 @@ var ShuQi = function (_super) {
       bounds: RANGE_FOUR_FIFTHS_SCREEN
     })) {}
 
-    if ((0,utils/* findAndClick */.Od)(text("一键收取"))) {
+    if ((0,utils/* findAndClick */.Od)(text("一键收取")), {
+      bounds: RANGE_FIXED_SCREEN
+    }) {
       (0,utils/* closeByImageMatching */.bB)();
     }
   };
@@ -3806,7 +3813,7 @@ var NAME_READ_TOMATO_FREE = "番茄免费小说";
 var PACKAGE_READ_TOMATO_FREE = "com.dragon.read";
 var NAME_READ_TOMATO_LITE = "番茄畅听音乐版";
 var PACKAGE_READ_TOMATO_LITE = "com.xs.fm.lite";
-var NAME_READ_RED_FRUITS = "红果免费短剧";
+var NAME_READ_RED_FRUITS = "番茄免费短剧";
 var PACKAGE_READ_RED_FRUITS = "com.phoenix.read";
 var NAME_READ_DEJIAN = "得间小说";
 var PACKAGE_READ_DEJIAN = "com.chaozh.iReader.dj";
@@ -3854,16 +3861,61 @@ var tikTokLite = new TikTokLite();
 var speedFree = new SpeedFree();
 var deJian = new DeJian();
 var wanChao = new WanChao();
-var list = [youShi, shuQi, starrySky, marvelFree, eggplantFree, sevenCatsFree, pandaBrain, tomato, tomatoFree, tomatoLite, redFruits, kuaiShouFree, speedFree, deJian, wanChao];
+var map = {
+  "1": youShi,
+  "2": shuQi,
+  "3": starrySky,
+  "4": marvelFree,
+  "5": eggplantFree,
+  "6": sevenCatsFree,
+  "7": pandaBrain,
+  "8": tomato,
+  "9": tomatoFree,
+  "10": tomatoLite,
+  "11": redFruits,
+  "12": kuaiShouFree,
+  "13": speedFree,
+  "14": deJian,
+  "15": wanChao
+};
 logger/* Record.info */.WV.info("加载配置");
+var _TOKEN = (_a = hamibot.env, _a._TOKEN),
+    _SHOW_CONSOLE = _a._SHOW_CONSOLE,
+    APP_ENV = _a.APP_ENV,
+    ROBOT_ID = _a.ROBOT_ID,
+    ORDER = _a.ORDER;
+var SHOW_CONSOLE = _SHOW_CONSOLE;
+var list = [];
+
+if (ORDER != undefined) {
+  logger/* Record.info */.WV.info("调整执行顺序");
+  var orderList = ORDER.split(" ");
+
+  if (orderList.length > 0) {
+    orderList = orderList.filter(function (value, index, self) {
+      return self.indexOf(value) === index;
+    });
+
+    for (var _i = 0, orderList_1 = orderList; _i < orderList_1.length; _i++) {
+      var i = orderList_1[_i];
+      var app_1 = map[i];
+      if (app_1 != undefined) list.push(app_1);
+    }
+  }
+}
+
+if (list.length != 15) {
+  for (var key in map) {
+    if (list.indexOf(map[key]) == -1) {
+      list.push(map[key]);
+    }
+  }
+}
+
 var filteredList = list.filter(function (item) {
   return hamibot.env[item.constructor.name] !== false;
 });
 logger/* Record.info */.WV.info("\u6B63\u5728\u542F\u52A8...\n\n\t\u5F53\u524D\u811A\u672C\u7248\u672C: ".concat(VERSION, "\n"));
-var _TOKEN = (_a = hamibot.env, _a._TOKEN),
-    _SHOW_CONSOLE = _a._SHOW_CONSOLE,
-    APP_ENV = _a.APP_ENV,
-    ROBOT_ID = _a.ROBOT_ID;
 
 if (APP_ENV === 'production') {
   logger/* Record.setDisplayLevel */.WV.setDisplayLevel(logger/* LogLevel.Log */["in"].Log);
@@ -3871,7 +3923,6 @@ if (APP_ENV === 'production') {
   logger/* Record.debug */.WV.debug("处于开发环境");
 }
 
-var SHOW_CONSOLE = _SHOW_CONSOLE;
 events.on("exit", function () {
   threads.shutDownAll();
   logger/* Record.info */.WV.info("结束...");
@@ -4806,7 +4857,6 @@ function defaultFormatter(line, callerName) {
 /* harmony export */   "DV": () => (/* binding */ waitRandomTime),
 /* harmony export */   "Ef": () => (/* binding */ randomClickChildInList),
 /* harmony export */   "MN": () => (/* binding */ matchAndJudge),
-/* harmony export */   "O": () => (/* binding */ toShowString),
 /* harmony export */   "Od": () => (/* binding */ findAndClick),
 /* harmony export */   "PI": () => (/* binding */ doFuncUntilPopupsGone),
 /* harmony export */   "TS": () => (/* binding */ merge),
@@ -4817,7 +4867,6 @@ function defaultFormatter(line, callerName) {
 /* harmony export */   "h3": () => (/* binding */ getScreenImage),
 /* harmony export */   "ov": () => (/* binding */ resizeY),
 /* harmony export */   "pl": () => (/* binding */ sendErrorMessage),
-/* harmony export */   "tM": () => (/* binding */ sendIncomeMessageToWxPuher),
 /* harmony export */   "vi": () => (/* binding */ moveDown),
 /* harmony export */   "vn": () => (/* binding */ randomClick),
 /* harmony export */   "w1": () => (/* binding */ convertSecondsToMinutes),
@@ -4825,7 +4874,7 @@ function defaultFormatter(line, callerName) {
 /* harmony export */   "xB": () => (/* binding */ clearBackground),
 /* harmony export */   "xv": () => (/* binding */ close)
 /* harmony export */ });
-/* unused harmony exports getTextBoundsByOcrRecognize, judgeFuncIsWorkByImg */
+/* unused harmony exports getTextBoundsByOcrRecognize, sendIncomeMessageToWxPuher, toShowString, judgeFuncIsWorkByImg */
 /* harmony import */ var _global__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(921);
 /* harmony import */ var _scripts_abstract_Base__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(290);
 /* harmony import */ var _exception__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(564);
@@ -4939,25 +4988,13 @@ function findAndClick(component, options, times) {
   }
 
   if (times >= _global__WEBPACK_IMPORTED_MODULE_0__/* .MAX_CLICK_COUNTS */ .u2) {
-    throw new _exception__WEBPACK_IMPORTED_MODULE_2__/* .ExceedMaxNumberOfAttempts */ .fx("untilGone");
+    throw new _exception__WEBPACK_IMPORTED_MODULE_2__/* .ExceedMaxNumberOfAttempts */ .fx("findAndClick");
   }
 
-  var tmp = component;
+  var bounds = scrollTo(component, options);
 
-  if (options === null || options === void 0 ? void 0 : options.searchByLeftRangeOption) {
-    tmp = searchByLeftRange(component, options === null || options === void 0 ? void 0 : options.searchByLeftRangeOption);
-  }
-
-  if (tmp.exists()) {
-    var obj = scrollTo(component, options);
-
-    if (obj != null) {
-      if (obj.text() !== "") {
-        _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.log */ .WV.log(obj.text());
-      }
-
-      randomClick(obj.bounds(), options);
-    }
+  if (bounds) {
+    randomClick(bounds, options);
 
     if (options === null || options === void 0 ? void 0 : options.untilGone) {
       findAndClick(component, options, ++times);
@@ -5034,7 +5071,12 @@ function scrollTo(sign, options, prePy, times) {
       return scrollTo(sign, options, pointY, times);
     } else {
       waitRandomTime(2);
-      return tmp;
+
+      if (tmp.text() !== "") {
+        _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.log */ .WV.log("".concat(tmp.text()));
+      }
+
+      return tmp.bounds();
     }
   }
 }
@@ -5090,9 +5132,9 @@ function doFuncUntilPopupsGone(buttonNameList, options) {
   var regex = merge(buttonNameList);
   var cycleCounts = 0;
 
-  while (++cycleCounts < _global__WEBPACK_IMPORTED_MODULE_0__/* .MAX_CYCLES_COUNTS */ .CD && (findAndClick(textMatches(regex), {
+  while (++cycleCounts < _global__WEBPACK_IMPORTED_MODULE_0__/* .MAX_CYCLES_COUNTS */ .CD && (findAndClick(textMatches(regex), options || {
     untilGone: true
-  }) || findAndClick(descMatches(regex), {
+  }) || findAndClick(descMatches(regex), options || {
     untilGone: true
   }))) {
     if (options === null || options === void 0 ? void 0 : options.func) {
@@ -5215,7 +5257,11 @@ function getStrByOcrRecognizeLimitBounds(options) {
   var img = getScreenImage(0, options === null || options === void 0 ? void 0 : options.top, device.width, options === null || options === void 0 ? void 0 : options.bottom);
   return ocr.recognizeText(img);
 }
-function getTextBoundsByOcrRecognize(str) {
+function getTextBoundsByOcrRecognize(str, show) {
+  if (show === void 0) {
+    show = false;
+  }
+
   var img = getScreenImage();
   var res = ocr.recognize(img);
 
@@ -5223,6 +5269,7 @@ function getTextBoundsByOcrRecognize(str) {
     var item = _a[_i];
 
     if (item.text.match(str)) {
+      if (show) _logger__WEBPACK_IMPORTED_MODULE_3__/* .Record.log */ .WV.log("".concat(item.text));
       return item.bounds;
     }
   }
@@ -5575,6 +5622,8 @@ var Base = function () {
     return object[key];
   };
 
+  Base.prototype.fresh = function () {};
+
   Base.prototype.signIn = function () {};
 
   Base.prototype.openTreasure = function () {};
@@ -5745,36 +5794,36 @@ var Base = __webpack_require__(290);
 
 
 init();
-main();
+test();
 
 function test() {
-  shuQi.start(60 * 60);
+  global/* youShi.start */.xE.start(120 * 60);
 }
 
 function main() {
   while (true) {
-    var runList = global/* filteredList */.C;
+    var runList = filteredList;
 
     if (runList.length == 0) {
-      throw new exception/* ConfigInvalidException */.Hm("拿我这测试了?");
+      throw new ConfigInvalidException("拿我这测试了?");
     }
 
     var startTime = new Date();
     var date = startTime.getMonth().toString() + "/" + startTime.getDate().toString();
 
-    if (date === global/* STORAGE.get */.P_.get(global/* STORAGE_DATE */.Z2)) {
+    if (date === STORAGE.get(STORAGE_DATE)) {
       var search = false;
 
-      for (var _i = 0, list_1 = global/* list */.pb; _i < list_1.length; _i++) {
+      for (var _i = 0, list_1 = list; _i < list_1.length; _i++) {
         var app_1 = list_1[_i];
 
-        if (search || app_1.constructor.name === global/* STORAGE.get */.P_.get(global/* STORAGE_APP */.mJ)) {
+        if (search || app_1.constructor.name === STORAGE.get(STORAGE_APP)) {
           var num = runList.indexOf(app_1);
 
           if (num == -1) {
             search = true;
           } else {
-            logger/* Record.info */.WV.info("继续执行剩余app");
+            LogRecord.info("继续执行剩余app");
             runList = runList.slice(num);
             break;
           }
@@ -5782,40 +5831,40 @@ function main() {
       }
     }
 
-    global/* STORAGE.put */.P_.put(global/* STORAGE_DATE */.Z2, date);
+    STORAGE.put(STORAGE_DATE, date);
     var endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate(), 23, 59, 59);
     var timeDifference = endTime.getTime() - startTime.getTime();
     var timePerMethod = timeDifference / 1000;
     var map = {};
     var sortedList = runList.slice().sort(function (a, b) {
-      return b.fetch(Base/* BaseKey.Weight */.N.Weight) - a.fetch(Base/* BaseKey.Weight */.N.Weight);
+      return b.fetch(BaseKey.Weight) - a.fetch(BaseKey.Weight);
     });
 
     for (var _a = 0, sortedList_1 = sortedList; _a < sortedList_1.length; _a++) {
       var app_2 = sortedList_1[_a];
       map[app_2.constructor.name] = 0;
-      logger/* Record.debug */.WV.debug("".concat(app_2.appName, ": ").concat(app_2.fetch(Base/* BaseKey.Weight */.N.Weight)));
+      LogRecord.debug("".concat(app_2.appName, ": ").concat(app_2.fetch(BaseKey.Weight)));
     }
 
     appTimeAllocation(map, timePerMethod, sortedList);
 
     for (var _b = 0, runList_1 = runList; _b < runList_1.length; _b++) {
       var app_3 = runList_1[_b];
-      logger/* Record.debug */.WV.debug("".concat(app_3.appName, ": ").concat((0,utils/* convertSecondsToMinutes */.w1)(map[app_3.constructor.name]), "\u5206\u949F"));
+      LogRecord.debug("".concat(app_3.appName, ": ").concat(convertSecondsToMinutes(map[app_3.constructor.name]), "\u5206\u949F"));
     }
 
     var surplus = 0;
-    logger/* Record.info */.WV.info("进入主流程");
+    LogRecord.info("进入主流程");
 
     for (var _c = 0, runList_2 = runList; _c < runList_2.length; _c++) {
       var app_4 = runList_2[_c];
-      (0,utils/* clearBackground */.xB)();
+      clearBackground();
       var executeTime = surplus + map[app_4.constructor.name];
-      app_4.store(Base/* BaseKey.Weight */.N.Weight, 0);
+      app_4.store(BaseKey.Weight, 0);
       map[app_4.constructor.name] = 0;
-      global/* STORAGE.put */.P_.put(global/* STORAGE_APP */.mJ, app_4.constructor.name);
+      STORAGE.put(STORAGE_APP, app_4.constructor.name);
       surplus = app_4.start(executeTime);
-      logger/* Record.debug */.WV.debug("surplus: ".concat(surplus));
+      LogRecord.debug("surplus: ".concat(surplus));
       var remainingAllocation = 30 * 60;
 
       for (var _d = 0, sortedList_2 = sortedList; _d < sortedList_2.length; _d++) {
@@ -5834,21 +5883,21 @@ function main() {
       }
     }
 
-    (0,utils/* clearBackground */.xB)();
-    logger/* Record.info */.WV.info("发送今日收益");
-    (0,utils/* sendIncomeMessageToWxPuher */.tM)((0,utils/* toShowString */.O)(global/* filteredList */.C));
+    clearBackground();
+    LogRecord.info("发送今日收益");
+    sendIncomeMessageToWxPuher(toShowString(filteredList));
     var doneTime = new Date();
 
     if (endTime.getTime() > doneTime.getTime()) {
       var waitTime = endTime.getTime() - doneTime.getTime();
-      logger/* Record.log */.WV.log("\u7B49\u5F85".concat((0,utils/* convertSecondsToMinutes */.w1)(waitTime / 1000 + 5), "\u5206\u949F\u5F00\u542F\u65B0\u4E00\u5929\u4EFB\u52A1"));
+      LogRecord.log("\u7B49\u5F85".concat(convertSecondsToMinutes(waitTime / 1000 + 5), "\u5206\u949F\u5F00\u542F\u65B0\u4E00\u5929\u4EFB\u52A1"));
       sleep(waitTime + 10000);
     }
   }
 }
 
 function appTimeAllocation(map, timePerMethod, sortedList) {
-  logger/* Record.info */.WV.info("分配执行时间");
+  LogRecord.info("分配执行时间");
 
   for (var _i = 0, sortedList_3 = sortedList; _i < sortedList_3.length; _i++) {
     var app_5 = sortedList_3[_i];
@@ -5864,7 +5913,7 @@ function appTimeAllocation(map, timePerMethod, sortedList) {
   for (var _a = 0, sortedList_4 = sortedList; _a < sortedList_4.length; _a++) {
     var app_6 = sortedList_4[_a];
 
-    if (app_6.medEffEstimatedTime != global/* MAX_ASSIMT_TIME */.KD) {
+    if (app_6.medEffEstimatedTime != MAX_ASSIMT_TIME) {
       timePerMethod -= app_6.medEffEstimatedTime;
 
       if (timePerMethod > 0) {
@@ -5877,13 +5926,13 @@ function appTimeAllocation(map, timePerMethod, sortedList) {
 
   var count = 1;
 
-  while (timePerMethod >= global/* BASE_ASSIMT_TIME */.IS) {
-    var time = count * global/* BASE_ASSIMT_TIME */.IS;
+  while (timePerMethod >= BASE_ASSIMT_TIME) {
+    var time = count * BASE_ASSIMT_TIME;
 
     for (var _b = 0, sortedList_5 = sortedList; _b < sortedList_5.length; _b++) {
       var app_7 = sortedList_5[_b];
 
-      if (app_7.lowEffEstimatedTime != global/* MAX_ASSIMT_TIME */.KD) {
+      if (app_7.lowEffEstimatedTime != MAX_ASSIMT_TIME) {
         var allocaTime = Math.min(time * app_7.lowEffAssmitCount, timePerMethod);
         var key = app_7.constructor.name;
         map[key] += allocaTime;
