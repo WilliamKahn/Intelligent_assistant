@@ -1,22 +1,18 @@
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, RANGE_FIXED_SCREEN, RANGE_FOUR_FIFTHS_SCREEN } from "../../global";
+import { findAndClick, fixedClick, goneClick, normalClick, scrollClick, selectedClick } from "../../common/click";
+import { doFuncAtGivenTime, merge, randomExecute, waitRandomTime } from "../../common/utils";
+import { MAX_CYCLES_COUNTS } from "../../global";
 import { functionLog, measureExecutionTime } from "../../lib/decorators";
 import { Record } from "../../lib/logger";
-import { doFuncAtGivenTime, doFuncUntilPopupsGone, findAndClick, getStrByOcrRecognizeLimitBounds, merge, normalClick, randomClickChildInList, resizeX, resizeY, waitRandomTime } from "../../lib/utils";
 import { Base, BaseKey } from "./Base";
 
 export abstract class AbstractFreeNovel extends Base {
 
     tab: UiSelector
 
-    buttonNameList:string[] = [
-        '看小视频再领.*'
-    ]
-
     constructor(packageName: string) {
         super()
         this.tab = id(packageName+":id/home_activity_navigation_bar")
-        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, BASE_ASSIMT_TIME)
-        this.medEffEstimatedTime = this.fetch(BaseKey.medEffEstimatedTime, 15 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, 15 * 60)
         this.lowEffEstimatedTime = 0
         this.lowEffAssmitCount = 2
     }
@@ -24,26 +20,24 @@ export abstract class AbstractFreeNovel extends Base {
     @measureExecutionTime
     highEff(): void {
         this.signIn()
-        this.openTreasure()
-    }
-
-    @measureExecutionTime
-    medEff(): void {
-        this.watchAds()
-        this.shopping()
-        this.luckySpin()
+        randomExecute([
+            ()=>{this.openTreasure()},
+            ()=>{this.watchAds()},
+            ()=>{this.shopping()},
+            ()=>{this.luckySpin()},
+        ])
     }
 
     @measureExecutionTime
     lowEff(time: number): void {
         //每十分钟执行一次
-        doFuncAtGivenTime(time / 2, 10 * 60,(perTime: number)=>{
+        doFuncAtGivenTime(time / 2, 30 * 60,(perTime: number)=>{
             this.readBook(perTime)
             this.openTreasure()
             return perTime
         })
         let isFirst = true
-        doFuncAtGivenTime(time / 2, 10 * 60,(perTime: number)=>{
+        doFuncAtGivenTime(time / 2, 30 * 60,(perTime: number)=>{
             if(isFirst){
                 this.listenBook()
                 isFirst = false
@@ -59,13 +53,15 @@ export abstract class AbstractFreeNovel extends Base {
     @measureExecutionTime
     weight(): void {
         this.goTo(this.tab, 2)
-        if(findAndClick(text("我的金币"), {bounds: RANGE_FIXED_SCREEN})){
+        if(scrollClick("我的金币")){
             let tmp = textStartsWith("今日金币").findOnce()
             if(tmp != null) {
                 const match = tmp.text().replace(",", "").match(/[0-9]+/)
                 if(match){
+                    const weight = parseInt(match[0])
                     Record.debug(`${this.constructor.name}:${parseInt(match[0])}`)
-                    this.store(BaseKey.Weight, parseInt(match[0]))
+                    this.store(BaseKey.Weight, weight)
+                    this.store(BaseKey.Money, (weight/10000).toFixed(2))
                 }
             }
         }
@@ -74,46 +70,25 @@ export abstract class AbstractFreeNovel extends Base {
     @functionLog("签到")
     signIn(): void {
         this.goTo(this.tab, 2)
-        doFuncUntilPopupsGone(this.buttonNameList, {
-            func: ()=>{
-                this.watch(text("日常福利"))
-            },
-            ocrRecognizeText: "看小视频再领[0-9]+金币"
-        })
+        this.watchAdsForCoin("日常福利")
     }
 
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goTo(this.tab, 2)
-        doFuncUntilPopupsGone(this.buttonNameList, {
-            func: ()=>{
-                this.watch(text("日常福利"))
-            },
-            ocrRecognizeText: "看小视频再领[0-9]+金币"
-        })
-        if (findAndClick(textMatches(merge(['开宝箱得金币', '[0-9]+分[0-9]+秒'])))) {
-            doFuncUntilPopupsGone(this.buttonNameList, {
-                func: ()=>{
-                    this.watch(text("日常福利"))
-                },
-                ocrRecognizeText: "看小视频再领[0-9]+金币"
-            })
+        this.watchAdsForCoin("日常福利")
+        //'[0-9]+分[0-9]+秒'
+        if (findAndClick('开宝箱得金币', {fixed:true, ocrRecognize:true})) {
+            this.watchAdsForCoin("日常福利")
         }
     }
 
     @functionLog("看视频")
     watchAds(): void {
         this.goTo(this.tab, 2)
-        if(findAndClick(text("去观看"), {
-            bounds: RANGE_FOUR_FIFTHS_SCREEN,
-            normalClickOptions: {waitTimes: 10},
-            untilGone: true
-        })){
+        if(scrollClick("去观看", "看小视频赚金币.*")){
             this.watch(text("日常福利"))
-            findAndClick(text("领金币"), {
-                bounds: RANGE_FOUR_FIFTHS_SCREEN,
-                untilGone: true
-            })
+            scrollClick("领金币", "看小视频赚金币.*")
         }
     }
 
@@ -122,16 +97,9 @@ export abstract class AbstractFreeNovel extends Base {
         this.goTo(this.tab, 2)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && findAndClick(text("去逛逛"), {
-                bounds: RANGE_FOUR_FIFTHS_SCREEN,
-                normalClickOptions: {waitTimes: 10},
-                untilGone: true
-            })) {
+            && scrollClick("去逛逛", "逛街赚金币.*")) {
             this.watch(text("日常福利"))
-            findAndClick(text("领金币"), {
-                bounds: RANGE_FOUR_FIFTHS_SCREEN,
-                untilGone: true
-            })
+            scrollClick("领金币", "逛街赚金币.*")
         }
     }
 
@@ -144,48 +112,62 @@ export abstract class AbstractFreeNovel extends Base {
     @functionLog("听书")
     listenBook(): void {
         this.openBook()
-        click(device.width/2, device.height/2)
-        waitRandomTime(2)
-        if(findAndClick(id(this.packageName+":id/reader_listen_entry"))){
-            if(findAndClick(text("去看小视频"))){
+        if(!id(this.packageName+":id/reader_listen_entry").exists()){
+            normalClick(device.width/2, device.height/2)
+        }
+        if(findAndClick(id(this.packageName+":id/reader_listen_entry"), {fixed:true})){
+            if(goneClick("去看小视频")){
                 this.watch(text("边听边读"))
             }
-            findAndClick(text("边听边读"))
+            fixedClick("边听边读")
         }
     }
 
     @functionLog("幸运大转盘")
     luckySpin(): void {
         this.goTo(this.tab, 2)
-        if(findAndClick(text("去抽奖"), {bounds: RANGE_FOUR_FIFTHS_SCREEN})){
-            for(let i =0; i<5 ;i++){
-                normalClick(resizeX(random(475, 610)), resizeY(random(1135, 1280)))
-                waitRandomTime(4)
-                if(i != 0){
-                    this.watch(text("幸运大转盘"))
+        if(scrollClick("去抽奖", "幸运大转盘.*")){
+            let tmp = textStartsWith("今日剩余抽奖次数").findOnce()
+            if(tmp != null){
+                const count = tmp.text().match("[0-9]+")
+                if(count){
+                    Record.debug(`${count}`)
+                    for(let i = 0;i<parseInt(count[0]);i++) {
+                        findAndClick("抽奖", {
+                            fixed:true,
+                            ocrRecognize:true,
+                            waitTimes:10,
+                            bounds:{bottom: 1656}
+                        })
+                        this.watch(text("幸运大转盘"))
+                        findAndClick("好的", {fixed:true, waitFor:true, clickUntilGone:true})
+                    }
                 }
-                waitRandomTime(10)
-                findAndClick(text("好的"))
             }
         }
     }
 
     continueListen(): void {
-        if(findAndClick(id(this.packageName+":id/voice_rl"))){
-            if(findAndClick(text("去看小视频"))){
-                this.watch(text("边听边读"))
+        if(!id(this.packageName+":id/voice_rl").exists()){
+            this.listenBook()
+        } else {
+            if(findAndClick(id(this.packageName+":id/voice_rl"))){
+                if(goneClick("去看小视频")){
+                    this.watch(text("边听边读"))
+                }
+                fixedClick("边听边读")
             }
-            findAndClick(text("边听边读"))
         }
     }
 
     openBook(): void {
         this.goTo(this.tab, 1)
-        if(findAndClick(text("完整榜单"))){
-            randomClickChildInList(
-                id(this.packageName+":id/right_content_view"),
-                random(0, 8)
-            )
+        if(selectedClick("推荐")){
+            findAndClick(id(this.packageName+":id/tv_book_one_book_title"),{
+                position:random(0, 3),
+                cover:true,
+                clickUntilGone: true,
+            })
         }
     }
 }

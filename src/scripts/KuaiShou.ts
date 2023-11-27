@@ -1,6 +1,8 @@
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_VEDIO_KUAISHOU, PACKAGE_VEDIO_KUAISHOU, RANGE_FOUR_FIFTHS_SCREEN } from "../global";
+import { findAndClick } from "../common/click";
+import { scrollTo } from "../common/search";
+import { closeByImageMatching, doFuncAtGivenTime, moveDown, resizeX, resizeY, waitRandomTime } from "../common/utils";
+import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_VEDIO_KUAISHOU, PACKAGE_VEDIO_KUAISHOU } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
-import { closeByImageMatching, doFuncAtGivenTime, doFuncUntilPopupsGone, findAndClick, moveDown, randomClickChildInList, resizeX, resizeY, scrollTo, waitRandomTime } from "../lib/utils";
 import { Base, BaseKey } from "./abstract/Base";
 
 export class KuaiShou extends Base{
@@ -48,7 +50,7 @@ export class KuaiShou extends Base{
         if(!text("日常任务").exists()){
             this.goTo(this.register, -1)
         }
-        scrollTo(text("金币收益"))
+        scrollTo("金币收益")
         let tmp = textMatches(/(\d+)/)
         .boundsInside(0, 0, resizeX(549), resizeY(429)).findOnce()
         if(tmp != null) {
@@ -61,12 +63,8 @@ export class KuaiShou extends Base{
         if(!text("日常任务").exists()){
             this.goTo(this.register, -1)
         }
-        if(findAndClick(text("立即领取"))) {
-            doFuncUntilPopupsGone(this.buttonNameList, {
-                func: () => { 
-                    // this.watchUntil()
-                }
-            })
+        if(findAndClick("立即领取")) {
+            this.watchAdsForCoin("日常任务")
             closeByImageMatching()
         }
     }
@@ -82,12 +80,8 @@ export class KuaiShou extends Base{
         if(!text("日常任务").exists()){
             this.goTo(this.register, -1)
         }
-        if(findAndClick(textMatches("立刻领[0-9]+金币"))){
-            doFuncUntilPopupsGone(this.buttonNameList, {
-                func: ()=>{
-                    // this.watchUntil()
-                }
-            })
+        if(findAndClick("立刻领[0-9]+金币")){
+            this.watchAdsForCoin("日常任务")
         }
     }
 
@@ -97,7 +91,8 @@ export class KuaiShou extends Base{
             this.goTo(this.register, -1)
         }
         let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS && findAndClick(text("领福利 赚更多")), RANGE_FOUR_FIFTHS_SCREEN){
+        while(++cycleCounts < MAX_CYCLES_COUNTS 
+            && findAndClick("领福利 赚更多")){
             // this.watchUntil()
         }
     }
@@ -107,7 +102,7 @@ export class KuaiShou extends Base{
         if(!text("日常任务").exists()){
             this.goTo(this.register, -1)
         }
-        if(findAndClick(text("去观看")), RANGE_FOUR_FIFTHS_SCREEN){
+        if(findAndClick("去观看")){
             for(let i = 0;i<6;i++){
                 let tmp = id(this.packageName+":id/recycler_view").findOnce()
                 if(tmp != null){
@@ -117,7 +112,7 @@ export class KuaiShou extends Base{
                         waitRandomTime(40)
                         back()
                         waitRandomTime(4)
-                        findAndClick(text("退出"))
+                        findAndClick("退出")
                     }
                     for(let j = 0 ;j<2;j++){
                         tmp.scrollForward()
@@ -126,8 +121,8 @@ export class KuaiShou extends Base{
                 }
             }
             this.backUntilFind(text("日常任务"))
-            if(findAndClick(text("领金币 限时领"))){
-                findAndClick(text("知道了"))
+            if(findAndClick("领金币 限时领")){
+                findAndClick("知道了")
             }
         }
     }
@@ -137,24 +132,20 @@ export class KuaiShou extends Base{
         if(!text("日常任务").exists()){
             this.goTo(this.register, -1)
         }
-        if(findAndClick(text("去领取"))){
-            if(findAndClick(text("领取饭补"))){
-                doFuncUntilPopupsGone(this.buttonNameList, {
-                    func: ()=>{
-                        // this.watchUntil()
-                    }
-                })  
+        if(findAndClick("去领取")){
+            if(findAndClick("领取饭补")){
+                this.watchAdsForCoin("日常任务")
             }
             this.backUntilFind(text("日常任务"))
         }
     }
 
-    @functionLog("领取所有奖励")
+    @functionLog("领取奖励")
     reward(): void {
         if(!text("日常任务").exists()){
             this.goTo(this.register, -1)
         }
-        findAndClick(text("领取奖励"))
+        findAndClick("领取奖励")
     }
 
 }

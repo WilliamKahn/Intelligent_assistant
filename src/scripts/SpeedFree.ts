@@ -1,6 +1,8 @@
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_SPEED_FREE, PACKAGE_READ_SPEED_FREE, RANGE_FOUR_FIFTHS_SCREEN } from "../global";
+import { findAndClick, goneClick, scrollClick } from "../common/click";
+import { scrollTo } from "../common/search";
+import { doFuncAtGivenTime, resizeX, resizeY, } from "../common/utils";
+import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_SPEED_FREE, PACKAGE_READ_SPEED_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
-import { findAndClick, merge, doFuncAtGivenTime, doFuncUntilPopupsGone, randomClickChildInList, scrollTo, waitRandomTime, normalClick, resizeX, resizeY } from "../lib/utils";
 import { Base, BaseKey } from "./abstract/Base";
 
 export class SpeedFree extends Base {
@@ -9,6 +11,8 @@ export class SpeedFree extends Base {
         '看视频再领[0-9]+金币',
         '看视频最高领[0-9]+金币'
     ]
+
+    topBar: string = ""
 
     constructor() {
         super()
@@ -34,18 +38,18 @@ export class SpeedFree extends Base {
 
     @measureExecutionTime
     lowEff(time: number): void {
-        time -= 5 * 60
         doFuncAtGivenTime(time, 10 * 60, (perTime:number) => {
             this.readBook(perTime)
             this.openTreasure()
+            this.reward()
         })
-        this.reward()
+        
     }
 
     @measureExecutionTime
     weight(): void {
         this.goTo(desc("discovery_button"), -1)
-        scrollTo(text("金币收益"))
+        scrollTo("金币收益")
         let tmp = textMatches("[0-9]+").boundsInside(0,0,resizeX(420), resizeY(432)).findOnce()
         if(tmp != null) {
             this.store(BaseKey.Weight, parseInt(tmp.text()))
@@ -55,27 +59,20 @@ export class SpeedFree extends Base {
     
     @functionLog("签到")
     signIn(): void{
+        //每日签到 签到
         this.goTo(desc("discovery_button"), -1)
-        if (findAndClick(textStartsWith("立即签到"))) {
-            doFuncUntilPopupsGone(this.buttonNameList, {
-                func: ()=>{
-                    this.watch(text("日常福利"))
-                }
-            })
-            findAndClick(text("我知道了"))
+        if (scrollClick("立即签到.+")) {
+            this.watchAdsForCoin("日常福利")
+            goneClick("我知道了")
         }
     }
 
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goTo(desc("discovery_button"), -1)
-        if(findAndClick(text("开宝箱得金币"))) {
-            doFuncUntilPopupsGone(this.buttonNameList, {
-                func: ()=>{
-                    this.watch(text("日常福利"))
-                }
-            })
-            findAndClick(text("我知道了"))
+        if(goneClick("开宝箱得金币")) {
+            this.watchAdsForCoin("日常福利")
+            goneClick("我知道了")
         }
     }
 
@@ -84,77 +81,59 @@ export class SpeedFree extends Base {
         this.goTo(desc("discovery_button"), -1)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && findAndClick(text("去观看"), {bounds: RANGE_FOUR_FIFTHS_SCREEN})){
+            && scrollClick("去观看", "看视频赚金币")){
             this.watch(text("日常福利"))
-            doFuncUntilPopupsGone(this.buttonNameList, {
-                func: ()=>{
-                    this.watch(text("日常福利"))
-                }
-            })
-            findAndClick(text("我知道了"))
+            this.watchAdsForCoin("日常福利")
+            goneClick("我知道了")
         }
     }
 
     @functionLog("阅读")
     readBook(totalTime: number): void {
         this.goTo(desc("bookstore_button"), -1)
-        normalClick(resizeX(320), resizeY(400))
-        randomClickChildInList(
-            classNameMatches(merge([
-                "android.support.v7.widget.RecyclerView",
-                "android.view.ViewGroup"
-        ])).depth(17).drawingOrder(1),
-            random(0, 7)
-        )
-        this.read(totalTime)
+        let tmp = id("com.dj.speed:id/channel_tab").findOnce()
+        if(tmp != null && findAndClick("推荐",
+        {fixed:true, ocrRecognize:true, bounds:tmp.bounds()})){
+            if(findAndClick(id("com.zhangyue.iReader.bookStore:id/iv_book"), {fixed:true})){
+                this.read(totalTime)
+            }
+        }
     }
     
     @functionLog("听书")
     listenBook(): void {
         this.goTo(desc("bookstore_button"), -1)
-        normalClick(resizeX(750), resizeY(385))
-        randomClickChildInList(
-            className("android.view.ViewGroup").depth(16).drawingOrder(2)
-            .boundsInside(resizeX(36),resizeY(648),resizeX(1044), resizeY(1037)), 
-            random(0, 3))
-        if(findAndClick(text("立即收听"))){
-            if(findAndClick(text("看视频"))){
-                this.watch(id("com.zhangyue.iReader.bookStore:id/listen_add_bk_tv"))
+        let tmp = id("com.dj.speed:id/channel_tab").findOnce()
+        if(tmp!=null && findAndClick("听书",
+        {fixed:true, ocrRecognize:true, bounds: tmp.bounds()})){
+            if(findAndClick(id("com.zhangyue.iReader.bookStore:id/id_audition_btn"))){
+                if(goneClick("看视频")){
+                    this.watch(desc("bookstore_button"))
+                }
             }
-            back()
-            waitRandomTime(4)
         }
-        back()
     }
 
     @functionLog("领饭补")
     mealSupp(): void {
         this.goTo(desc("discovery_button"), -1)
-        if(findAndClick(text("立即领取"), {
-            searchByLeftRangeOption: text("吃饭赚钱"),
-            bounds: RANGE_FOUR_FIFTHS_SCREEN
-        })) {
-            doFuncUntilPopupsGone(this.buttonNameList, {
-                func: ()=>{
-                    this.watch(text("日常福利"))
-                }
-            })
-            findAndClick(text("我知道了"))
+        if(scrollClick("立即领取", "吃饭赚钱")) {
+            this.watchAdsForCoin("日常福利")
+            goneClick("我知道了")
         }
     }
 
-    @functionLog("领取所有奖励")
+    @functionLog("领取奖励")
     reward(): void {
         this.goTo(desc("discovery_button"), -1)
         let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && findAndClick(text("领取"), {bounds: RANGE_FOUR_FIFTHS_SCREEN})) {
-            doFuncUntilPopupsGone(this.buttonNameList, {
-                func: ()=>{
-                    this.watch(text("日常福利"))
-                }
-            })
-            findAndClick(text("我知道了"))
+        let list = ["阅读赚海量金币", "听书赚海量金币"]
+        for(let range of list){
+            while(++cycleCounts < MAX_CYCLES_COUNTS
+                && scrollClick("领取", range)) {
+                this.watchAdsForCoin("日常福利")
+                goneClick("我知道了")
+            }
         }
     }
 }

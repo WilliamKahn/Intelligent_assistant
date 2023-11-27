@@ -1,3 +1,5 @@
+import { APP_ENV } from "../global";
+
 /*
  * @Author: BATU1579
  * @CreateDate: 2022-02-05 04:00:16
@@ -642,7 +644,7 @@ export class Record {
     private static recLog(scheme: LoggerScheme, config: LogRecordConfig, logMessage?: string): string {
         // TODO(BATU1579): 自定义日志格式
         let detailMessage = `[${scheme.displayName}] [${getCallerName(config.skipCallerNumber)}]: ${logMessage}`;
-        let showMessage = `${logMessage}`;
+        let showMessage = APP_ENV === "production" ? `${logMessage}`:`[${getCallerName(config.skipCallerNumber)}]: ${logMessage}`;
         // 向日志堆栈中添加数据
         let needRecord = config.needRecord ?? scheme.needRecord ?? true;
         if (needRecord && scheme.level >= Record.RECORD_LEVEL) {

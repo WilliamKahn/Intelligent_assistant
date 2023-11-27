@@ -6,25 +6,26 @@
  * @FilePath: \\src\\index.ts
  * @Description: 脚本入口
  */
-import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, RANGE_FOUR_FIFTHS_SCREEN, RANGE_MIDDLE_SCREEN, STORAGE, STORAGE_APP, STORAGE_DATE, deJian, eggplantFree, filteredList, kuaiShouFree, list, marvelFree, pandaBrain, redFruits, sevenCatsFree, shuQi, speedFree, starrySky, tomato, tomatoFree, tomatoLite, wanChao, youShi } from "./global";
-import { clearBackground, closeByImageMatching, convertSecondsToMinutes, doFuncUntilPopupsGone, findAndClick, getScreenImage, getStrByOcrRecognizeLimitBounds, getTextBoundsByOcrRecognize, normalClick, resizeX, resizeY, scrollTo, sendErrorMessage, sendIncomeMessageToWxPuher, toShowString } from "./lib/utils";
+import { findAndClick } from "./common/click";
+import { sendIncomeMessageToWxPuher, toShowString } from "./common/report";
+import { clearBackground, closeByImageMatching, convertSecondsToMinutes } from "./common/utils";
+import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, STORAGE, STORAGE_APP, STORAGE_DATE, filteredList, redFruits, starrySky, tomatoLite } from "./global";
+import { ConfigInvalidException } from "./lib/exception";
 import { init } from "./lib/init";
 import { Record as LogRecord } from "./lib/logger";
-import { ConfigInvalidException } from "./lib/exception";
 import { BaseKey } from "./scripts/abstract/Base";
 
 init()
 
 test()
 // main()
-
 function test() {
-    youShi.start(120 * 60)
-    // for(let app of list){
+    // for(let app of list){ 1536 0.05
     //     log(`${app.appName}: ${app.fetch(BaseKey.Weight)}`)
-    // }
-    //STORAGE.put(STORAGE_APP, "DeJian")
-    //shuQi.weight()
+    // }34 248
+    redFruits.readBook(30 * 60)
+
+    hamibot.exit()
 }
 
 function main() {
@@ -39,19 +40,12 @@ function main() {
         const date = startTime.getMonth().toString()+"/"+startTime.getDate().toString()
         //断开重连
         if(date === STORAGE.get(STORAGE_DATE)){
-            let search = false
-            for(let app of list){
-                //肯定查找到
-                if(search || app.constructor.name === STORAGE.get(STORAGE_APP)){
-                    let num = runList.indexOf(app)
-                    if(num == -1){
-                        search = true
-                    } else {
-                        LogRecord.info("继续执行剩余app")
-                        runList = runList.slice(num)
-                        break
-                    }
-                }
+            runList = runList.filter(
+                app => app.fetch(BaseKey.Executed, false) === false
+            )
+        } else {
+            for(let app of runList){
+                app.store(BaseKey.Executed, false)
             }
         }
         STORAGE.put(STORAGE_DATE, date)
@@ -67,12 +61,12 @@ function main() {
         const sortedList = runList.slice().sort((a,b) => b.fetch(BaseKey.Weight) - a.fetch(BaseKey.Weight))
         for (let app of sortedList) {
             map[app.constructor.name] = 0
-            LogRecord.debug(`${app.appName}: ${app.fetch(BaseKey.Weight)}`)
+            //LogRecord.debug(`${app.appName}: ${app.fetch(BaseKey.Weight)}`)
         }
         //时间分配算法
         appTimeAllocation(map, timePerMethod, sortedList)
         for(let app of runList){
-            LogRecord.debug(`${app.appName}: ${convertSecondsToMinutes(map[app.constructor.name])}分钟`)
+            LogRecord.log(`${app.appName}: ${convertSecondsToMinutes(map[app.constructor.name])}分钟`)
         }
         
         //前一个app剩余时间
@@ -89,6 +83,8 @@ function main() {
             //执行流程
             STORAGE.put(STORAGE_APP, app.constructor.name)
             surplus = app.start(executeTime)
+            //代表app已执行
+            app.store(BaseKey.Executed, true)
             LogRecord.debug(`surplus: ${surplus}`)
             //surplus分配算法
             let remainingAllocation = 30 * 60
@@ -110,8 +106,8 @@ function main() {
         const doneTime = new Date();
         if(endTime.getTime() > doneTime.getTime()) {
             const waitTime = (endTime.getTime() - doneTime.getTime())
-            LogRecord.log(`等待${convertSecondsToMinutes(waitTime/1000 + 5)}分钟开启新一天任务`)
-            sleep(waitTime + 10000)
+            LogRecord.log(`等待${convertSecondsToMinutes(waitTime/1000 + 1)}分钟开启新一天任务`)
+            sleep(waitTime + 60 * 1000)
         }
     }
 }

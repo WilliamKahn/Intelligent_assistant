@@ -1,7 +1,9 @@
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_VEDIO_KUAISHOU_LITE, PACKAGE_VEDIO_KUAISHOU_LITE, RANGE_FIXED_SCREEN, RANGE_MIDDLE_SCREEN } from "../global";
-import { Base, BaseKey } from "./abstract/Base";
-import { findAndClick, doFuncUntilPopupsGone, moveDown, scrollTo, closeByImageMatching, doFuncAtGivenTime, waitRandomTime } from "../lib/utils";
+import { findAndClick } from "../common/click";
+import { scrollTo } from "../common/search";
+import { closeByImageMatching, doFuncAtGivenTime, moveDown } from "../common/utils";
+import { BASE_ASSIMT_TIME, NAME_VEDIO_KUAISHOU_LITE, PACKAGE_VEDIO_KUAISHOU_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
+import { Base, BaseKey } from "./abstract/Base";
 
 export class KuaiShouLite extends Base{
 
@@ -55,11 +57,7 @@ export class KuaiShouLite extends Base{
     signIn(): void {
         this.goTo(this.tab, 2)
         if(findAndClick(text("立即领取"))) {
-            doFuncUntilPopupsGone(this.buttonNameList, {
-                func: () => { 
-                    // this.watchUntil()
-                }
-            })
+            this.watchAdsForCoin("日常福利")
             closeByImageMatching()
         }
     }
@@ -67,7 +65,7 @@ export class KuaiShouLite extends Base{
     @functionLog("看广告")
     watchAds(): void {
         this.goTo(this.tab, 2)
-        scrollTo(text("日常任务"), {bounds: RANGE_MIDDLE_SCREEN})
+        scrollTo("日常任务")
         // let before = this.record()
         // back()
         // waitRandomTime(4)
@@ -95,26 +93,18 @@ export class KuaiShouLite extends Base{
     openTreasure(): void {
         this.goTo(this.tab, 2)
         if(text("恭喜你获得").exists()){
-            doFuncUntilPopupsGone(this.buttonNameList, {
-                func: () => { 
-                    // this.watchUntil()
-                }
-            })
+            this.watchAdsForCoin("日常福利")
         }
         if(findAndClick(text("开宝箱得金币"))) {
             if(text("恭喜你获得").exists()){
-                doFuncUntilPopupsGone(this.buttonNameList, {
-                    func: () => { 
-                        // this.watchUntil()
-                    }
-                })
+                this.watchAdsForCoin("日常福利")
             }
         }
     }
 
     record(): number {
         this.goTo(this.tab, 2)
-        if(findAndClick(text("我的金币"), {bounds: RANGE_FIXED_SCREEN})){
+        if(findAndClick(text("我的金币"))){
             let tmp = textEndsWith("金币").findOnce()
             if(tmp != null){
                 return parseInt(tmp.text())

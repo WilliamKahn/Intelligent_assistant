@@ -1,7 +1,7 @@
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_SHUQI, PACKAGE_READ_SHUQI, RANGE_FIXED_SCREEN, RANGE_FOUR_FIFTHS_SCREEN } from "../global";
+import { findAndClick, goneClick, scrollClick, selectedClick } from "../common/click";
+import { closeByImageMatching, doFuncAtGivenTime, } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_READ_SHUQI, PACKAGE_READ_SHUQI } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
-import { Record } from "../lib/logger";
-import { findAndClick, closeByImageMatching, doFuncUntilPopupsGone, randomClickChildInList, resizeX, resizeY } from "../lib/utils";
 import { Base, BaseKey } from "./abstract/Base";
 
 export class ShuQi extends Base{
@@ -14,45 +14,45 @@ export class ShuQi extends Base{
         this.packageName = PACKAGE_READ_SHUQI
         this.tab = id("android:id/tabs")
         this.exitNum = 0
-        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, BASE_ASSIMT_TIME)
-        this.medEffEstimatedTime = this.fetch(BaseKey.medEffEstimatedTime, 10 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, 15 * 60)
         this.lowEffEstimatedTime = 0
     }
 
     @measureExecutionTime
     highEff(): void {
-        closeByImageMatching()
         this.signIn()
-        this.coin = this.record()
-    }
-    @measureExecutionTime
-    medEff(): void {
         this.watchAds()
         this.reward()
     }
     @measureExecutionTime
     lowEff(time: number): void {
-        time -= 3 * 60
-        this.readBook(time)
-        this.reward()
+        doFuncAtGivenTime(time, 20 * 60, (perTime:number) => {
+            this.readBook(perTime)
+            this.reward()
+        })
     }
     @measureExecutionTime
     weight(): void {
-        let cCoin = this.record()
-        Record.debug(`${cCoin}`)
-        this.store(BaseKey.Weight, cCoin -this.coin)
+        this.goTo(this.tab, 4)
+        let tmp = id(this.packageName+":id/account_worth_money").findOnce()
+        if(tmp != null){
+            const weight = parseInt(tmp.text())
+            this.store(BaseKey.Weight, weight)
+            this.store(BaseKey.Money, (weight/10000).toFixed(2))
+        }
     }
 
     @functionLog("签到")
     signIn(): void {
         this.goTo(this.tab, 2)
-        if(findAndClick(text("立即签到"))){
-            doFuncUntilPopupsGone(['看视频领取[0-9]+金币'], {
-                func: ()=>{
-                    this.watch(text("做任务 赚金币"))
-                }
-            })
+        if(goneClick("立即签到")){
             closeByImageMatching()
+        } else {
+            if(scrollClick("去签到", "每日签到")){
+                if(goneClick("立即签到")){
+                    closeByImageMatching()    
+                }
+            }
         }
     }
 
@@ -61,7 +61,7 @@ export class ShuQi extends Base{
         this.goTo(this.tab, 2)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && findAndClick(text("去观看"), {bounds: RANGE_FOUR_FIFTHS_SCREEN})){
+            && scrollClick("去观看", "看视频赚[0-9]+金币")){
             this.watch(text("做任务 赚金币"))
         }
     }
@@ -69,34 +69,23 @@ export class ShuQi extends Base{
     @functionLog("阅读")
     readBook(totalTime: number): void {
         this.goTo(this.tab, 1)
-        if(findAndClick(text("完整榜单"))){
-            randomClickChildInList(
-                id(this.packageName+":id/rank_book_recycle_view"),
-                random(0, 6)
-            )
-            this.read(totalTime)
+        if(selectedClick("推荐")){
+            if(findAndClick(id(this.packageName+":id/tpl_book_name"), {
+                position:random(0,7),
+                cover:true
+            })){
+                this.read(totalTime)
+            }
         }
     }
 
-    @functionLog("领取所有奖励")
+    @functionLog("领取奖励")
     reward(): void {
         this.goTo(this.tab, 2)
-        let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && findAndClick(text("领取奖励"), {bounds:RANGE_FOUR_FIFTHS_SCREEN})) {
-        }
-        if(findAndClick(text("一键收取")),{bounds:RANGE_FIXED_SCREEN}){
+        if(scrollClick("(一键|加倍)收取")){
+            this.watchAdsForCoin("做任务 赚金币")
+            goneClick("领取加倍奖励")
             closeByImageMatching()
         }
-    }
-
-    record(): number{
-        this.goTo(this.tab, 2)
-        let tmp = textMatches("[0-9]+金币.*").boundsInside(0,0,resizeX(500),resizeY(500)).findOnce()
-        if(tmp != null) {
-            Record.debug(`${tmp.text()}`)
-            return parseInt(tmp.text())
-        }
-        return 0    
     }
 }

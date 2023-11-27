@@ -1,7 +1,8 @@
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_WANCHAO, PACKAGE_READ_WANCHAO, RANGE_FIXED_SCREEN } from "../global";
+import { findAndClick, goneClick } from "../common/click";
+import { getScreenImage, resizeX, resizeY, waitRandomTime } from "../common/utils";
+import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_WANCHAO, PACKAGE_READ_WANCHAO } from "../global";
 import { measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
-import { findAndClick, getScreenImage, isGrayColor, resizeX, resizeY, waitRandomTime } from "../lib/utils";
 import { Base, BaseKey } from "./abstract/Base";
 
 export class WanChao extends Base {
@@ -24,32 +25,29 @@ export class WanChao extends Base {
 
     //阅读有礼
     readForMoney(): void {
-        if (findAndClick(text("阅读有礼"))) {
+        if (findAndClick("阅读有礼")) {
             let cycleCounts = 0
             while (++cycleCounts < MAX_CYCLES_COUNTS && text("请完成安全验证").exists()) {
                 this.overDetection()
                 waitRandomTime(4)
             }
-            let avoid = text("抽奖").findOnce()?.parent()
-            if(avoid != null) {
-                let cycleCounts = 0
-                while(++cycleCounts < MAX_CYCLES_COUNTS 
-                    && findAndClick(text("待完成"), {bounds: RANGE_FIXED_SCREEN, avoid: avoid})) {
+            while(++cycleCounts < MAX_CYCLES_COUNTS 
+                && findAndClick("待完成", {waitTimes:10})) {
+                back()
+                waitRandomTime(4)
+            }
+            if(goneClick("抽奖")){
+                let box = idContains('nc_1_n1z').findOnce()
+                if(box != null) {
+                    swipe(box.bounds().centerX(), box.bounds().centerY(), device.width,box.bounds().centerY()+random(-25,0), 100)
                     waitRandomTime(3)
-                    back()
-                    waitRandomTime(4)
                 }
-            }
-            findAndClick(text("抽奖"))
-            let box = idContains('nc_1_n1z').findOnce()
-            if(box != null) {
-                swipe(box.bounds().centerX(), box.bounds().centerY(), device.width,box.bounds().centerY()+random(-25,0), 100)
-                waitRandomTime(3)
-            }
-            if(findAndClick(className("android.view.View").depth(13).drawingOrder(0).boundsInside(350,550,700,900))){
-                let money = textMatches("[0-9]+\.[0-9]+元").boundsInside(resizeX(108),resizeY(1140),resizeX(972),resizeY(1323)).findOnce() 
-                if(money != null) {
-                    Record.log(`中奖${money.text()}`)
+                if(findAndClick("抽奖", {ocrRecognize:true, bounds:{top:200}})){
+                    let money = textMatches("[0-9]+\.[0-9]+元")
+                    .boundsInside(resizeX(108),resizeY(1140),resizeX(972),resizeY(1323)).findOnce()
+                    if(money != null) {
+                        Record.log(`中奖${money.text()}`)
+                    }
                 }
             }
         }
@@ -79,7 +77,7 @@ export class WanChao extends Base {
                 let red = colors.red(color)
                 let green = colors.green(color);
                 let blue = colors.blue(color)
-                t += isGrayColor(red, green, blue)
+                t += this.isGrayColor(red, green, blue)
             }
             //记录区域范围内最小值
             if(t<min){
@@ -93,6 +91,19 @@ export class WanChao extends Base {
             let centerY = (slideBox.bounds().top + slideBox.bounds().bottom)/2
             //149
             gesture(2000, [centerX, centerY], [centerX + index - 149, centerY + random(-50, 50)])
-        }        
+        }
+        img.recycle()
+    }
+
+    /**
+     * @description 用于计算图片灰度，判断滑块
+     */
+    isGrayColor(red:number, green:number, blue:number): number {
+    // 计算RGB通道值的标准差
+        if((red+green+blue)>200 && (red+green+blue)< 500) {
+            return Math.sqrt((Math.pow(red - green, 2) + Math.pow(red - blue, 2) + Math.pow(green - blue, 2)) / 3);
+        } else {
+            return 100
+        }
     }
 }

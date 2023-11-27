@@ -1,8 +1,9 @@
+import { sendErrorMessage } from "../common/report";
+import { clearBackground, convertSecondsToMinutes, waitRandomTime } from "../common/utils";
 import { MAX_RETRY_COUNTS, REDUNDANCY_TIME } from "../global";
 import { BaseKey } from "../scripts/abstract/Base";
 import { ExceedMaxNumberOfAttempts, isCurrentAppBanned } from "./exception";
-import { LOG_STACK, Record } from "./logger";
-import { clearBackground, convertSecondsToMinutes, sendErrorMessage, waitRandomTime } from "./utils";
+import { Record } from "./logger";
 
 /**
  * @description 方法日志
@@ -10,17 +11,28 @@ import { clearBackground, convertSecondsToMinutes, sendErrorMessage, waitRandomT
  * @returns 
  */
 export function functionLog(message: string) {
-    return function (_: any, key: string, descriptor: PropertyDescriptor) {
+    return function (target: any, key: string, descriptor: PropertyDescriptor) {
       const originalMethod = descriptor.value;
+      let isEnabled = true
       
       descriptor.value = function (...args: any[]) {
-        const instance = this as any;
-        waitRandomTime(4)
-        Record.info(`执行下一步任务：${message}`)
         let startTime = new Date();
         try {
-          originalMethod.apply(this, args);
+          if(isEnabled){
+            waitRandomTime(4)
+            Record.info(`执行下一步任务：${message}`)
+            const result = originalMethod.apply(this, args)
+            if(result === false){
+              isEnabled = false
+            }
+            return result
+          }
         } catch (error) {
+          Record.debug(`${error}`)
+          if(isCurrentAppBanned(error)){
+            throw error
+          }
+          const instance = this as any;
           let retries = 1;
           while (retries < MAX_RETRY_COUNTS) {
             if(key === "readBook" || key === "swipeVideo") {
@@ -35,11 +47,19 @@ export function functionLog(message: string) {
               startTime = new Date()
               clearBackground()
               if(instance.lauchApp()){
-                instance.clear()
-                originalMethod.apply(this, args)
+                waitRandomTime(4)
+                Record.info(`执行下一步任务：${message}`)
+                instance.reset()
+                const result = originalMethod.apply(this, args)
+                if(result === false){
+                  isEnabled = false
+                }
+                return result
               }
               break
             } catch (error) {
+              Record.error(`${error}`)
+              sendErrorMessage()
               retries++
             }
           }
@@ -48,9 +68,12 @@ export function functionLog(message: string) {
             throw new ExceedMaxNumberOfAttempts(key)
           }
         }
-        
-        Record.info(`${message}任务结束`)
-      };
+      }
+      if(key === "watchAds") {
+        target[`enable${key}`] = function () {
+          isEnabled = true
+        }
+      }
       return descriptor;
     };
 }
@@ -82,6 +105,7 @@ export function measureExecutionTime(_: any, key: string, descriptor: PropertyDe
         instance.medEffEstimatedTime = time
         instance.store(BaseKey.medEffEstimatedTime, time)
       }
+      
       return executionTime;
     }
     return descriptor;
@@ -102,14 +126,17 @@ export function startDecorator(_: any, __: string, descriptor: PropertyDescripto
       try{
         originalMethod.apply(this, args)
       }catch(e) {
-        Record.error(`当前app发生异常: ${e}`)
-        sendErrorMessage()
+        if(isCurrentAppBanned(e)){
+          Record.error(`账号异常`)
+        } else {
+          Record.error(`当前app发生异常: ${e}`)
+          sendErrorMessage()
+        }
       }
       const endTime = new Date();
       const executionTime = (endTime.getTime() - startTime.getTime())/1000;
       Record.info("即将执行下一个app")
       Record.debug(`剩余${convertSecondsToMinutes(args[0] - executionTime)}分钟`)
-      LOG_STACK.clear()
       //返回剩余时间
       return args[0] - executionTime
     }

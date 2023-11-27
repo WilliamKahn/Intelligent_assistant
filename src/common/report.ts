@@ -1,0 +1,61 @@
+import { APP_TOKEN, ROBOT_ID, WX_PUSHER_URL, _TOKEN } from "../global";
+import { LOG_STACK, LogLevel, Record } from "../lib/logger";
+import { BaseKey } from "../scripts/abstract/Base";
+import { getScreenImage } from "./utils";
+
+export function sendIncomeMessageToWxPuher(str: string){
+    if (_TOKEN && _TOKEN !== "") {
+        let res = http.postJson(WX_PUSHER_URL, {
+            "appToken":APP_TOKEN,
+            "content":str,
+            "summary":"智能助手日收益推送",
+            "contentType":3,
+            "uids":[
+                _TOKEN
+            ],
+            "verifyPay":false
+        })
+        return res.statusCode === 200;        
+    }
+}
+
+export function toShowString(list: any[]){
+    let stack: string[] = [`id: ${ROBOT_ID}\n`]
+    let sumWeight = 0
+    let sumMoney = 0
+    for (let app of list) {
+        let weight:number = parseInt(app.fetch(BaseKey.Weight, 0))
+        let money:number = parseFloat(app.fetch(BaseKey.Money, 0))
+        Record.debug(`${app.appName}: ${weight}`)
+        sumWeight += weight
+        sumMoney += money
+        stack.push(`${app.appName}: ${weight} - - - ${money}元`)
+    }
+    stack.push(`\n今日总收益: ${sumWeight}金币 - - - ${sumMoney.toFixed(2)}元`)
+    return stack.join('\n')
+}
+
+export function sendErrorMessage(){
+    let collection = LOG_STACK
+    // .filter((frame) => {
+    //     return frame.getLevel() >= LogLevel.Info;
+    // });
+    const img = getScreenImage()
+    hamibot.postMessage(Date.now().toString(), {
+        telemetry: true,
+        data: {
+          title: 'error',
+          attachments: [
+            // 支持 text, json, image 三种类型，根据实际需要选择使用
+            {
+              type: 'text',
+              data: collection.toString(),
+            },
+            {
+              type: 'image',
+              data: images.toBase64(img), // base64
+            },
+          ],
+        },
+      });
+}

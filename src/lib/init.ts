@@ -6,10 +6,11 @@
  * @FilePath: \\src\\lib\\init.ts
  * @Description: 脚本初始化
  */
-import { Record } from "./logger";
-import { PermissionException, ServiceNotEnabled } from "./exception";
-import { waitRandomTime } from "./utils";
+import { randomClick } from "../common/click";
+import { waitRandomTime } from "../common/utils";
 import { SHOW_CONSOLE } from "../global";
+import { PermissionException, ServiceNotEnabled } from "./exception";
+import { Record } from "./logger";
 
 export function init() {
     // check accessibility permission
@@ -32,6 +33,16 @@ export function init() {
         Record.debug("分辨率: " + device.height + " x " + device.width);
     }
 
+    threads.start(function () {
+        // @ts-ignore
+        let pattern =".?立即开始.?|.?允许.?";
+        let tmp = className("android.widget.Button").textMatches(pattern).findOne(5000)
+        if(tmp != null){
+            waitRandomTime(1)
+            randomClick(tmp.bounds())
+        }
+    })
+
     if (!requestScreenCapture()) {
         throw new PermissionException("Accessibility permission obtaining failure.");
     } else {
@@ -39,11 +50,12 @@ export function init() {
     }
 
     // download resource
-    if (!files.exists("/sdcard/exit-white.jpg")){
+    if (!files.exists("/sdcard/exit.png")){
         Record.debug("正在加载资源")
-        let img = images.load("https://hamibot-1304500632.cos.ap-nanjing.myqcloud.com/exit-white.jpg")
+        let img = images.load("https://hamibot-1304500632.cos.ap-nanjing.myqcloud.com/exit.png")
         if(img != null){
-            img.saveTo("/sdcard/exit-white.jpg")
+            img.saveTo("/sdcard/exit.png")
+            img.recycle()
         }
     }
     device.keepScreenOn(3600 * 1000)

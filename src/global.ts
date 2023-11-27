@@ -7,27 +7,27 @@
  * @Description: 全局常量和配置项验证
  */
 
+import { waitRandomTime } from "./common/utils";
 import { ConfigInvalidException } from "./lib/exception";
-import { LogLevel, LOG_STACK, Record as LogRecord, sendLog, setToken } from "./lib/logger";
-import { Bounds, resizeX, resizeY, waitRandomTime } from "./lib/utils";
+import { LogLevel, Record as LogRecord, setToken } from "./lib/logger";
 import { DeJian } from "./scripts/DeJian";
+import { EggplantFree } from "./scripts/EggplantFree";
+import { KuaiShou } from "./scripts/KuaiShou";
+import { KuaiShouFree } from "./scripts/KuaiShouFree";
 import { KuaiShouLite } from "./scripts/KuaiShouLite";
+import { MarvelFree } from "./scripts/MarvelFree";
+import { PandaBrain } from "./scripts/PandaBrain";
 import { RedFruits } from "./scripts/RedFruits";
+import { SevenCatsFree } from "./scripts/SevenCatsFree";
+import { ShuQi } from "./scripts/ShuQi";
+import { SpeedFree } from "./scripts/SpeedFree";
+import { StarrySky } from "./scripts/StarrySky";
+import { TikTokLite } from "./scripts/TikTokLite";
 import { Tomato } from "./scripts/Tomato";
 import { TomatoFree } from "./scripts/TomatoFree";
 import { TomatoLite } from "./scripts/TomatoLite";
 import { WanChao } from "./scripts/WanChao";
 import { YouShi } from "./scripts/YouShi";
-import { StarrySky } from "./scripts/StarrySky";
-import { EggplantFree } from "./scripts/EggplantFree";
-import { PandaBrain } from "./scripts/PandaBrain";
-import { SpeedFree } from "./scripts/SpeedFree";
-import { MarvelFree } from "./scripts/MarvelFree";
-import { SevenCatsFree } from "./scripts/SevenCatsFree";
-import { ShuQi } from "./scripts/ShuQi";
-import { KuaiShouFree } from "./scripts/KuaiShouFree";
-import { KuaiShou } from "./scripts/KuaiShou";
-import { TikTokLite} from "./scripts/TikTokLite";
 
 
 //*******************全局常量****************************/
@@ -36,7 +36,7 @@ export const PROJECT_NAME = "智能助手"
 /**
  * @description: 脚本版本号。建议根据 [语义化版本号] 迭代
  */
-export const VERSION = "0.2.4";
+export const VERSION = "0.3.0";
 
 // export const LISTENER_INTERVAL = 100
 // export const EVENT = events.emitter()
@@ -52,7 +52,7 @@ export const MAX_CLICK_COUNTS = 8
 //最大重启app次数
 export const MAX_RETRY_COUNTS = 3
 //点击后等待时间，单位s
-export const WAIT_TIME_AFTER_CLICK = 4
+export const WAIT_TIME_AFTER_CLICK = 6
 //最大循环次数
 export const MAX_CYCLES_COUNTS = 25
 //时间分配之冗余时间
@@ -67,26 +67,15 @@ export const MAX_ASSIMT_TIME = 24 * 60 * 60
 export const STORAGE_APP = "app"
 //中止日期（月/日）
 export const STORAGE_DATE = "date"
-//存储名称
-export const STORAGE_WEIGHT_CONTAINER = "YWfjbEVp29"
+//不记录运行时间
+export const STORAGE_NO_RECORD = "noRecord"
+//存储名称29
+export const STORAGE_WEIGHT_CONTAINER = "YWfjbEVp31" 
 //存储
 export const STORAGE = storages.create(STORAGE_WEIGHT_CONTAINER);
 //基于设备分辨率
 export const DEVICE_WIDTH = 1080
 export const DEVICE_HEIGHT = 2340
-//点击滑动范围
-export const RANGE_MIDDLE_SCREEN: Bounds = {
-    top: device.height * 1 / 3,
-    bottom: device.height * 2 / 3
-}
-export const RANGE_FOUR_FIFTHS_SCREEN: Bounds = {
-    top: device.height * 1 / 5,
-    bottom: device.height * 4 / 5
-}
-export const RANGE_FIXED_SCREEN: Bounds = {
-    top: resizeX(200),
-    bottom: resizeY(2140)
-}
 
 //脚本包名
 export const NAME_READ_TOMATO = "番茄畅听"
@@ -165,7 +154,7 @@ export const tomato = new Tomato()
 export const tomatoFree = new TomatoFree()
 //番茄极速  常黑了
 export const tomatoLite = new TomatoLite()
-//红果
+//番茄免费短剧
 export const redFruits = new RedFruits()
 
 //快手免费小说
@@ -248,7 +237,6 @@ if(APP_ENV === 'production'){
     LogRecord.debug("处于开发环境")
 }
 // -------------------- register listener -----------------------
-
 // register exit listener
 events.on("exit", () => {
     threads.shutDownAll()
@@ -256,6 +244,7 @@ events.on("exit", () => {
     waitRandomTime(5)
     console.hide()
 });
+
 
 // ------------------------ validation --------------------------
 

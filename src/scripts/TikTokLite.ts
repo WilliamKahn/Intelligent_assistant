@@ -1,6 +1,8 @@
+import { findAndClick, normalClick, randomClick } from "../common/click";
+import { scrollTo } from "../common/search";
+import { doFuncAtGivenTime, moveDown, resizeX, resizeY, } from "../common/utils";
 import { NAME_VEDIO_TIKTOK_LITE, PACKAGE_VEDIO_TIKTOK_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
-import { findAndClick, moveDown, doFuncAtGivenTime, doFuncUntilPopupsGone, randomClick, scrollTo, waitRandomTime, normalClick, resizeX, resizeY } from "../lib/utils";
 import { Base, BaseKey } from "./abstract/Base";
 
 export class TikTokLite extends Base{
@@ -42,7 +44,7 @@ export class TikTokLite extends Base{
         if(!text("日常任务").exists()){
             this.goTo(this.register, -1)
         }
-        scrollTo(text("金币收益"))
+        scrollTo("金币收益")
         normalClick(resizeX(random(104, 328)), resizeY(random(389, 493)))
         let tmp = textMatches(/(\d+)/)
         .boundsInside(0, 0, resizeX(328), resizeY(594)).findOnce()
@@ -57,11 +59,7 @@ export class TikTokLite extends Base{
             this.goTo(this.register, -1)
         }
         findAndClick(text("点击领取"))
-        doFuncUntilPopupsGone(this.buttonNameList, {
-            func: ()=>{
-                // this.watchUntil()
-            }
-        })
+        this.watchAdsForCoin("日常福利")
     }
 
     @functionLog("开宝箱")
