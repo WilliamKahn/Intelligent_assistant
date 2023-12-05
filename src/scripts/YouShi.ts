@@ -1,5 +1,5 @@
 import { WidgetNotFoundException } from './../lib/exception';
-import { findAndClick, fixedClick, goneClick, normalClick, scrollClick } from "../common/click";
+import { findAndClick, fixedClick, dialogClick, normalClick, scrollClick } from "../common/click";
 import { convertSecondsToMinutes, doFuncAtGivenTime, moveDown, randomExecute, resizeX, resizeY } from "../common/utils";
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_VEDIO_YOUSHI, PACKAGE_VEDIO_YOUSHI } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
@@ -69,7 +69,7 @@ export class YouShi extends Base{
     @functionLog("签到")
     signIn(): void{
         this.goTo(this.tab, 3)
-        if(goneClick("签到领金币")){
+        if(dialogClick("签到领金币")){
             this.watchAdsForCoin("日常任务")
         } else {//"签到失败"
             if(findAndClick("立即签到", {feedback:true})){
@@ -108,9 +108,9 @@ export class YouShi extends Base{
         this.goTo(this.tab, 3)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS  && scrollClick("点击领取")){
-            if(goneClick("开始抽奖")){
+            if(dialogClick("开始抽奖")){
                 normalClick(resizeX(random(395, 689)), resizeY(random(750, 1067)))
-                if(goneClick("点击领取")){
+                if(dialogClick("点击领取")){
                     break
                 }
             }
@@ -153,7 +153,7 @@ export class YouShi extends Base{
     doubleEarn(): void{
         this.goTo(this.tab, 3)
         if(scrollClick("去翻倍")){
-            goneClick("我知道了")
+            dialogClick("我知道了")
         }
     }
 

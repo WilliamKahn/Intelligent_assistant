@@ -1,4 +1,4 @@
-import { findAndClick, goneClick, normalClick, scrollClick, selectedClick } from "../common/click";
+import { findAndClick, dialogClick, normalClick, scrollClick, selectedClick } from "../common/click";
 import { closeByImageMatching, doFuncAtGivenTime, randomExecute, waitRandomTime } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_SEVEN_CATS_FREE, PACKAGE_READ_SEVEN_CATS_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
@@ -31,7 +31,7 @@ export class SevenCatsFree extends AbstractFreeNovel{
     @functionLog("签到")
     signIn(): void {
         this.goTo(this.tab, 2)
-        goneClick("立即签到.+")
+        dialogClick("立即签到.+")
         this.watchAdsForCoin("日常福利")
     }
 }

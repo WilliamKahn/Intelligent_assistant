@@ -1,10 +1,10 @@
 import { OcrResultDetail } from "ocr"
 import { ExceedMaxNumberOfAttempts } from "../lib/exception"
 import { Record } from "../lib/logger"
-import { Bounds, ScrollToOptions, SearchByLeftRangeOptions, SearchByOcrRecognizeOptions, SearchByUiSelectOptions, SearchOptions } from "./interfaces"
-import { calculateDistance, close, closeByImageMatching, compareStr, getScreenImage, myBoundsContains, resizeX, resizeY, waitRandomTime } from "./utils"
 import { clickDialogOption } from "./click"
 import { Dialog } from "./enums"
+import { Bounds, ScrollToOptions, SearchByLeftRangeOptions, SearchByOcrRecognizeOptions, SearchByUiSelectOptions, SearchOptions } from "./interfaces"
+import { close, closeByImageMatching, compareStr, getScreenImage, myBoundsContains, resizeX, resizeY, waitRandomTime } from "./utils"
 
 /**
  * todo 躲避遮挡目标时会触发关闭按钮
@@ -20,7 +20,7 @@ export function scrollTo(component: string|UiSelector, options?: ScrollToOptions
     const bottom = options?.fixed? device.height: range?.bottom || device.height
     //返回超过三次则异常
     if (scrollTimes > 2) {
-        throw new ExceedMaxNumberOfAttempts("scrollTo")
+        throw new ExceedMaxNumberOfAttempts("超过最大限制次数")
     }
     const [bounds, text] = search(component, options)
     if(bounds && !options?.fixed) {
@@ -76,11 +76,13 @@ export function scrollTo(component: string|UiSelector, options?: ScrollToOptions
             //列表项才需要ocr识别
             if(options?.cover && text !== "" && ++avoidTimes < 3){
                 Record.debug("滑动遮挡校验")
+                Record.debug(`text :${text}`)
+                Record.debug(`bounds :${bounds}`)
                 const img = getScreenImage(bounds)
                 const bigImg = images.scale(img, 3, 3)
                 const grayImg = images.cvtColor(bigImg, "BGR2GRAY")
                 const str = ocr.recognizeText(grayImg)
-                // adaptiveImg.saveTo("/sdcard/result.jpg")
+                // grayImg.saveTo("/sdcard/result.jpg")
                 // app.viewFile("/sdcard/result.jpg")
                 img.recycle()
                 bigImg.recycle()
@@ -140,11 +142,16 @@ export function search(component:string|UiSelector, options?:SearchOptions){
  */
 export function searchByLeftRange(button: string|UiSelector, options:SearchByLeftRangeOptions, times: number = 0) {
     if(times > 3) {
-        throw new ExceedMaxNumberOfAttempts("searchInRange")
+        throw new ExceedMaxNumberOfAttempts("超过最大限制次数")
     }
-    if(typeof options.leftRange === "string"){
-        let tmp = searchByUiSelect(textMatches(options.leftRange))
-        || searchByUiSelect(descMatches(options.leftRange))
+    let tmp:UiObject|null
+    if(options.leftRange){
+        if(typeof options.leftRange === "string"){
+            tmp = searchByUiSelect(textMatches(options.leftRange))
+            || searchByUiSelect(descMatches(options.leftRange))
+        } else {
+            tmp = searchByUiSelect(options.leftRange)
+        }
         if (tmp == null) {
             close(0)
             return searchByLeftRange(button, options, ++times)
@@ -152,14 +159,15 @@ export function searchByLeftRange(button: string|UiSelector, options:SearchByLef
             //let result = eval(button.toString())
             let top = tmp.bounds().top - 10
             let bottom = tmp.bounds().bottom + 80
+            let left = tmp.bounds().right
             if(bottom <= top){
                 bottom = top + 200
             }
             if(typeof button === "string"){
-                return searchByUiSelect(textMatches(button).boundsInside(0, top, device.width, bottom), options)
-            || searchByUiSelect(descMatches(button).boundsInside(0, top, device.width, bottom))
+                return searchByUiSelect(textMatches(button).boundsInside(left, top, device.width, bottom), options)
+            || searchByUiSelect(descMatches(button).boundsInside(left, top, device.width, bottom))
             } else {
-                return searchByUiSelect(button.boundsInside(0, top, device.width, bottom), options)
+                return searchByUiSelect(button.boundsInside(left, top, device.width, bottom), options)
             }
         }
     }
@@ -177,30 +185,15 @@ export function searchByOcrRecognize(str: string, options?:SearchByOcrRecognizeO
     grayImg.recycle()
     let list:OcrResultDetail[] = []
     for(let item of res.results){
-        if(item.text.match(str)){
+        if(RegExp("^"+str+"$").test(item.text)){
             list.push(item)
         }
     }
     Record.debug(`list length: ${list.length}`)
     if(list.length > 0){
         let result:OcrResultDetail|null = null
-        if(options?.position){
-            Record.debug(`position: ${options.position}`)
-            if(typeof options.position === "number"){
-                result = list[options.position]
-            } else {
-                let minDistance = Number.MAX_VALUE
-                for(let item of list){
-                    const bounds = item.bounds
-                    const controlX = (bounds.left + bounds.right)/2
-                    const controlY = (bounds.top + bounds.bottom)/2
-                    const distance = calculateDistance(options.position, {x:controlX, y:controlY})
-                    if(distance < minDistance){
-                        minDistance = distance
-                        result = item
-                    }
-                }
-            }
+        if(options?.index){
+            result = list[options.index]
         } else {
             result = list[0]
         }
@@ -222,57 +215,38 @@ export function searchByOcrRecognize(str: string, options?:SearchByOcrRecognizeO
 
 export function searchByUiSelect(component:UiSelector, options?:SearchByUiSelectOptions) {
     let result: UiObject|null = null
-    if(options?.waitFor || options?.position){
-        if(options.waitFor){
-            result = component.findOne(10 * 1000)
-            if(result == null){
-                for(let i = 0; i < 3; i++){
-                    closeByImageMatching()
-                    clickDialogOption(Dialog.Negative)
-                    result = component.findOne(5 * 1000)
-                    if(result){
-                        break
-                    }
-                }
-            }
-            waitRandomTime(3)
-        }
-        if(options.position){
-            let list:any = component.find()
-            if(list.nonEmpty()){
-                if(typeof options.position === "number"){
-                    result = list[options.position]
-                }else{
-                    let minDistance = Number.MAX_VALUE
-                    if(options.bounds){
-                        list = list.filter(element => {
-                            const bounds = element.bounds()
-                            if(options.bounds)
-                            return myBoundsContains(options.bounds, bounds)
-                        })
-                    }
-                    for(let i = 0;i<list.length;i++){
-                        const control = list[i]
-                        const bounds = control.bounds()
-                        const controlX = (bounds.left + bounds.right)/2
-                        const controlY = (bounds.top + bounds.bottom)/2
-                        const distance = calculateDistance(options.position, {x:controlX, y:controlY})
-                        if(distance < minDistance){
-                            Record.debug(`select item: x=${controlX},y=${controlY}`)
-                            minDistance = distance
-                            result = control
-                        }
-                    }
+    //延迟等待
+    if(options?.waitFor){
+        result = component.findOne(10 * 1000)
+        if(result == null){
+            for(let i = 0; i < 3; i++){
+                closeByImageMatching()
+                clickDialogOption(Dialog.Negative)
+                result = component.findOne(5 * 1000)
+                if(result){
+                    break
                 }
             }
         }
-    } else {
-        result = component.findOnce()
+        waitRandomTime(2)
     }
-    if(result && options?.bounds){
-        const bounds = result.bounds()
-        if(!myBoundsContains(options.bounds, bounds)){
-            return null
+    let list:any = component.find()
+    if(list.nonEmpty()){
+        list = list.filter(element => {
+            const bounds = element.bounds()
+            return bounds.width() > 0
+        })
+        if(options?.bounds){
+            list = list.filter(element => {
+                const bounds = element.bounds()
+                if(options.bounds)
+                return myBoundsContains(options.bounds, bounds)
+            })
+        }
+        if(options?.index){
+            result = list[options.index]
+        } else {
+            result = list[0]
         }
     }
     return result

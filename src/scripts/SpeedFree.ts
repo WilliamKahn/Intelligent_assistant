@@ -1,6 +1,6 @@
-import { findAndClick, goneClick, scrollClick } from "../common/click";
+import { findAndClick, fixedClick, dialogClick, readClick, scrollClick } from "../common/click";
 import { scrollTo } from "../common/search";
-import { doFuncAtGivenTime, resizeX, resizeY, } from "../common/utils";
+import { doFuncAtGivenTime, merge, resizeX, resizeY, } from "../common/utils";
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_SPEED_FREE, PACKAGE_READ_SPEED_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Base, BaseKey } from "./abstract/Base";
@@ -18,20 +18,16 @@ export class SpeedFree extends Base {
         super()
         this.appName = NAME_READ_SPEED_FREE
         this.packageName = PACKAGE_READ_SPEED_FREE
-        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, BASE_ASSIMT_TIME)
-        this.medEffEstimatedTime = this.fetch(BaseKey.medEffEstimatedTime, 20 * 60)
+        this.initialComponent = desc("bookstore_button")
+        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, 30 * 60)
         this.lowEffEstimatedTime = 0
     }
 
     @measureExecutionTime
     highEff(): void {
         this.signIn()
-        this.openTreasure()
-    }
-
-    @measureExecutionTime
-    medEff(): void {
         this.listenBook()
+        this.openTreasure()
         this.watchAds()
         this.reward()
     }
@@ -43,7 +39,6 @@ export class SpeedFree extends Base {
             this.openTreasure()
             this.reward()
         })
-        
     }
 
     @measureExecutionTime
@@ -52,7 +47,9 @@ export class SpeedFree extends Base {
         scrollTo("金币收益")
         let tmp = textMatches("[0-9]+").boundsInside(0,0,resizeX(420), resizeY(432)).findOnce()
         if(tmp != null) {
-            this.store(BaseKey.Weight, parseInt(tmp.text()))
+            const weight = parseInt(tmp.text())
+            this.store(BaseKey.Weight, weight)
+            this.store(BaseKey.Money, (weight/33000).toFixed(2))
         }
     }
 
@@ -61,18 +58,16 @@ export class SpeedFree extends Base {
     signIn(): void{
         //每日签到 签到
         this.goTo(desc("discovery_button"), -1)
-        if (scrollClick("立即签到.+")) {
+        if (dialogClick("立即签到.+")) {
             this.watchAdsForCoin("日常福利")
-            goneClick("我知道了")
         }
     }
 
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goTo(desc("discovery_button"), -1)
-        if(goneClick("开宝箱得金币")) {
+        if(fixedClick("开宝箱得金币")) {
             this.watchAdsForCoin("日常福利")
-            goneClick("我知道了")
         }
     }
 
@@ -84,7 +79,6 @@ export class SpeedFree extends Base {
             && scrollClick("去观看", "看视频赚金币")){
             this.watch(text("日常福利"))
             this.watchAdsForCoin("日常福利")
-            goneClick("我知道了")
         }
     }
 
@@ -93,8 +87,8 @@ export class SpeedFree extends Base {
         this.goTo(desc("bookstore_button"), -1)
         let tmp = id("com.dj.speed:id/channel_tab").findOnce()
         if(tmp != null && findAndClick("推荐",
-        {fixed:true, ocrRecognize:true, bounds:tmp.bounds()})){
-            if(findAndClick(id("com.zhangyue.iReader.bookStore:id/iv_book"), {fixed:true})){
+        {fixed:true, ocrRecognize:true, bounds:tmp.bounds(), selectedThreshold:100})){
+            if(readClick(id("com.zhangyue.iReader.bookStore:id/iv_book"), random(0, 5))){
                 this.read(totalTime)
             }
         }
@@ -105,9 +99,11 @@ export class SpeedFree extends Base {
         this.goTo(desc("bookstore_button"), -1)
         let tmp = id("com.dj.speed:id/channel_tab").findOnce()
         if(tmp!=null && findAndClick("听书",
-        {fixed:true, ocrRecognize:true, bounds: tmp.bounds()})){
-            if(findAndClick(id("com.zhangyue.iReader.bookStore:id/id_audition_btn"))){
-                if(goneClick("看视频")){
+        {fixed:true, ocrRecognize:true, bounds: tmp.bounds(), selectedThreshold:100})){
+            if(findAndClick(id("com.zhangyue.iReader.bookStore:id/id_audition_btn"), {
+                index: random(0, 7)
+            })){
+                if(dialogClick(merge(["看视频", "看广告加时长"]))){
                     this.watch(desc("bookstore_button"))
                 }
             }
@@ -119,7 +115,6 @@ export class SpeedFree extends Base {
         this.goTo(desc("discovery_button"), -1)
         if(scrollClick("立即领取", "吃饭赚钱")) {
             this.watchAdsForCoin("日常福利")
-            goneClick("我知道了")
         }
     }
 
@@ -132,7 +127,6 @@ export class SpeedFree extends Base {
             while(++cycleCounts < MAX_CYCLES_COUNTS
                 && scrollClick("领取", range)) {
                 this.watchAdsForCoin("日常福利")
-                goneClick("我知道了")
             }
         }
     }

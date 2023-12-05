@@ -1,10 +1,12 @@
-import { clickDialogOption, findAndClick, fixedClick, goneClick, normalClick, randomClick } from "../../common/click"
+import { Image } from "images"
+import { clickDialogOption, findAndClick, fixedClick, dialogClick, normalClick, randomClick } from "../../common/click"
 import { Dialog } from "../../common/enums"
-import { close, closeByImageMatching, convertSecondsToMinutes, findLargestIndexes, getGrayscaleHistogram, getScreenImage, matchAndJudge, merge, resizeX, resizeY, waitRandomTime } from "../../common/utils"
-import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, MAX_BACK_COUNTS, MAX_CYCLES_COUNTS, STORAGE } from "../../global"
+import { close, closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, findLargestIndexes, getGrayscaleHistogram, getScreenImage, matchAndJudge, merge, resizeX, resizeY, waitRandomTime } from "../../common/utils"
+import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, MAX_BACK_COUNTS, MAX_CYCLES_COUNTS, MAX_RETRY_COUNTS, STORAGE } from "../../global"
 import { startDecorator } from "../../lib/decorators"
 import { ExceedMaxNumberOfAttempts } from "../../lib/exception"
 import { LOG_STACK, Record } from "../../lib/logger"
+import { search } from "../../common/search"
 
 /* 
 基础父类
@@ -16,7 +18,9 @@ export abstract class Base {
     packageName: string = ""
 
     //导航栏跳转参数 用于防止重复点击
-    // ocrGoTo: boolean = false
+    initialComponent: UiSelector = text("")
+    initialNum: number = -1
+
     randomTab: UiSelector = text("")
     tab: UiSelector = text("")
     depth: number = 0
@@ -32,8 +36,6 @@ export abstract class Base {
     lowEffEstimatedTime: number = MAX_ASSIMT_TIME
     //耗时任务数量（涉及到时间分配）
     lowEffAssmitCount = 1
-    //阅读
-    // verify: boolean = true
 
     //高效率 T0 1
     abstract highEff(): void
@@ -47,7 +49,6 @@ export abstract class Base {
     //权重
     abstract weight(): void
 
-    //启动APP => 签到 => 提现 => 看广告 => 听书(优先听书，边听边看) => 看小说
     @startDecorator
     start(time: number): void {
         if (time > 0 && this.lauchApp()) {
@@ -65,7 +66,7 @@ export abstract class Base {
                 time -= processTime
             }
             if(time >= this.lowEffEstimatedTime) {
-                let processTime:any = this.lowEff(time)
+                const processTime:any = this.lowEff(time)
                 time -= processTime
             }
             if (flag) {
@@ -80,6 +81,7 @@ export abstract class Base {
             let tmp = this.backUntilFind(this.randomTab)
             if(tmp != null){
                 this.tab = id(tmp.id())
+                this.initialComponent = this.tab
                 Record.debug(`${this.tab}`)
             } else {
                 throw "id定位失败"
@@ -123,17 +125,8 @@ export abstract class Base {
         const grayHistogram = getGrayscaleHistogram(img)
         const [index] = findLargestIndexes(grayHistogram, 1)
         Record.debug(`read index: ${index}`)
-        while(totalTime > readTime) {
+        doFuncAtGivenTime(totalTime, 10, ()=>{
             readTime += waitRandomTime(10)
-            //防止app内广告
-            // if(this.verify){
-            //     this.backUntilFind(textMatches(merge(["菜单", ".*[0-9]*[金]?币"])))
-            // } else {
-            //     let waitSign = ['.*后可领奖励','.*后可领取奖励', '.*后领取观看奖励']
-            //     if(textMatches(merge(waitSign)).exists()){
-            //         this.watch(textMatches("第[0-9]+章.*"))
-            //     }
-            // }
             this.watch(index)
             //阅读页面弹窗
             fixedClick(merge([".*不再提示", "我知道了", "放弃下载"]))
@@ -141,11 +134,7 @@ export abstract class Base {
                 resizeX(random(1070, 1080)),
                 resizeY(random(1900, 2000))
             )
-        }
-        // waitRandomTime(5)
-        // back()
-        // waitRandomTime(5)
-        // doFuncUntilPopupsGone(["直接退出", "退出阅读", "暂不加入", "下次再说", "取消", "暂不添加"])
+        })
     }
 
     /**
@@ -177,20 +166,8 @@ export abstract class Base {
         if (currentPackage() !== this.packageName) {
             this.lauchApp()
         }
-        let tmp = textMatches(".*[0-9]+[ ]?[s秒]?.*").findOnce()
-        let waitTime:number
-        if(tmp != null) {
-            waitTime = matchAndJudge(tmp.text())
-        } else {
-            //识别屏幕三分之一以上区域
-            const img = getScreenImage({bottom: 500})
-            const grayImg = images.cvtColor(img, "BGR2GRAY")
-            const str = ocr.recognizeText(grayImg)
-            img.recycle()
-            grayImg.recycle()
-            //正则表达式替换掉时间减少干扰
-            waitTime = matchAndJudge(str.replace(/\d+:\d+/, "x"))
-        }
+        const [_, name] = search(".*[0-9]+[ ]?[s秒]?.*", {ocrRecognize:true, bounds:{bottom: device.height * 1/5}})
+        const waitTime = matchAndJudge(name)
         Record.debug(`watchTimes = ${times}, waitTime = ${waitTime}`)
         if(text("该视频提到的内容是").findOne(waitTime * 1000)){
             back()
@@ -199,7 +176,13 @@ export abstract class Base {
             return
         }
         waitRandomTime(10)
-        findAndClick("跳过", {fixed:true})
+        if(findAndClick(".*跳过.*", {fixed:true, bounds:{left:device.width, bottom:device.height * 1/5}})){
+            if(!clickDialogOption(Dialog.Positive)){
+                waitRandomTime(1)
+                this.watch(exitSign, ++times)
+                return
+            }
+        }
         close(times)
         //坚持退出 检测
         if(times < 5){
@@ -207,9 +190,7 @@ export abstract class Base {
         } else {
             clickDialogOption(Dialog.Negative)
         }
-        if(goneClick("领取奖励")){
-            times = this.exitNum
-        }
+        dialogClick("领取奖励")
         this.watch(exitSign, ++times)
     }
 
@@ -278,11 +259,12 @@ export abstract class Base {
 
     watchAdsForCoin(backSign: string){
         let cycleCounts = 0
+        const str = "看.*(视频|内容|广告).*(得|领|赚).*([0-9]+金币|更多)"
         while(++cycleCounts < MAX_CYCLES_COUNTS
-            && (goneClick("看.*(视频|内容).*(得|领|赚).*[0-9]+金币"))){
-            this.watch(textMatches(backSign))
+            && (dialogClick(str))){
+            this.watch(textMatches(merge([backSign, str])))
         }
-        goneClick("开心收下")
+        dialogClick(merge(["开心收下", "我知道了"]))
     }
 
     /**
@@ -293,7 +275,8 @@ export abstract class Base {
         //广告重置
         this.enablewatchAds()
         //跳转留存记录
-        this.preComponent = text("")
+        this.preComponent = this.initialComponent
+        this.preNum = this.initialNum
     }
 
     /**

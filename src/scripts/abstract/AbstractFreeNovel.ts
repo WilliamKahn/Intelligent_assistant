@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, goneClick, normalClick, scrollClick, selectedClick } from "../../common/click";
+import { findAndClick, fixedClick, dialogClick, normalClick, readClick, scrollClick, selectedClick, ocrClick } from "../../common/click";
 import { doFuncAtGivenTime, merge, randomExecute, waitRandomTime } from "../../common/utils";
 import { MAX_CYCLES_COUNTS } from "../../global";
 import { functionLog, measureExecutionTime } from "../../lib/decorators";
@@ -12,6 +12,8 @@ export abstract class AbstractFreeNovel extends Base {
     constructor(packageName: string) {
         super()
         this.tab = id(packageName+":id/home_activity_navigation_bar")
+        this.initialComponent = this.tab
+        this.initialNum = 1
         this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, 15 * 60)
         this.lowEffEstimatedTime = 0
         this.lowEffAssmitCount = 2
@@ -77,8 +79,7 @@ export abstract class AbstractFreeNovel extends Base {
     openTreasure(): void {
         this.goTo(this.tab, 2)
         this.watchAdsForCoin("日常福利")
-        //'[0-9]+分[0-9]+秒'
-        if (findAndClick('开宝箱得金币', {fixed:true, ocrRecognize:true})) {
+        if (ocrClick('开宝箱得金币')) {
             this.watchAdsForCoin("日常福利")
         }
     }
@@ -116,7 +117,7 @@ export abstract class AbstractFreeNovel extends Base {
             normalClick(device.width/2, device.height/2)
         }
         if(findAndClick(id(this.packageName+":id/reader_listen_entry"), {fixed:true})){
-            if(goneClick("去看小视频")){
+            if(dialogClick("去看小视频")){
                 this.watch(text("边听边读"))
             }
             fixedClick("边听边读")
@@ -152,7 +153,7 @@ export abstract class AbstractFreeNovel extends Base {
             this.listenBook()
         } else {
             if(findAndClick(id(this.packageName+":id/voice_rl"))){
-                if(goneClick("去看小视频")){
+                if(dialogClick("去看小视频")){
                     this.watch(text("边听边读"))
                 }
                 fixedClick("边听边读")
@@ -162,12 +163,8 @@ export abstract class AbstractFreeNovel extends Base {
 
     openBook(): void {
         this.goTo(this.tab, 1)
-        if(selectedClick("推荐")){
-            findAndClick(id(this.packageName+":id/tv_book_one_book_title"),{
-                position:random(0, 3),
-                cover:true,
-                clickUntilGone: true,
-            })
+        if(selectedClick("推荐", 170)){
+            readClick(id(this.packageName+":id/tv_book_one_book_title"), random(0, 3))
         }
     }
 }

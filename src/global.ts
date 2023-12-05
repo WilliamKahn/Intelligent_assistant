@@ -70,7 +70,7 @@ export const STORAGE_DATE = "date"
 //不记录运行时间
 export const STORAGE_NO_RECORD = "noRecord"
 //存储名称29
-export const STORAGE_WEIGHT_CONTAINER = "YWfjbEVp31" 
+export const STORAGE_WEIGHT_CONTAINER = "YWfjbEVp31"
 //存储
 export const STORAGE = storages.create(STORAGE_WEIGHT_CONTAINER);
 //基于设备分辨率
@@ -87,7 +87,7 @@ export const PACKAGE_READ_TOMATO_FREE = "com.dragon.read"
 export const NAME_READ_TOMATO_LITE = "番茄畅听音乐版"
 export const PACKAGE_READ_TOMATO_LITE = "com.xs.fm.lite"
 
-export const NAME_READ_RED_FRUITS = "番茄免费短剧"
+export const NAME_READ_RED_FRUITS = "红果免费短剧"
 export const PACKAGE_READ_RED_FRUITS = "com.phoenix.read"
 
 export const NAME_READ_DEJIAN = "得间小说"

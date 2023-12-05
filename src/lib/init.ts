@@ -6,7 +6,7 @@
  * @FilePath: \\src\\lib\\init.ts
  * @Description: 脚本初始化
  */
-import { randomClick } from "../common/click";
+import { findAndClick, randomClick } from "../common/click";
 import { waitRandomTime } from "../common/utils";
 import { SHOW_CONSOLE } from "../global";
 import { PermissionException, ServiceNotEnabled } from "./exception";
@@ -34,13 +34,13 @@ export function init() {
     }
 
     threads.start(function () {
+        Record.debug("子线程启动")
         // @ts-ignore
-        let pattern =".?立即开始.?|.?允许.?";
-        let tmp = className("android.widget.Button").textMatches(pattern).findOne(5000)
-        if(tmp != null){
-            waitRandomTime(1)
-            randomClick(tmp.bounds())
-        }
+        findAndClick(className("android.widget.Button").textMatches(".?立即开始.?|.?允许.?"),{
+            waitFor:true,
+            clickUntilGone:true,
+            fixed:true
+        })
     })
 
     if (!requestScreenCapture()) {

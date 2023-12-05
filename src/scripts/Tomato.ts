@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, goneClick, scrollClick, selectedClick } from "../common/click";
+import { findAndClick, fixedClick, dialogClick, scrollClick, selectedClick } from "../common/click";
 import { scrollTo } from "../common/search";
 import { doFuncAtGivenTime, merge, randomExecute, resizeX, resizeY, waitRandomTime, } from "../common/utils";
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_TOMATO, PACKAGE_READ_TOMATO } from "../global";
@@ -15,6 +15,7 @@ export class Tomato extends AbstractTomato {
         this.randomTab = className("android.widget.RadioGroup")
         .boundsInside(0, device.height-300, device.width, device.height)
         .boundsContains(0, device.height - 100,device.width, device.height - 50)
+        this.initialNum = 0
         this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, BASE_ASSIMT_TIME)
         this.medEffEstimatedTime = this.fetch(BaseKey.medEffEstimatedTime, 90 * 60)
         this.lowEffEstimatedTime = 0
@@ -74,7 +75,7 @@ export class Tomato extends AbstractTomato {
         this.goTo(this.tab, 2)
         this.sign()
         scrollTo("金币献爱心", {waitFor:true})
-        if (scrollTo("立即签到")) {
+        if (scrollClick("立即签到", "(明日)?签到")) {
             this.sign()
         }
     }
@@ -83,10 +84,7 @@ export class Tomato extends AbstractTomato {
     reward(): void {
         this.goTo(this.tab, 2)
         let cycleCounts = 0
-        let list = ["听书赚金币"]
-        if(this.situation) {
-            list.push("阅读赚金币")
-        }
+        let list = ["听书赚金币", "阅读赚金币"]
         for(let range of list) {
             while(++cycleCounts < MAX_CYCLES_COUNTS &&
                 scrollClick("(?:立即|翻倍)领取", range))
@@ -99,10 +97,10 @@ export class Tomato extends AbstractTomato {
     @functionLog("听书")
     listenBook(): void {
         this.goTo(this.tab, 0)
-        if(selectedClick("推荐")){
+        if(selectedClick("推荐", 170)){
             findAndClick(className("android.widget.TextView"), {
                 leftRange:random(1,4).toString(),
-                position:1})
+                index:1})
             while(!text("阅读电子书").exists()){
                 back()
                 waitRandomTime(3)
@@ -111,7 +109,7 @@ export class Tomato extends AbstractTomato {
                 waitRandomTime(3)
                 findAndClick(className("android.widget.TextView"), {
                     leftRange:random(1,4).toString(),
-                    position:1})
+                    index:1})
             }
             fixedClick(merge(["开始播放", "续播"]))   
         }
@@ -120,10 +118,12 @@ export class Tomato extends AbstractTomato {
     @functionLog("阅读")
     readBook(totalTime: number): void {
         this.goTo(this.tab, 0)
-        if(selectedClick("推荐")){
+        if(selectedClick("推荐", 170)){
+            
             findAndClick(className("android.widget.TextView"), {
                 leftRange:random(1,4).toString(),
-                position:1})
+                cover:true
+            })
             while(!text("阅读电子书").exists()){
                 back()
                 waitRandomTime(3)
@@ -132,7 +132,8 @@ export class Tomato extends AbstractTomato {
                 waitRandomTime(3)
                 findAndClick(className("android.widget.TextView"), {
                     leftRange:random(1,4).toString(),
-                    position:1})
+                    cover:true
+                })
             }
             if(fixedClick("阅读电子书")){
                 this.read(totalTime)
@@ -143,6 +144,9 @@ export class Tomato extends AbstractTomato {
     @functionLog("看广告")
     watchAds(): boolean {
         this.goTo(this.tab, 2)
+        if(!text("看视频赚金币").exists()){
+            scrollTo("金币献爱心", {waitFor:true})
+        }
         if(scrollClick("立即观看", "看视频赚金币")){
             this.watch(text("日常福利"))
             let tmp = text("立即观看").findOne(10 * 1000)
@@ -164,7 +168,7 @@ export class Tomato extends AbstractTomato {
     winGoldCoin(): void {
         this.goTo(this.tab, 2)
         if(scrollClick("去抽奖", "天天抽奖赢金币")){
-            goneClick("抽奖")
+            dialogClick("抽奖")
         }
     }
 

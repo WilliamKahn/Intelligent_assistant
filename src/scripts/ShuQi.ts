@@ -1,4 +1,4 @@
-import { findAndClick, goneClick, scrollClick, selectedClick } from "../common/click";
+import { findAndClick, dialogClick, readClick, scrollClick, selectedClick } from "../common/click";
 import { closeByImageMatching, doFuncAtGivenTime, } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_SHUQI, PACKAGE_READ_SHUQI } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
@@ -13,6 +13,8 @@ export class ShuQi extends Base{
         this.appName = NAME_READ_SHUQI
         this.packageName = PACKAGE_READ_SHUQI
         this.tab = id("android:id/tabs")
+        this.initialComponent = this.tab
+        this.initialNum = 1
         this.exitNum = 0
         this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, 15 * 60)
         this.lowEffEstimatedTime = 0
@@ -45,11 +47,11 @@ export class ShuQi extends Base{
     @functionLog("签到")
     signIn(): void {
         this.goTo(this.tab, 2)
-        if(goneClick("立即签到")){
+        if(dialogClick("立即签到")){
             closeByImageMatching()
         } else {
             if(scrollClick("去签到", "每日签到")){
-                if(goneClick("立即签到")){
+                if(dialogClick("立即签到")){
                     closeByImageMatching()    
                 }
             }
@@ -69,11 +71,8 @@ export class ShuQi extends Base{
     @functionLog("阅读")
     readBook(totalTime: number): void {
         this.goTo(this.tab, 1)
-        if(selectedClick("推荐")){
-            if(findAndClick(id(this.packageName+":id/tpl_book_name"), {
-                position:random(0,7),
-                cover:true
-            })){
+        if(selectedClick("推荐", 170)){
+            if(readClick(id(this.packageName+":id/tpl_book_name"), random(0,7))){
                 this.read(totalTime)
             }
         }
@@ -84,7 +83,7 @@ export class ShuQi extends Base{
         this.goTo(this.tab, 2)
         if(scrollClick("(一键|加倍)收取")){
             this.watchAdsForCoin("做任务 赚金币")
-            goneClick("领取加倍奖励")
+            dialogClick("领取加倍奖励")
             closeByImageMatching()
         }
     }

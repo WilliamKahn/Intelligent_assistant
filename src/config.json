@@ -79,7 +79,7 @@
         "default": true
     },
     {
-        "label": "11.番茄免费短剧",
+        "label": "11.红果免费短剧",
         "type": "checkbox",
         "name": "RedFruits",
         "default": true

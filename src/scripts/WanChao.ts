@@ -1,4 +1,4 @@
-import { findAndClick, goneClick } from "../common/click";
+import { findAndClick, fixedClick, dialogClick } from "../common/click";
 import { getScreenImage, resizeX, resizeY, waitRandomTime } from "../common/utils";
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_WANCHAO, PACKAGE_READ_WANCHAO } from "../global";
 import { measureExecutionTime } from "../lib/decorators";
@@ -32,11 +32,11 @@ export class WanChao extends Base {
                 waitRandomTime(4)
             }
             while(++cycleCounts < MAX_CYCLES_COUNTS 
-                && findAndClick("待完成", {waitTimes:10})) {
+                && findAndClick("待完成", {waitTimes:10, cover:true})) {
                 back()
                 waitRandomTime(4)
             }
-            if(goneClick("抽奖")){
+            if(fixedClick("抽奖")){
                 let box = idContains('nc_1_n1z').findOnce()
                 if(box != null) {
                     swipe(box.bounds().centerX(), box.bounds().centerY(), device.width,box.bounds().centerY()+random(-25,0), 100)
@@ -47,6 +47,7 @@ export class WanChao extends Base {
                     .boundsInside(resizeX(108),resizeY(1140),resizeX(972),resizeY(1323)).findOnce()
                     if(money != null) {
                         Record.log(`中奖${money.text()}`)
+                        this.store(BaseKey.Money, parseFloat(money.text()))
                     }
                 }
             }

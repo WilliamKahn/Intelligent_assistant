@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, goneClick, scrollClick, selectedClick } from "../common/click";
+import { findAndClick, fixedClick, dialogClick, scrollClick, selectedClick } from "../common/click";
 import { scrollTo } from "../common/search";
 import { moveDown, randomExecute, resizeX, resizeY, } from "../common/utils";
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_TOMATO_LITE, PACKAGE_READ_TOMATO_LITE } from "../global";
@@ -17,6 +17,7 @@ export class TomatoLite extends AbstractTomato {
         this.randomTab = className("android.widget.RadioGroup")
         .boundsInside(0, device.height-300, device.width, device.height)
         .boundsContains(0, device.height - 100,device.width, device.height - 50)
+        this.initialNum = 0
         this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, 35 * 60)
     }
 
@@ -25,7 +26,7 @@ export class TomatoLite extends AbstractTomato {
         this.signIn()
         randomExecute([
             ()=>{this.openTreasure()},
-            ()=>{if(this.situation) this.mealSupp()},
+            ()=>{this.mealSupp()},
             ()=>{this.winGoldCoin()},
             ()=>{
                 this.listenBook()
@@ -59,7 +60,7 @@ export class TomatoLite extends AbstractTomato {
     @functionLog("听书")
     listenBook(): void {
         this.goTo(this.tab, 0)
-        if(selectedClick("音乐")){
+        if(selectedClick("音乐", 170)){
             if(fixedClick("排行榜")){
                 scrollClick(random(1,8).toString())
             }
@@ -84,7 +85,7 @@ export class TomatoLite extends AbstractTomato {
     mealSupp(): void{
         this.goTo(this.tab, 2)
         if(scrollClick("去领取", "吃饭补贴")){
-            if(goneClick("领取.*补贴[0-9]金币")) {
+            if(dialogClick("领取.*补贴[0-9]金币")) {
                 this.watchAdsForCoin("日常福利")
             }
         }
@@ -118,7 +119,7 @@ export class TomatoLite extends AbstractTomato {
             let cycleCounts = 0
             while(++cycleCounts < MAX_CYCLES_COUNTS 
                 && findAndClick("抽奖", {fixed:true, waitTimes:10})) {
-                if(!goneClick("开心收下")){
+                if(!dialogClick("开心收下")){
                     this.watchAdsForCoin("日常福利")
                 } else {
                     break

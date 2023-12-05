@@ -1,5 +1,5 @@
 import { Image, Point } from "images";
-import { DEVICE_HEIGHT, DEVICE_WIDTH, MAX_CYCLES_COUNTS, SHOW_CONSOLE } from "../global";
+import { DEVICE_HEIGHT, DEVICE_WIDTH, SHOW_CONSOLE } from "../global";
 import { Record } from "../lib/logger";
 import { findAndClick, normalClick } from './click';
 import { Bounds } from './interfaces';
@@ -71,9 +71,7 @@ export function clearBackground(){
         waitRandomTime(4)
         if(recents()){
             waitRandomTime(4)
-            if(findAndClick(idContains("clear"), {fixed:true})){
-                waitRandomTime(4)
-            }
+            findAndClick(idContains("clear"), {fixed:true})
         }
     }
 }
@@ -91,24 +89,6 @@ export function moveDown(totalTime:number, interval:number): void{
         watchTime += waitRandomTime(interval)
     }
 }
-
-/**
- * @description 利用正则表达式匹配buttonNameList上的控件并点击直至消失
- * @param buttonNameList 正则表达式列表
- * @param func 点击后的处理方法 
- * ？：0或1次 *：0或无数次 +：1次或无数次
- */
-// export function doFuncUntilPopupsGone(buttonNameList: string[], func?: ()=> void): void {
-//     const regex = merge(buttonNameList)
-//     let cycleCounts = 0
-//     while(++cycleCounts < MAX_CYCLES_COUNTS //options || todo 合并undefined
-//         && (findAndClick(regex, 
-//             {clickUntilGone: true, ocrRecognize: true, fixed: true, waitTimes: 8}))) {
-//         if(func) {
-//             func()
-//         }
-//     }
-// }
 
 /**
  * @description 合并数组用于正则表达式 [1,2,3] => "1|2|3"
@@ -133,18 +113,31 @@ export function convertSecondsToMinutes(seconds: number) {
  */
 export function close(times: number){
     if(!closeByImageMatching()){
-        switch(times % 2){
+        switch(times % 4){
             case 0:
-                //button
-                if(!findAndClick(className("android.widget.ImageView")
-                .boundsInside(945, 0, device.width, 309))){
+                if(!findAndClick(className("android.widget.ImageView"), 
+                {fixed:true, bounds:{left:device.width * 3 / 5, bottom:device.height * 4 / 5}})){
                     back()
                     waitRandomTime(4)
                 }
                 break
             case 1:
-                if(!findAndClick(className("android.widget.ImageView")
-                .boundsInside(0, 0, 132, 273))){
+                if(!findAndClick(className("android.widget.Button"),
+                {fixed:true, bounds:{left:device.width * 3 / 5, bottom:device.height * 4 / 5}})){
+                    back()
+                    waitRandomTime(4)
+                }
+                break
+            case 2:
+                if(!findAndClick(className("android.widget.ImageView"), 
+                {fixed:true, bounds:{right:device.width * 1 / 3, bottom:device.height * 4 / 5}})){
+                    back()
+                    waitRandomTime(4)
+                }
+                break
+            case 3:
+                if(!findAndClick(className("android.widget.Button"), 
+                {fixed:true, bounds:{right:device.width * 1 / 3, bottom:device.height * 4 / 5}})){
                     back()
                     waitRandomTime(4)
                 }
@@ -217,7 +210,29 @@ export function closeByImageMatching(): boolean {
     return false
 }
 export function findPreferredCloseButton(list:Point[]){
-    list.sort((a, b) => {
+    const num = random(0,1)
+    //距离原点排序
+    const sortedCoordinates = list.slice().sort((a, b) => {
+        const distanceA = calculateDistance(a, {x:0,y:0});
+        const distanceB = calculateDistance(b, {x:0,y:0});
+        return distanceA - distanceB;
+    });
+    let firstCoordinate = {x:0, y:0}
+    for(let i = 0;i<sortedCoordinates.length; i++){
+        if(calculateDistance(firstCoordinate, sortedCoordinates[i]) > 3){
+            firstCoordinate = sortedCoordinates[i]
+
+            if(num === 0 && !boundsInside(firstCoordinate.x - 100, firstCoordinate.y - 100, firstCoordinate.x + 100, firstCoordinate.y + 100).findOnce()){
+                sortedCoordinates.splice(i)
+                i--
+            }
+        } else {
+            sortedCoordinates.splice(i)
+            i--
+        }
+    }
+
+    sortedCoordinates.sort((a, b) => {
         const {priority: priorityA, distance: distanceA} = calculatePriority(a);
         const {priority: priorityB, distance: distanceB} = calculatePriority(b);
         if (priorityA === priorityB) {
@@ -225,7 +240,7 @@ export function findPreferredCloseButton(list:Point[]){
         }
         return priorityA - priorityB;
     })
-    return list.length > 0 ? list[0] : null;
+    return sortedCoordinates.length > 0 ? sortedCoordinates[0] : null;
 }
 // 辅助函数，用于计算两点之间的距离
 export function calculateDistance(pointA: Point, pointB: Point): number {
@@ -261,20 +276,24 @@ export function doFuncAtGivenTime(totalTime: number, maxTime: number, func:(perT
     }
 }
 
-export function matchAndJudge(str: string){
-    //匹配14，14秒，14s
-    const time = str.match(/[0-9]+[s秒]?/)
-    const swipe = str.match(/(滑动)?浏览/)
-    if(time) {
-        let totalTime = parseInt(time[0], 10)
-        if(totalTime > 50 || totalTime < 3){
-            totalTime = 3
-        }
-        if(swipe){
-            Record.log("滑动浏览广告")
-            moveDown(totalTime, 4)
-        } else {
-            return totalTime
+export function matchAndJudge(str: string|undefined){
+    Record.debug(`${str}`)
+    if(str){
+        str = str.replace(/\d+:\d+/, "x")
+        //匹配14，14秒，14s
+        const time = str.match(/[0-9]+[s秒]?/)
+        const swipe = str.match(/(滑动)?浏览/)
+        if(time) {
+            let totalTime = parseInt(time[0], 10)
+            if(totalTime > 50 || totalTime < 3){
+                totalTime = 3
+            }
+            if(swipe){
+                Record.log("滑动浏览广告")
+                moveDown(totalTime, 4)
+            } else {
+                return totalTime
+            }
         }
     }
     return 3
@@ -378,7 +397,7 @@ export function getGrayscaleHistogram(img:Image, rate:number = 4){
             // 获取当前像素的颜色值
             var color = img.pixel(x, y);
             // 计算灰度值
-            var grayValue = (colors.red(color) + colors.green(color) + colors.blue(color)) / 3;    
+            var grayValue = (colors.red(color) + colors.green(color) + colors.blue(color)) / 3;
             // 更新灰度直方图
             grayHistogram[Math.floor(grayValue)]++;
         }
@@ -388,30 +407,6 @@ export function getGrayscaleHistogram(img:Image, rate:number = 4){
 }
 
 export function findLargestIndexes(arr: number[], count: number): number[] {
-    // if (arr.length < 2) {
-    //     throw new Error("数组长度必须至少为2");
-    // }
-
-    // let index1 = 0;
-    // let index2 = 1;
-
-    // if (arr[index1] < arr[index2]) {
-    //     // 交换 index1 和 index2
-    //     [index1, index2] = [index2, index1];
-    // }
-
-    // for (let i = 2; i < arr.length; i++) {
-    //     if (arr[i] > arr[index1]) {
-    //         // 当前元素比最大元素大，更新最大元素和第二大元素的下标
-    //         index2 = index1;
-    //         index1 = i;
-    //     } else if (arr[i] > arr[index2]) {
-    //         // 当前元素比第二大元素大，更新第二大元素的下标
-    //         index2 = i;
-    //     }
-    // }
-
-    // return [index1, index2];
     if (count <= 0) {
         throw new Error("返回长度必须大于等于1");
     }
@@ -459,6 +454,25 @@ export function myBoundsContains(mainBounds: Bounds, testBounds: Bounds){
         testRight <= mainRight &&
         testBottom <= mainBottom
     );
+}
+
+export function mergeHistogram(hist: number[]): number[] {
+    const mergedHistogram: number[] = [];
+    for (let i = 0; i < hist.length; i += 16) {
+        // 计算当前区间的累加和
+        const sum = hist.slice(i, i + 16).reduce((acc, val) => acc + val, 0);        
+
+        // 将累加和放在下标为7的位置上
+        for (let j = 0; j < 7; j++) {
+            mergedHistogram.push(0);
+        }
+        mergedHistogram.push(sum);
+        for (let j = 0; j < 8; j++) {
+            mergedHistogram.push(0);
+        }
+    }
+
+    return mergedHistogram;
 }
 
 

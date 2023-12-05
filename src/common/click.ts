@@ -4,14 +4,17 @@ import { Record } from "../lib/logger"
 import { Dialog } from "./enums"
 import { Bounds, FindAndClickOptions, NormalClickOptions, RandomClickOptions } from "./interfaces"
 import { scrollTo } from "./search"
-import { boundsScaling, close, closeByImageMatching, findLargestIndexes, getGrayscaleHistogram, getScreenImage, judgeFuncIsWorkByImg, merge, waitRandomTime } from "./utils"
+import { boundsScaling, close, closeByImageMatching, findLargestIndexes, getGrayscaleHistogram, getScreenImage, judgeFuncIsWorkByImg, merge, mergeHistogram, waitRandomTime } from "./utils"
 
 //通用方法
 export function fixedClick(text:string){
-    return findAndClick(text, {fixed:true, clickUntilGone:true})
+    return findAndClick(text, {fixed:true})
+}
+export function ocrClick(text:string){
+    return findAndClick(text, {fixed:true, ocrRecognize:true})
 }
 //固定、ocr识别、重复点击、区域限定
-export function goneClick(text:string){
+export function dialogClick(text:string){
     return findAndClick(text, {
         fixed:true, 
         ocrRecognize: true, 
@@ -21,15 +24,23 @@ export function goneClick(text:string){
             top: device.height * 1 / 3,
             left: device.width * 1 / 5,
             right: device.width * 4 / 5
-        }})
+        }
+    })
+}
+export function readClick(selector: UiSelector, index: number){
+    return findAndClick(selector, {
+        index: index,
+        clickUntilGone: true,
+        cover: true
+    })
 }
 //滑动、遮挡校验、左侧定位（必定存在）、重复点击 （任务列表）
 export function scrollClick(text:string, range?:string){
     return findAndClick(text, {leftRange:range, cover:true, check:true})
 }
 //固定、一定存在、点击改变
-export function selectedClick(text: string){
-    return findAndClick(text, {fixed:true, waitFor:true, selected:true, check:true})
+export function selectedClick(text: string, threshold: number){
+    return findAndClick(text, {fixed:true, waitFor:true, selectedThreshold: threshold, check:true})
 }
 /**
  * @description 随机点击列表子项
@@ -47,13 +58,13 @@ export function randomClickChildInList(component: UiSelector, index: number){
     }
 }
 export function clickDialogOption(options?:Dialog){
-    if(options === undefined){//1803  2340 
+    if(options === undefined){
         options = random(Dialog.Positive, Dialog.Negative)
     }
     if(options === Dialog.Positive){
-        goneClick(merge(["继续观看", "抓住奖励机会", "留下看看"]))
+        return fixedClick(merge(["继续观看", "抓住奖励机会", "留下看看", "关闭"]))
     } else if(options === Dialog.Negative) {
-        goneClick(merge(["取消", "关闭", "(以后|下次)再说", "退出", "暂不", "离开"]))
+        return fixedClick(merge(["取消", "关闭", "(以后|下次)再说", "(直接|坚持)?退出(阅读)?", "暂不加入", "离开"]))
     }
 }
 /**
@@ -63,7 +74,7 @@ export function clickDialogOption(options?:Dialog){
  */
 export function findAndClick(component: string|UiSelector, options?:FindAndClickOptions, times: number = 0){
     if (++times > MAX_CLICK_COUNTS) {
-        throw new ExceedMaxNumberOfAttempts("findAndClick")
+        throw new ExceedMaxNumberOfAttempts("超过最大限制次数")
     } else if(times > MAX_CLICK_COUNTS - 2){
         close(0)
     } else if(times > MAX_CLICK_COUNTS - 4){
@@ -71,11 +82,12 @@ export function findAndClick(component: string|UiSelector, options?:FindAndClick
     }
     const [bounds, name] = scrollTo(component, options)
     if(bounds) {
-        if (options?.selected){
+        if (options?.selectedThreshold){
             const list = getGrayscaleHistogram(getScreenImage(bounds))
-            const index = findLargestIndexes(list, 2)
+            const mergeList = mergeHistogram(list)
+            const index = findLargestIndexes(mergeList, 2)
             Record.debug(`selected index = ${index}`)
-            if(index[0] < 50 || index[1] < 50){
+            if(Math.abs(index[0] - index[1]) > options.selectedThreshold){
                 return true
             }
         }
@@ -127,7 +139,7 @@ export function normalClick(x: number, y: number, options?: NormalClickOptions){
     const time = options?.waitTimes || WAIT_TIME_AFTER_CLICK
     const result = threads.disposable();
     if(options?.feedback){
-        threads.start(function(){
+        let thread = threads.start(function(){
             // 在新线程中开启一个Toast监听
             events.observeToast();
             events.on("toast", function(toast){
@@ -135,6 +147,7 @@ export function normalClick(x: number, y: number, options?: NormalClickOptions){
                 result.setAndNotify(toast.getText())
             })
         })
+        thread.waitFor()
     }
     if(SHOW_CONSOLE){
         console.hide()
@@ -152,7 +165,7 @@ export function normalClick(x: number, y: number, options?: NormalClickOptions){
         const str = result.blockedGet()
         Record.debug(str)
         threads.shutDownAll()
-        if(str.match("失败|异常")){
+        if(str.match("失败|异常|领取过奖励")){
             throw new CurrentAppBanned(str)
         }
     } else {

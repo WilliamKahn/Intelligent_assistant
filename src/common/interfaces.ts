@@ -10,8 +10,8 @@ export interface Bounds{
 export type FindAndClickOptions = ScrollToOptions & RandomClickOptions & {
     //是否持续点击
     clickUntilGone?: boolean
-    //是否点击过
-    selected?:boolean
+    //点击阈值(高于阈值不点击)
+    selectedThreshold?:number
 }
 
 export type RandomClickOptions = NormalClickOptions & {
@@ -32,7 +32,7 @@ export type SearchOptions = SearchByLeftRangeOptions & {
 }
 
 export type SearchByLeftRangeOptions = SearchByUiSelectOptions & {
-    leftRange?: string
+    leftRange?: string|UiSelector
 }
 
 export type SearchByUiSelectOptions = SearchByOcrRecognizeOptions & {
@@ -42,7 +42,7 @@ export type SearchByUiSelectOptions = SearchByOcrRecognizeOptions & {
 
 export interface SearchByOcrRecognizeOptions{
     //相对位置
-    position?:number|Point
+    index?:number
     //ocr识别边界
     bounds?:Bounds
 }

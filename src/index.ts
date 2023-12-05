@@ -6,10 +6,9 @@
  * @FilePath: \\src\\index.ts
  * @Description: 脚本入口
  */
-import { findAndClick } from "./common/click";
 import { sendIncomeMessageToWxPuher, toShowString } from "./common/report";
-import { clearBackground, closeByImageMatching, convertSecondsToMinutes } from "./common/utils";
-import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, STORAGE, STORAGE_APP, STORAGE_DATE, filteredList, redFruits, starrySky, tomatoLite } from "./global";
+import { clearBackground, convertSecondsToMinutes } from "./common/utils";
+import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, STORAGE, STORAGE_APP, STORAGE_DATE, deJian, filteredList, redFruits, wanChao } from "./global";
 import { ConfigInvalidException } from "./lib/exception";
 import { init } from "./lib/init";
 import { Record as LogRecord } from "./lib/logger";
@@ -17,15 +16,13 @@ import { BaseKey } from "./scripts/abstract/Base";
 
 init()
 
-test()
-// main()
+// test()
+main()
 function test() {
-    // for(let app of list){ 1536 0.05
-    //     log(`${app.appName}: ${app.fetch(BaseKey.Weight)}`)
-    // }34 248
-    redFruits.readBook(30 * 60)
-
-    hamibot.exit()
+    // for(let app of filteredList){
+    //     log(`${app.appName}: ${app.fetch(BaseKey.Weight)}----${app.fetch(BaseKey.Money)}`)
+    // }
+    wanChao.store(BaseKey.Money, 0.30)
 }
 
 function main() {
@@ -58,10 +55,10 @@ function main() {
         //初始化map
         const map:Record<string, number> = {}
         //将数组按照权重等级排序
-        const sortedList = runList.slice().sort((a,b) => b.fetch(BaseKey.Weight) - a.fetch(BaseKey.Weight))
+        const sortedList = runList.slice().sort((a,b) => b.fetch(BaseKey.Money, 0) * 100 - a.fetch(BaseKey.Money, 0) * 100)
         for (let app of sortedList) {
             map[app.constructor.name] = 0
-            //LogRecord.debug(`${app.appName}: ${app.fetch(BaseKey.Weight)}`)
+            LogRecord.debug(`${app.appName}`)
         }
         //时间分配算法
         appTimeAllocation(map, timePerMethod, sortedList)
@@ -79,6 +76,7 @@ function main() {
             let executeTime = surplus + map[app.constructor.name]
             //权重置零 避免前天的遗留权重，导致即使昨天运行失败但是权重依然存在
             app.store(BaseKey.Weight, 0)
+            app.store(BaseKey.Money, 0)
             map[app.constructor.name] = 0
             //执行流程
             STORAGE.put(STORAGE_APP, app.constructor.name)
@@ -144,18 +142,20 @@ function appTimeAllocation(map: Record<string, number>, timePerMethod: number, s
 
     //耗时任务时间分配
     let count = 1
-    while(timePerMethod >= BASE_ASSIMT_TIME){
-        let time = count * BASE_ASSIMT_TIME
-        for (let app of sortedList) {
-            if (app.lowEffEstimatedTime != MAX_ASSIMT_TIME) {
-                const allocaTime = Math.min(time * app.lowEffAssmitCount, timePerMethod)
-                let key = app.constructor.name
-                map[key] += allocaTime
-                timePerMethod -= allocaTime
+    if(sortedList.length > 0){
+        while(timePerMethod >= BASE_ASSIMT_TIME){
+            let time = count * BASE_ASSIMT_TIME
+            for (let app of sortedList) {
+                if (app.lowEffEstimatedTime != MAX_ASSIMT_TIME) {
+                    const allocaTime = Math.min(time * app.lowEffAssmitCount, timePerMethod)
+                    let key = app.constructor.name
+                    map[key] += allocaTime
+                    timePerMethod -= allocaTime
+                }
             }
-        }
-        if(count < 4) {
-            count++
+            if(count < 4) {
+                count++
+            }
         }
     }
 }

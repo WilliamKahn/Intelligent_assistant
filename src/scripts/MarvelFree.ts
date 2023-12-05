@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, goneClick, randomClickChildInList, scrollClick, selectedClick } from "../common/click";
+import { findAndClick, fixedClick, dialogClick, randomClickChildInList, readClick, scrollClick, selectedClick } from "../common/click";
 import { scrollTo } from "../common/search";
 import { closeByImageMatching, doFuncAtGivenTime, merge, resizeX, resizeY } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_MARVEL_FREE, PACKAGE_READ_MARVEL_FREE } from "../global";
@@ -12,6 +12,8 @@ export class MarvelFree extends Base{
         this.appName = NAME_READ_MARVEL_FREE
         this.packageName = PACKAGE_READ_MARVEL_FREE
         this.tab = id(this.packageName+":id/tab_layout")
+        this.initialComponent = this.tab
+        this.initialNum = 0
         this.depth = 1
         this.exitNum = 0
         this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, 15 * 60)
@@ -78,8 +80,8 @@ export class MarvelFree extends Base{
     @functionLog("阅读")
     readBook(totalTime: number): void {
         this.goTo(this.tab, 0)
-        if(selectedClick("推荐")){
-            if(findAndClick(id(PACKAGE_READ_MARVEL_FREE+":id/tv_book_name"), {fixed:true, position:random(0,7)})){
+        if(selectedClick("推荐", 170)){
+            if(readClick(id(PACKAGE_READ_MARVEL_FREE+":id/tv_book_name"), random(0,7))){
                 this.read(totalTime)
             }
         }   
