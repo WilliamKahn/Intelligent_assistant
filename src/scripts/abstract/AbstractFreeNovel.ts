@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, dialogClick, normalClick, readClick, scrollClick, selectedClick, ocrClick } from "../../common/click";
+import { findAndClick, fixedClick, dialogClick, normalClick, readClick, scrollClick, selectedClick, ocrClick, goneClick } from "../../common/click";
 import { doFuncAtGivenTime, merge, randomExecute, waitRandomTime } from "../../common/utils";
 import { MAX_CYCLES_COUNTS } from "../../global";
 import { functionLog, measureExecutionTime } from "../../lib/decorators";
@@ -120,7 +120,7 @@ export abstract class AbstractFreeNovel extends Base {
             if(dialogClick("去看小视频")){
                 this.watch(text("边听边读"))
             }
-            fixedClick("边听边读")
+            goneClick("边听边读")
         }
     }
 
@@ -156,7 +156,7 @@ export abstract class AbstractFreeNovel extends Base {
                 if(dialogClick("去看小视频")){
                     this.watch(text("边听边读"))
                 }
-                fixedClick("边听边读")
+                goneClick("边听边读")
             }
         }
     }

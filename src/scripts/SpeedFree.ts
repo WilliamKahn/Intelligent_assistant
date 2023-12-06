@@ -7,13 +7,6 @@ import { Base, BaseKey } from "./abstract/Base";
 
 export class SpeedFree extends Base {
 
-    buttonNameList:string[] = [
-        '看视频再领[0-9]+金币',
-        '看视频最高领[0-9]+金币'
-    ]
-
-    topBar: string = ""
-
     constructor() {
         super()
         this.appName = NAME_READ_SPEED_FREE

@@ -13,6 +13,9 @@ export function fixedClick(text:string){
 export function ocrClick(text:string){
     return findAndClick(text, {fixed:true, ocrRecognize:true})
 }
+export function goneClick(text: string){
+    return findAndClick(text, {fixed:true, clickUntilGone:true})
+}
 //固定、ocr识别、重复点击、区域限定
 export function dialogClick(text:string){
     return findAndClick(text, {
@@ -64,7 +67,7 @@ export function clickDialogOption(options?:Dialog){
     if(options === Dialog.Positive){
         return fixedClick(merge(["继续观看", "抓住奖励机会", "留下看看", "关闭"]))
     } else if(options === Dialog.Negative) {
-        return fixedClick(merge(["取消", "关闭", "(以后|下次)再说", "(直接|坚持)?退出(阅读)?", "暂不加入", "离开"]))
+        return fixedClick(merge(["取消", "关闭", "(以后|下次)再说", "(直接|坚持)?退出(阅读)?", "暂不加入", "(残忍)离开", "放弃奖励"]))
     }
 }
 /**
@@ -137,14 +140,15 @@ export function randomClick(bounds: Bounds, options?: RandomClickOptions) {
  */
 export function normalClick(x: number, y: number, options?: NormalClickOptions){
     const time = options?.waitTimes || WAIT_TIME_AFTER_CLICK
-    const result = threads.disposable();
+    const result = threads.disposable()
     if(options?.feedback){
-        let thread = threads.start(function(){
+        const thread = threads.start(function(){
             // 在新线程中开启一个Toast监听
             events.observeToast();
             events.on("toast", function(toast){
                 // 当监听到Toast时，将Toast的内容存储到公共变量中
                 result.setAndNotify(toast.getText())
+                events.removeAllListeners("toast")
             })
         })
         thread.waitFor()
@@ -164,7 +168,6 @@ export function normalClick(x: number, y: number, options?: NormalClickOptions){
         })
         const str = result.blockedGet()
         Record.debug(str)
-        threads.shutDownAll()
         if(str.match("失败|异常|领取过奖励")){
             throw new CurrentAppBanned(str)
         }

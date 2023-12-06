@@ -107,7 +107,7 @@ export class YouShi extends Base{
     reward(): void {
         this.goTo(this.tab, 3)
         let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS  && scrollClick("点击领取")){
+        while(++cycleCounts < 5  && scrollClick("点击领取")){
             if(dialogClick("开始抽奖")){
                 normalClick(resizeX(random(395, 689)), resizeY(random(750, 1067)))
                 if(dialogClick("点击领取")){

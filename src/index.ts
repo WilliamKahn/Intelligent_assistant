@@ -8,7 +8,7 @@
  */
 import { sendIncomeMessageToWxPuher, toShowString } from "./common/report";
 import { clearBackground, convertSecondsToMinutes } from "./common/utils";
-import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, STORAGE, STORAGE_APP, STORAGE_DATE, deJian, filteredList, redFruits, wanChao } from "./global";
+import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, STORAGE, STORAGE_APP, STORAGE_DATE, filteredList, speedFree } from "./global";
 import { ConfigInvalidException } from "./lib/exception";
 import { init } from "./lib/init";
 import { Record as LogRecord } from "./lib/logger";
@@ -22,7 +22,7 @@ function test() {
     // for(let app of filteredList){
     //     log(`${app.appName}: ${app.fetch(BaseKey.Weight)}----${app.fetch(BaseKey.Money)}`)
     // }
-    wanChao.store(BaseKey.Money, 0.30)
+    speedFree.watchAdsForCoin("日常福利")
 }
 
 function main() {

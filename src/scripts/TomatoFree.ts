@@ -69,7 +69,7 @@ export class TomatoFree extends AbstractTomato {
     @functionLog("签到")
     signIn(): void{
         this.goTo(this.tab, 2)
-        if(selectedClick("福利中心", 80)){
+        if(selectedClick("福利中心", 40)){
             this.sign()
             scrollTo("金币献爱心", {waitFor:true})
             if(scrollClick("去签到")) {

@@ -161,7 +161,7 @@ export abstract class Base {
         }
         //三个方式都无法解决直接异常（每个可执行两遍）
         if(times > 9){
-            throw new ExceedMaxNumberOfAttempts("watch")
+            throw new ExceedMaxNumberOfAttempts("超过最大限制次数")
         }
         if (currentPackage() !== this.packageName) {
             this.lauchApp()
@@ -259,7 +259,7 @@ export abstract class Base {
 
     watchAdsForCoin(backSign: string){
         let cycleCounts = 0
-        const str = "看.*(视频|内容|广告).*(得|领|赚).*([0-9]+金币|更多)"
+        const str = "看.*(视频|内容|广告).*(得|领|赚|收取).*([0-9]+金币|更多)"
         while(++cycleCounts < MAX_CYCLES_COUNTS
             && (dialogClick(str))){
             this.watch(textMatches(merge([backSign, str])))

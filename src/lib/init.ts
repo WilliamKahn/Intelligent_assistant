@@ -33,7 +33,7 @@ export function init() {
         Record.debug("分辨率: " + device.height + " x " + device.width);
     }
 
-    threads.start(function () {
+    const thread = threads.start(function () {
         Record.debug("子线程启动")
         // @ts-ignore
         findAndClick(className("android.widget.Button").textMatches(".?立即开始.?|.?允许.?"),{
@@ -42,7 +42,7 @@ export function init() {
             fixed:true
         })
     })
-
+    thread.waitFor()
     if (!requestScreenCapture()) {
         throw new PermissionException("Accessibility permission obtaining failure.");
     } else {

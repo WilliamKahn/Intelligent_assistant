@@ -221,8 +221,8 @@ export function findPreferredCloseButton(list:Point[]){
     for(let i = 0;i<sortedCoordinates.length; i++){
         if(calculateDistance(firstCoordinate, sortedCoordinates[i]) > 3){
             firstCoordinate = sortedCoordinates[i]
-
-            if(num === 0 && !boundsInside(firstCoordinate.x - 100, firstCoordinate.y - 100, firstCoordinate.x + 100, firstCoordinate.y + 100).findOnce()){
+            const component = boundsInside(firstCoordinate.x - 100, firstCoordinate.y - 100, firstCoordinate.x + 100, firstCoordinate.y + 100).findOnce()
+            if(num === 0 && !(component != null && component.text() === "")){
                 sortedCoordinates.splice(i)
                 i--
             }

@@ -36,7 +36,7 @@ export const PROJECT_NAME = "智能助手"
 /**
  * @description: 脚本版本号。建议根据 [语义化版本号] 迭代
  */
-export const VERSION = "0.3.0";
+export const VERSION = "0.4.1";
 
 // export const LISTENER_INTERVAL = 100
 // export const EVENT = events.emitter()

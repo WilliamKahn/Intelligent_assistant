@@ -35,7 +35,7 @@ export function toShowString(list: any[]){
     return stack.join('\n')
 }
 
-export function sendErrorMessage(){
+export function sendErrorMessage(str: string){
     let collection = LOG_STACK
     // .filter((frame) => {
     //     return frame.getLevel() >= LogLevel.Info;
@@ -44,7 +44,7 @@ export function sendErrorMessage(){
     hamibot.postMessage(Date.now().toString(), {
         telemetry: true,
         data: {
-          title: 'error',
+          title: str,
           attachments: [
             // 支持 text, json, image 三种类型，根据实际需要选择使用
             {
@@ -58,4 +58,5 @@ export function sendErrorMessage(){
           ],
         },
       });
+      img.recycle()
 }

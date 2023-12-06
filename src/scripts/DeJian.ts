@@ -71,7 +71,7 @@ export class DeJian extends Base {
         let tmp = id("com.chaozh.iReader.dj:id/channel_tab").findOnce()
         if(tmp != null && findAndClick("推荐", 
         {fixed:true, ocrRecognize:true, bounds: tmp.bounds(), selectedThreshold:100})){
-            if(readClick(id("com.zhangyue.iReader.bookStore:id/iv_book"), random(0, 5))){
+            if(readClick(id("com.zhangyue.iReader.bookStore:id/id_tv_book_name"), random(0, 5))){
                 this.read(totalTime)
             }
         }

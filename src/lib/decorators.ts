@@ -27,10 +27,11 @@ export function functionLog(message: string) {
             }
             return result
           }
-        } catch (error) {
-          Record.debug(`${error}`)
+        } catch (error:any) {
           if(isCurrentAppBanned(error)){
             throw error
+          } else {
+            Record.debug(`${error.message}`)
           }
           const instance = this as any;
           let retries = 1;
@@ -57,15 +58,14 @@ export function functionLog(message: string) {
                 return result
               }
               break
-            } catch (error) {
-              Record.error(`${error}`)
-              sendErrorMessage()
+            } catch (error:any) {
+              Record.debug(`${error.message}`)
+              sendErrorMessage(error.message)
               retries++
             }
           }
           if(retries >= MAX_RETRY_COUNTS) {
-            Record.error(`${error}`)
-            throw new ExceedMaxNumberOfAttempts(key)
+            throw new ExceedMaxNumberOfAttempts("超过最大尝试次数")
           }
         }
       }
@@ -125,12 +125,12 @@ export function startDecorator(_: any, __: string, descriptor: PropertyDescripto
       const startTime = new Date();
       try{
         originalMethod.apply(this, args)
-      }catch(e) {
-        if(isCurrentAppBanned(e)){
+      }catch(error:any) {
+        if(isCurrentAppBanned(error)){
           Record.error(`账号异常`)
         } else {
-          Record.error(`当前app发生异常: ${e}`)
-          sendErrorMessage()
+          Record.error(`当前app发生异常: ${error.message}`)
+          sendErrorMessage(error.message)
         }
       }
       const endTime = new Date();
