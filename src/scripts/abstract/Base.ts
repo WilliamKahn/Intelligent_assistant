@@ -176,7 +176,7 @@ export abstract class Base {
             return
         }
         waitRandomTime(10)
-        if(findAndClick(".*跳过.*", {fixed:true, bounds:{left:device.width, bottom:device.height * 1/5}})){
+        if(findAndClick(".*跳过.*", {fixed:true, bounds:{left:device.width * 2 / 3, bottom:device.height * 1/5}})){
             if(!clickDialogOption(Dialog.Positive)){
                 waitRandomTime(1)
                 this.watch(exitSign, ++times)
@@ -185,7 +185,7 @@ export abstract class Base {
         }
         close(times)
         //坚持退出 检测
-        if(times < 5){
+        if(times < 3){
             clickDialogOption(Dialog.Positive)
         } else {
             clickDialogOption(Dialog.Negative)

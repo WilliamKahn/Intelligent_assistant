@@ -113,31 +113,17 @@ export function convertSecondsToMinutes(seconds: number) {
  */
 export function close(times: number){
     if(!closeByImageMatching()){
-        switch(times % 4){
+        switch(times % 2){
             case 0:
-                if(!findAndClick(className("android.widget.ImageView"), 
+                if(!findAndClick(classNameMatches("android\.widget\.(ImageView|Button)"),
                 {fixed:true, bounds:{left:device.width * 3 / 5, bottom:device.height * 4 / 5}})){
                     back()
                     waitRandomTime(4)
                 }
                 break
             case 1:
-                if(!findAndClick(className("android.widget.Button"),
-                {fixed:true, bounds:{left:device.width * 3 / 5, bottom:device.height * 4 / 5}})){
-                    back()
-                    waitRandomTime(4)
-                }
-                break
-            case 2:
-                if(!findAndClick(className("android.widget.ImageView"), 
-                {fixed:true, bounds:{right:device.width * 1 / 3, bottom:device.height * 4 / 5}})){
-                    back()
-                    waitRandomTime(4)
-                }
-                break
-            case 3:
-                if(!findAndClick(className("android.widget.Button"), 
-                {fixed:true, bounds:{right:device.width * 1 / 3, bottom:device.height * 4 / 5}})){
+                if(!findAndClick(classNameMatches("android\.widget\.(ImageView|Button)"), 
+                {fixed:true, bounds:{right:device.width * 2 / 5, bottom:device.height * 4 / 5}})){
                     back()
                     waitRandomTime(4)
                 }
@@ -210,7 +196,6 @@ export function closeByImageMatching(): boolean {
     return false
 }
 export function findPreferredCloseButton(list:Point[]){
-    const num = random(0,1)
     //距离原点排序
     const sortedCoordinates = list.slice().sort((a, b) => {
         const distanceA = calculateDistance(a, {x:0,y:0});
@@ -222,7 +207,9 @@ export function findPreferredCloseButton(list:Point[]){
         if(calculateDistance(firstCoordinate, sortedCoordinates[i]) > 3){
             firstCoordinate = sortedCoordinates[i]
             const component = boundsInside(firstCoordinate.x - 100, firstCoordinate.y - 100, firstCoordinate.x + 100, firstCoordinate.y + 100).findOnce()
-            if(num === 0 && !(component != null && component.text() === "")){
+            //筛选控件
+            if(firstCoordinate.y > device.height * 1 / 5 
+            && !(component != null && component.text() === "")){
                 sortedCoordinates.splice(i)
                 i--
             }
@@ -231,7 +218,9 @@ export function findPreferredCloseButton(list:Point[]){
             i--
         }
     }
-
+    // for(let t of sortedCoordinates){
+    //     log(t)
+    // }
     sortedCoordinates.sort((a, b) => {
         const {priority: priorityA, distance: distanceA} = calculatePriority(a);
         const {priority: priorityB, distance: distanceB} = calculatePriority(b);

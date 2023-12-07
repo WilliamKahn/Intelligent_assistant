@@ -1390,7 +1390,6 @@ function closeByImageMatching() {
   return false;
 }
 function findPreferredCloseButton(list) {
-  var num = random(0, 1);
   var sortedCoordinates = list.slice().sort(function (a, b) {
     var distanceA = calculateDistance(a, {
       x: 0,
@@ -1412,7 +1411,7 @@ function findPreferredCloseButton(list) {
       firstCoordinate = sortedCoordinates[i];
       var component = boundsInside(firstCoordinate.x - 100, firstCoordinate.y - 100, firstCoordinate.x + 100, firstCoordinate.y + 100).findOnce();
 
-      if (num === 0 && !(component != null && component.text() === "")) {
+      if (firstCoordinate.y > device.height * 1 / 5 && !(component != null && component.text() === "")) {
         sortedCoordinates.splice(i);
         i--;
       }
@@ -1887,7 +1886,7 @@ var Base = function () {
     if (findAndClick(".*跳过.*", {
       fixed: true,
       bounds: {
-        left: device.width,
+        left: device.width * 2 / 3,
         bottom: device.height * 1 / 5
       }
     })) {
@@ -1900,7 +1899,7 @@ var Base = function () {
 
     utils_close(times);
 
-    if (times < 5) {
+    if (times < 3) {
       clickDialogOption(Dialog.Positive);
     } else {
       clickDialogOption(Dialog.Negative);
@@ -5641,7 +5640,7 @@ var _a;
 
 
 var PROJECT_NAME = "智能助手";
-var VERSION = "0.3.0";
+var VERSION = "0.4.1";
 var global_WX_PUSHER_URL = "https://wxpusher.zjiecode.com/api/send/message";
 var global_APP_TOKEN = "AT_2vEaUfXFmwMKybX7YeX3yCJFrmc7TFlD";
 var MAX_BACK_COUNTS = 10;
@@ -5910,7 +5909,7 @@ init();
 test();
 
 function test() {
-  speedFree.watchAdsForCoin("日常福利");
+  speedFree.start(300 * 60);
 }
 
 function main() {
