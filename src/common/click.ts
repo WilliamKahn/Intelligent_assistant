@@ -45,21 +45,6 @@ export function scrollClick(text:string, range?:string){
 export function selectedClick(text: string, threshold: number){
     return findAndClick(text, {fixed:true, waitFor:true, selectedThreshold: threshold, check:true})
 }
-/**
- * @description 随机点击列表子项
- * @param component 列表项
- * @param index 子项下标，推荐使用random(?,?)
- * @param avoid 需要躲避的控件
- */
-export function randomClickChildInList(component: UiSelector, index: number){
-    const list = component.boundsInside(0, 0, device.width, device.height).findOnce()
-    if (list != null) {
-        let child = list.child(index)
-        if(child != null) {
-            randomClick(child.bounds())
-        }
-    }
-}
 export function clickDialogOption(options?:Dialog){
     if(options === undefined){
         options = random(Dialog.Positive, Dialog.Negative)

@@ -197,7 +197,8 @@ export const {
     _SHOW_CONSOLE,
     APP_ENV,
     ROBOT_ID,
-    ORDER
+    ORDER,
+    RESET
 } = hamibot.env;
 //是否显示控制台
 export const SHOW_CONSOLE = _SHOW_CONSOLE
@@ -235,6 +236,11 @@ if(APP_ENV === 'production'){
     LogRecord.setDisplayLevel(LogLevel.Log)
 } else if(APP_ENV === 'development') {
     LogRecord.debug("处于开发环境")
+}
+
+if(RESET === true){
+    LogRecord.info("脚本重置")
+    STORAGE.clear()
 }
 // -------------------- register listener -----------------------
 // register exit listener

@@ -1,6 +1,6 @@
-import { findAndClick, fixedClick, dialogClick, randomClickChildInList, readClick, scrollClick, selectedClick } from "../common/click";
+import { findAndClick, fixedClick, readClick, scrollClick, selectedClick } from "../common/click";
 import { scrollTo } from "../common/search";
-import { closeByImageMatching, doFuncAtGivenTime, merge, resizeX, resizeY } from "../common/utils";
+import { closeByImageMatching, doFuncAtGivenTime, resizeX, resizeY } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_MARVEL_FREE, PACKAGE_READ_MARVEL_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Base, BaseKey } from "./abstract/Base";

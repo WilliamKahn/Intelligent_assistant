@@ -1,5 +1,4 @@
-import { WidgetNotFoundException } from './../lib/exception';
-import { findAndClick, fixedClick, dialogClick, normalClick, scrollClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, normalClick, scrollClick } from "../common/click";
 import { convertSecondsToMinutes, doFuncAtGivenTime, moveDown, randomExecute, resizeX, resizeY } from "../common/utils";
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_VEDIO_YOUSHI, PACKAGE_VEDIO_YOUSHI } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";

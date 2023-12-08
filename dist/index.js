@@ -1066,17 +1066,6 @@ function selectedClick(text, threshold) {
     check: true
   });
 }
-function randomClickChildInList(component, index) {
-  var list = component.boundsInside(0, 0, device.width, device.height).findOnce();
-
-  if (list != null) {
-    var child = list.child(index);
-
-    if (child != null) {
-      randomClick(child.bounds());
-    }
-  }
-}
 function clickDialogOption(options) {
   if (options === undefined) {
     options = random(Dialog.Positive, Dialog.Negative);
@@ -1272,9 +1261,9 @@ function utils_convertSecondsToMinutes(seconds) {
 }
 function utils_close(times) {
   if (!closeByImageMatching()) {
-    switch (times % 4) {
+    switch (times % 2) {
       case 0:
-        if (!findAndClick(className("android.widget.ImageView"), {
+        if (!findAndClick(classNameMatches("android\.widget\.(ImageView|Button)"), {
           fixed: true,
           bounds: {
             left: device.width * 3 / 5,
@@ -1288,38 +1277,10 @@ function utils_close(times) {
         break;
 
       case 1:
-        if (!findAndClick(className("android.widget.Button"), {
+        if (!findAndClick(classNameMatches("android\.widget\.(ImageView|Button)"), {
           fixed: true,
           bounds: {
-            left: device.width * 3 / 5,
-            bottom: device.height * 4 / 5
-          }
-        })) {
-          back();
-          waitRandomTime(4);
-        }
-
-        break;
-
-      case 2:
-        if (!findAndClick(className("android.widget.ImageView"), {
-          fixed: true,
-          bounds: {
-            right: device.width * 1 / 3,
-            bottom: device.height * 4 / 5
-          }
-        })) {
-          back();
-          waitRandomTime(4);
-        }
-
-        break;
-
-      case 3:
-        if (!findAndClick(className("android.widget.Button"), {
-          fixed: true,
-          bounds: {
-            right: device.width * 1 / 3,
+            right: device.width * 2 / 5,
             bottom: device.height * 4 / 5
           }
         })) {
@@ -3046,7 +3007,6 @@ var KuaiShouFree = function (_super) {
   function KuaiShouFree() {
     var _this = _super.call(this) || this;
 
-    _this.buttonNameList = ['看视频赚更多', '看广告赚更多'];
     _this.coin = 0;
     _this.isFirst = true;
     _this.appName = NAME_READ_KUAISHOU_FREE;
@@ -3096,6 +3056,10 @@ var KuaiShouFree = function (_super) {
   KuaiShouFree.prototype.watchAds = function () {
     this.goTo(this.tab, 2);
     var cycleCounts = 0;
+
+    if (!text("看视频赚[0-9]+金币").exists()) {
+      return;
+    }
 
     while (++cycleCounts < MAX_CYCLES_COUNTS && scrollClick("去赚钱", "看视频赚[0-9]+金币")) {
       this.watch(text("日常任务"));
@@ -5735,7 +5699,8 @@ var global_TOKEN = (_a = hamibot.env, _a._TOKEN),
     _SHOW_CONSOLE = _a._SHOW_CONSOLE,
     APP_ENV = _a.APP_ENV,
     global_ROBOT_ID = _a.ROBOT_ID,
-    ORDER = _a.ORDER;
+    ORDER = _a.ORDER,
+    RESET = _a.RESET;
 var SHOW_CONSOLE = _SHOW_CONSOLE;
 var list = [];
 
@@ -5773,6 +5738,11 @@ if (APP_ENV === 'production') {
   logger_Record.setDisplayLevel(LogLevel.Log);
 } else if (APP_ENV === 'development') {
   logger_Record.debug("处于开发环境");
+}
+
+if (RESET === true) {
+  logger_Record.info("脚本重置");
+  global_STORAGE.clear();
 }
 
 events.on("exit", function () {
@@ -5909,7 +5879,7 @@ init();
 test();
 
 function test() {
-  speedFree.start(300 * 60);
+  log(text("明日可领").exists());
 }
 
 function main() {

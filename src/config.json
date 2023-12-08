@@ -12,11 +12,18 @@
         "help": "不填写则按照默认顺序(1 2 3 4)执行, 执行顺序先后并不影响执行时间长短, 以空格分隔"
     },
     {
+        "label": "初始化",
+        "help": "清空所有本地留存记录(重置脚本至初始状态)",
+        "name": "RESET",
+        "type": "checkbox",
+        "default": false
+    },
+    {
         "label": "是否显示控制台",
         "help": "日志信息在hamibot中可查看, 关闭后可提高效率",
         "name": "_SHOW_CONSOLE",
         "type": "checkbox",
-        "default": false
+        "default": true
     },
     {
         "label": "1.有柿",
