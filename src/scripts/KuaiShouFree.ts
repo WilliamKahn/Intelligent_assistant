@@ -17,7 +17,7 @@ export class KuaiShouFree extends Base{
         this.initialComponent = this.tab
         this.initialNum = 1
         this.exitNum = 2
-        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, 20 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60)
         this.lowEffEstimatedTime = 0
     }
 

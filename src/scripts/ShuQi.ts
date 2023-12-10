@@ -16,7 +16,7 @@ export class ShuQi extends Base{
         this.initialComponent = this.tab
         this.initialNum = 1
         this.exitNum = 0
-        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, 15 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 15 * 60)
         this.lowEffEstimatedTime = 0
     }
 
@@ -49,10 +49,12 @@ export class ShuQi extends Base{
         this.goTo(this.tab, 2)
         if(dialogClick("立即签到")){
             closeByImageMatching()
+            closeByImageMatching()
         } else {
             if(scrollClick("去签到", "每日签到")){
                 if(dialogClick("立即签到")){
-                    closeByImageMatching()    
+                    closeByImageMatching()
+                    closeByImageMatching()
                 }
             }
         }

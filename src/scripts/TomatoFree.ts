@@ -19,7 +19,7 @@ export class TomatoFree extends AbstractTomato {
         .boundsInside(0, device.height-300, device.width, device.height)
         .boundsContains(100, device.height - 100,device.width-100, device.height - 50)
         this.initialNum = 0
-        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, 35 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 35 * 60)
         this.lowEffEstimatedTime = 0
         this.lowEffAssmitCount = 2
     }

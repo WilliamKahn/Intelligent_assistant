@@ -16,7 +16,7 @@ export class MarvelFree extends Base{
         this.initialNum = 0
         this.depth = 1
         this.exitNum = 0
-        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, 15 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 15 * 60)
         this.lowEffEstimatedTime = 0
     }
 

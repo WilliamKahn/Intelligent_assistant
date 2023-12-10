@@ -1,5 +1,5 @@
-import { findAndClick, fixedClick, dialogClick, normalClick, readClick, scrollClick, selectedClick, ocrClick, goneClick } from "../../common/click";
-import { doFuncAtGivenTime, merge, randomExecute, waitRandomTime } from "../../common/utils";
+import { dialogClick, findAndClick, goneClick, normalClick, ocrClick, readClick, scrollClick, selectedClick } from "../../common/click";
+import { doFuncAtGivenTime, randomExecute, waitRandomTime } from "../../common/utils";
 import { MAX_CYCLES_COUNTS } from "../../global";
 import { functionLog, measureExecutionTime } from "../../lib/decorators";
 import { Record } from "../../lib/logger";
@@ -14,7 +14,7 @@ export abstract class AbstractFreeNovel extends Base {
         this.tab = id(packageName+":id/home_activity_navigation_bar")
         this.initialComponent = this.tab
         this.initialNum = 1
-        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, 15 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 15 * 60)
         this.lowEffEstimatedTime = 0
         this.lowEffAssmitCount = 2
     }

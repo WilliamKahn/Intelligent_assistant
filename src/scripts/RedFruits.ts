@@ -1,7 +1,7 @@
 import { findAndClick, fixedClick, readClick, scrollClick, selectedClick } from "../common/click";
 import { scrollTo } from "../common/search";
-import { convertSecondsToMinutes, doFuncAtGivenTime, findLargestIndexes, getGrayscaleHistogram, getScreenImage, merge, resizeX, resizeY, waitRandomTime } from "../common/utils";
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_RED_FRUITS, PACKAGE_READ_RED_FRUITS } from "../global";
+import { convertSecondsToMinutes, doFuncAtGivenTime, merge, resizeX, resizeY, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_READ_RED_FRUITS, PACKAGE_READ_RED_FRUITS } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { AbstractTomato } from "./abstract/AbstractTomato";
@@ -14,7 +14,7 @@ export class RedFruits extends AbstractTomato {
         super()
         this.appName = NAME_READ_RED_FRUITS
         this.packageName = PACKAGE_READ_RED_FRUITS
-        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, 20 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60)
         this.initialComponent = text("首页")
         this.lowEffEstimatedTime = 0
         this.lowEffAssmitCount = 2
@@ -25,6 +25,7 @@ export class RedFruits extends AbstractTomato {
         this.signIn()
         this.openTreasure()
         this.watchAds()
+        this.mealSupp()
     }
 
     @measureExecutionTime
@@ -92,7 +93,7 @@ export class RedFruits extends AbstractTomato {
     reward(): void {
         this.goTo(text("福利"), -1)
         let cycleCounts = 0
-        let list = ["看短剧赚金币", "阅读赚金币"]
+        let list = ["看短剧(自动)?赚金币","阅读赚金币"]
         for(let range of list){
             while(++cycleCounts < MAX_CYCLES_COUNTS 
                 && scrollClick("立即领取", range)) {

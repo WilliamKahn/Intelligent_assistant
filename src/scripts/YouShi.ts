@@ -12,8 +12,8 @@ export class YouShi extends Base{
         this.appName = NAME_VEDIO_YOUSHI
         this.packageName = PACKAGE_VEDIO_YOUSHI
         this.tab = id("android:id/tabs")
-        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, BASE_ASSIMT_TIME)
-        this.medEffEstimatedTime = this.fetch(BaseKey.medEffEstimatedTime, 110 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME)
+        this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 110 * 60)
         this.lowEffEstimatedTime = 0
     }
 

@@ -21,8 +21,8 @@ export class KuaiShou extends Base{
         this.tab = id(this.packageName+":id/tab_layout")
         this.register = id(this.packageName + ":id/pendant_mask_bg")
         this.depth = 1
-        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, BASE_ASSIMT_TIME)
-        this.medEffEstimatedTime = this.fetch(BaseKey.medEffEstimatedTime, 15 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME)
+        this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 15 * 60)
         this.lowEffEstimatedTime = 0
     }
 

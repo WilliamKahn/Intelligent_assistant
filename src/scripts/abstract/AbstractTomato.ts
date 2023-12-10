@@ -1,7 +1,6 @@
-import { findAndClick, fixedClick, dialogClick } from "../../common/click";
-import { close, merge } from "../../common/utils";
-import { CurrentAppBanned, isCurrentAppBanned } from "../../lib/exception";
-import { Record } from "../../lib/logger";
+import { findAndClick, fixedClick } from "../../common/click";
+import { merge } from "../../common/utils";
+import { CurrentAppBanned } from "../../lib/exception";
 import { Base } from "./Base";
 
 export abstract class AbstractTomato extends Base {

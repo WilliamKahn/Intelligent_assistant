@@ -99,11 +99,11 @@ export function measureExecutionTime(_: any, key: string, descriptor: PropertyDe
       if(key === "highEff"){
         Record.debug(`highEff时间调整为${convertSecondsToMinutes(time)}分钟`)
         instance.highEffEstimatedTime = time
-        instance.store(BaseKey.highEffEstimatedTime, time)
+        instance.store(BaseKey.HighEffEstimatedTime, time)
       } else if(key === "medEff") {
         Record.debug(`medEff时间调整为${convertSecondsToMinutes(time)}分钟`)
         instance.medEffEstimatedTime = time
-        instance.store(BaseKey.medEffEstimatedTime, time)
+        instance.store(BaseKey.MedEffEstimatedTime, time)
       }
       
       return executionTime;

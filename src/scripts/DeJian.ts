@@ -14,8 +14,8 @@ export class DeJian extends Base {
         this.appName = NAME_READ_DEJIAN
         this.packageName = PACKAGE_READ_DEJIAN
         this.initialComponent = desc("bookstore_button")
-        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, BASE_ASSIMT_TIME)
-        this.medEffEstimatedTime = this.fetch(BaseKey.medEffEstimatedTime, 45 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME)
+        this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 45 * 60)
         this.lowEffEstimatedTime = 0
     }
 

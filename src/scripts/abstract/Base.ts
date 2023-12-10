@@ -51,7 +51,7 @@ export abstract class Base {
 
     @startDecorator
     start(time: number): void {
-        if (time > 0 && this.lauchApp()) {
+        if (this.lauchApp()) {
             this.reset()
             Record.info(`${this.appName}预计执行${convertSecondsToMinutes(time)}分钟`)
             this.reSearchTab()
@@ -323,10 +323,10 @@ export abstract class Base {
 
 export enum BaseKey {
     Weight,
+    Money,
     Executed,
-    highEffEstimatedTime,
-    medEffEstimatedTime,
-    lowEffEstimatedTime,
-    Money
+    HighEffEstimatedTime,
+    MedEffEstimatedTime,
+    LowEffEstimatedTime,
 }
 

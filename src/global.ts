@@ -36,7 +36,7 @@ export const PROJECT_NAME = "智能助手"
 /**
  * @description: 脚本版本号。建议根据 [语义化版本号] 迭代
  */
-export const VERSION = "0.4.1";
+export const VERSION = "0.4.3";
 
 // export const LISTENER_INTERVAL = 100
 // export const EVENT = events.emitter()
@@ -174,6 +174,12 @@ export const deJian = new DeJian()
 //望潮
 export const wanChao = new WanChao()
 
+//初始化map
+export const highEffmap:Record<string, number> = {}
+export const medEffMap:Record<string, number> = {}
+export const lowEffMap:Record<string, number> = {}
+export const fixedMap:Record<string, number> = {}
+
 const map:Record<string, any> = {
     "1" : youShi,
     "2" : shuQi,
@@ -210,13 +216,22 @@ if(ORDER != undefined){
     if(orderList.length > 0) {
         //去重复
         orderList = orderList.filter((value:string, index: number, self:string) => self.indexOf(value) === index)
-        for(let i of orderList){
-            let app = map[i]
+        for(let key of orderList){
+            const parts = key.split(":")
+            if(parts.length === 2){
+                key = parts[0]
+                const time = Number(parts[1])
+                if(!isNaN(time)){
+                    const app = map[key]
+                    if(app != undefined) fixedMap[app.constructor.name] = time * 60
+                }
+            }
+            let app = map[key]
             if(app != undefined) list.push(app)
         }
     }
 }
-if(list.length != 15){
+if(list.length != map.length){
     for(let key in map){
         if(list.indexOf(map[key]) == -1){
             list.push(map[key])

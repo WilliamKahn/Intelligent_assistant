@@ -12,7 +12,7 @@ export class SpeedFree extends Base {
         this.appName = NAME_READ_SPEED_FREE
         this.packageName = PACKAGE_READ_SPEED_FREE
         this.initialComponent = desc("bookstore_button")
-        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, 30 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 120 * 60)
         this.lowEffEstimatedTime = 0
     }
 

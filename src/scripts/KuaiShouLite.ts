@@ -17,8 +17,8 @@ export class KuaiShouLite extends Base{
         this.packageName = PACKAGE_VEDIO_KUAISHOU_LITE
         this.tab = id(this.packageName+":id/tab_layout")
         this.depth = 1
-        this.highEffEstimatedTime = this.fetch(BaseKey.highEffEstimatedTime, BASE_ASSIMT_TIME)
-        this.medEffEstimatedTime = this.fetch(BaseKey.medEffEstimatedTime, 30 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME)
+        this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 30 * 60)
         this.lowEffEstimatedTime = 0
     }
 
