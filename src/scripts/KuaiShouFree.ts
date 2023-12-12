@@ -16,7 +16,6 @@ export class KuaiShouFree extends Base{
         this.tab = id(this.packageName+":id/home_bottom_bar")
         this.initialComponent = this.tab
         this.initialNum = 1
-        this.exitNum = 2
         this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60)
         this.lowEffEstimatedTime = 0
     }
@@ -41,7 +40,6 @@ export class KuaiShouFree extends Base{
     weight(): void {
         const weight = this.record() - this.coin
         this.store(BaseKey.Weight, weight)
-        this.store(BaseKey.Money, (weight/10000).toFixed(2))
     }
     
     @functionLog("签到")
@@ -94,8 +92,10 @@ export class KuaiShouFree extends Base{
 
     record(): number{
         this.goTo(this.tab, 2)
-        const str = ocr.recognizeText(getScreenImage({
-            left:resizeX(78),top:resizeY(339), right:resizeX(360), bottom: resizeY(438)}))
+        const img = getScreenImage({
+            left:resizeX(78),top:resizeY(339), right:resizeX(360), bottom: resizeY(438)})
+        const str = ocr.recognizeText(img)
+        img.recycle()
         const match = str.match("[0-9]+")
         if(match){
             return parseInt(match[0])

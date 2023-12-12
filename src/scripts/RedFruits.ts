@@ -10,6 +10,8 @@ import { BaseKey } from "./abstract/Base";
 
 export class RedFruits extends AbstractTomato {
 
+    list = ["阅读赚金币"]
+
     constructor() {
         super()
         this.appName = NAME_READ_RED_FRUITS
@@ -30,8 +32,20 @@ export class RedFruits extends AbstractTomato {
 
     @measureExecutionTime
     lowEff(time: number): void {
+        this.goTo(text("福利"), -1)
+        let flag = false
+        if(textMatches("看短剧(自动)?赚金币").exists()){
+            if(textMatches("看短剧赚金币").exists()){
+                this.list.push("看短剧赚金币")
+            }
+            flag = true
+        }
         doFuncAtGivenTime(time / 2, 10 * 60, (perTime: number) => {
-            this.swipeVideo(perTime)
+            if(flag){
+                this.swipeVideo(perTime)
+            } else {
+                this.readBook(perTime)
+            }
             this.openTreasure()
             this.reward()
         })
@@ -51,7 +65,6 @@ export class RedFruits extends AbstractTomato {
         if(tmp != null) {
             const weight = parseInt(tmp.text())
             this.store(BaseKey.Weight, weight)
-            this.store(BaseKey.Money, (weight/33000).toFixed(2))
         }
     }
 
@@ -82,7 +95,7 @@ export class RedFruits extends AbstractTomato {
         if(selectedClick("经典", 170)){
             if(findAndClick(id(this.packageName+":id/name_tv"),{
                 leftRange:random(1,8).toString(),
-                cover:true
+                coverBoundsScaling: 1
             })){
                 this.read(totalTime)
             }
@@ -93,8 +106,7 @@ export class RedFruits extends AbstractTomato {
     reward(): void {
         this.goTo(text("福利"), -1)
         let cycleCounts = 0
-        let list = ["看短剧(自动)?赚金币","阅读赚金币"]
-        for(let range of list){
+        for(let range of this.list){
             while(++cycleCounts < MAX_CYCLES_COUNTS 
                 && scrollClick("立即领取", range)) {
                 this.watchAdsForCoin("日常福利")
@@ -132,13 +144,13 @@ export class RedFruits extends AbstractTomato {
         this.goTo(text("福利"), -1)
         if(scrollClick("去领取", "吃饭补贴")){
             if(fixedClick("领.*补贴[0-9]+金币")){
-                this.watchAdsForCoin("已按时吃饭[0-9]天")
+                this.watchAdsForCoin("已按时吃饭.*天")
             }
             let cycleCounts = 0
             while(++cycleCounts < MAX_CYCLES_COUNTS &&
                 fixedClick("看视频补领一次补贴")){
-                this.watch(textMatches("已按时吃饭[0-9]天"))
-                this.watchAdsForCoin("已按时吃饭[0-9]天")
+                this.watch(textMatches("已按时吃饭.*天|恭喜获得"))
+                this.watchAdsForCoin("已按时吃饭.*天")
             }
         }
     }

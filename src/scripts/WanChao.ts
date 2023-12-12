@@ -32,7 +32,7 @@ export class WanChao extends Base {
                 waitRandomTime(4)
             }
             while(++cycleCounts < MAX_CYCLES_COUNTS 
-                && findAndClick("待完成", {waitTimes:10, cover:true})) {
+                && findAndClick("待完成", {waitTimes:10, coverBoundsScaling:1})) {
                 back()
                 waitRandomTime(4)
             }
@@ -47,7 +47,7 @@ export class WanChao extends Base {
                     .boundsInside(resizeX(108),resizeY(1140),resizeX(972),resizeY(1323)).findOnce()
                     if(money != null) {
                         Record.log(`中奖${money.text()}`)
-                        this.store(BaseKey.Money, parseFloat(money.text()))
+                        this.store(BaseKey.Weight, parseFloat(money.text()) * this.exchangeRate)
                     }
                 }
             }

@@ -66,7 +66,6 @@ export class Tomato extends AbstractTomato {
         if(tmp != null) {
             const weight = parseInt(tmp.text())
             this.store(BaseKey.Weight, weight)
-            this.store(BaseKey.Money, (weight/30000).toFixed(2))
         }
     }
 
@@ -122,7 +121,7 @@ export class Tomato extends AbstractTomato {
             
             findAndClick(className("android.widget.TextView"), {
                 leftRange:random(1,4).toString(),
-                cover:true
+                coverBoundsScaling:1
             })
             while(!text("阅读电子书").exists()){
                 back()
@@ -132,7 +131,7 @@ export class Tomato extends AbstractTomato {
                 waitRandomTime(3)
                 findAndClick(className("android.widget.TextView"), {
                     leftRange:random(1,4).toString(),
-                    cover:true
+                    coverBoundsScaling:1
                 })
             }
             if(fixedClick("阅读电子书")){

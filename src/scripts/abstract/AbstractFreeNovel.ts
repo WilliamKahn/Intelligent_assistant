@@ -1,7 +1,7 @@
 import { dialogClick, findAndClick, goneClick, normalClick, ocrClick, readClick, scrollClick, selectedClick } from "../../common/click";
 import { doFuncAtGivenTime, randomExecute, waitRandomTime } from "../../common/utils";
 import { MAX_CYCLES_COUNTS } from "../../global";
-import { functionLog, measureExecutionTime } from "../../lib/decorators";
+import { functionLog, measureExecutionTime, startDecorator } from "../../lib/decorators";
 import { Record } from "../../lib/logger";
 import { Base, BaseKey } from "./Base";
 
@@ -61,9 +61,8 @@ export abstract class AbstractFreeNovel extends Base {
                 const match = tmp.text().replace(",", "").match(/[0-9]+/)
                 if(match){
                     const weight = parseInt(match[0])
-                    Record.debug(`${this.constructor.name}:${parseInt(match[0])}`)
+                    Record.debug(`${this.constructor.name}:${weight}`)
                     this.store(BaseKey.Weight, weight)
-                    this.store(BaseKey.Money, (weight/10000).toFixed(2))
                 }
             }
         }

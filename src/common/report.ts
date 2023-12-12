@@ -25,11 +25,11 @@ export function toShowString(list: any[]){
     let sumMoney = 0
     for (let app of list) {
         let weight:number = parseInt(app.fetch(BaseKey.Weight, 0))
-        let money:number = parseFloat(app.fetch(BaseKey.Money, 0))
+        let money:number = weight/app.exchangeRate
         Record.debug(`${app.appName}: ${weight}`)
         sumWeight += weight
         sumMoney += money
-        stack.push(`${app.appName}: ${weight} - - - ${money}元`)
+        stack.push(`${app.appName}: ${weight} - - - ${money.toFixed(2)}元`)
     }
     stack.push(`\n今日总收益: ${sumWeight}金币 - - - ${sumMoney.toFixed(2)}元`)
     return stack.join('\n')

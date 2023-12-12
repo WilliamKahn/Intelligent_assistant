@@ -1,18 +1,15 @@
-import { findAndClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, scrollClick } from "../common/click";
+import { Move } from "../common/enums";
 import { scrollTo } from "../common/search";
-import { closeByImageMatching, doFuncAtGivenTime, moveDown, resizeX, resizeY, waitRandomTime } from "../common/utils";
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_VEDIO_KUAISHOU, PACKAGE_VEDIO_KUAISHOU } from "../global";
+import { close, closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, moveDown, randomExecute, resizeX, resizeY, swipeDown, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_VEDIO_KUAISHOU, PACKAGE_VEDIO_KUAISHOU } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
+import { Record } from "../lib/logger";
 import { Base, BaseKey } from "./abstract/Base";
 
 export class KuaiShou extends Base{
 
     register: UiSelector
-
-    buttonNameList:string[] = [
-        '看内容最高可得[0-9]+金币.*',
-        '看视频最高可得[0-9]+金币.*'
-    ]
 
     constructor(){
         super()
@@ -20,26 +17,28 @@ export class KuaiShou extends Base{
         this.packageName = PACKAGE_VEDIO_KUAISHOU
         this.tab = id(this.packageName+":id/tab_layout")
         this.register = id(this.packageName + ":id/pendant_mask_bg")
+        this.initialComponent = this.tab
+        this.initialNum = 1
         this.depth = 1
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME)
-        this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 15 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 30 * 60)
         this.lowEffEstimatedTime = 0
     }
 
     @measureExecutionTime
     highEff(): void {
         this.signIn()
-        this.openTreasure()
-    }
-    @measureExecutionTime
-    medEff(): void {
-        this.watchAds()
-        this.openTreasure()
-        this.watchlive()
+        randomExecute([
+            ()=>{this.openTreasure()},
+            ()=>{this.watchAds()},
+            ()=>{this.mealSupp()},
+            ()=>{this.like()},
+            ()=>{this.comment()},
+            ()=>{this.collect()},
+        ])
     }
     @measureExecutionTime
     lowEff(time: number): void {
-        doFuncAtGivenTime(time, 10 * 60, (perTime: number) => {
+        doFuncAtGivenTime(time, 25 * 60, (perTime: number) => {
             this.swipeVideo(perTime)
             this.openTreasure()
         })
@@ -47,23 +46,21 @@ export class KuaiShou extends Base{
     }
     @measureExecutionTime
     weight(): void {
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
-        }
-        scrollTo("金币收益")
+        this.goto(-1)
+        scrollTo("[0-9]+", {coverBoundsScaling:1})
         let tmp = textMatches(/(\d+)/)
         .boundsInside(0, 0, resizeX(549), resizeY(429)).findOnce()
         if(tmp != null) {
-            this.store(BaseKey.Weight, parseInt(tmp.text()))
+            const weight = parseInt(tmp.text())
+            Record.debug(`weight: ${weight}`)
+            this.store(BaseKey.Weight, weight)
         }
     }
     
     @functionLog("签到")
     signIn(): void {
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
-        }
-        if(findAndClick("立即领取")) {
+        this.goto(-1)
+        if(dialogClick("立即领取")) {
             this.watchAdsForCoin("日常任务")
             closeByImageMatching()
         }
@@ -71,81 +68,138 @@ export class KuaiShou extends Base{
 
     @functionLog("刷视频")
     swipeVideo(totalTime: number): void {
-        this.goTo(this.tab, 1)
+        this.goto(1)
+        Record.log(`预计刷视频${convertSecondsToMinutes(totalTime)}分钟`)
         moveDown(totalTime, 10)
     }
 
     @functionLog("开宝箱")
     openTreasure(): void {
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
-        }
-        if(findAndClick("立刻领[0-9]+金币")){
+        this.goto(-1)
+        if(fixedClick("立刻领[0-9]+金币")){
             this.watchAdsForCoin("日常任务")
         }
     }
 
-    @functionLog("看视频")
+    @functionLog("看广告")
     watchAds(): void {
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
-        }
+        this.goto(-1)
         let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && findAndClick("领福利 赚更多")){
-            // this.watchUntil()
+        while(++cycleCounts < MAX_CYCLES_COUNTS
+            && findAndClick("领福利 赚更多", {coverBoundsScaling:1.2, leftRange:"看广告得.*金币"})){
+            this.watch(text("日常任务"))
         }
     }
 
     @functionLog("看直播")
     watchlive(): void {
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
-        }
-        if(findAndClick("去观看")){
-            for(let i = 0;i<6;i++){
-                let tmp = id(this.packageName+":id/recycler_view").findOnce()
-                if(tmp != null){
-                    let child = tmp.child(0) 
-                    if(child != null){
-                        child.click()
-                        waitRandomTime(40)
-                        back()
-                        waitRandomTime(4)
-                        findAndClick("退出")
-                    }
-                    for(let j = 0 ;j<2;j++){
-                        tmp.scrollForward()
-                        waitRandomTime(2)
-                    }
+        this.goto(-1)
+        if(findAndClick("去观看 限时领", {coverBoundsScaling:1.2, leftRange:"看直播得.*金币"})){
+            for(let i = 0;i < 6;i++){
+                swipeDown(Move.Fast, 1000)
+                waitRandomTime(2)
+                if(findAndClick(id(this.packageName+":id/photo"), {
+                    index: random(0,3),
+                    waitTimes: 40
+                })){
+                    this.backUntilFind(id(this.packageName+":id/photo"))
                 }
             }
             this.backUntilFind(text("日常任务"))
-            if(findAndClick("领金币 限时领")){
-                findAndClick("知道了")
+            if(findAndClick("领金币 限时领", {coverBoundsScaling:1.2, leftRange:"看直播得.*金币"})){
+                dialogClick("知道了")
             }
         }
     }
 
     @functionLog("领饭补")
     mealSupp(): void {
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
-        }
-        if(findAndClick("去领取")){
-            if(findAndClick("领取饭补")){
-                this.watchAdsForCoin("日常任务")
+        this.goto(-1)
+        if(scrollClick("去查看|去领取", "到饭点领饭补")){
+            let cycleCounts = 0
+            if(fixedClick("领取饭补")){
+                this.watchAdsForCoin("看直播")
             }
-            this.backUntilFind(text("日常任务"))
+            while(cycleCounts < MAX_CYCLES_COUNTS && fixedClick(".*待补签")){
+                this.watch(text("已补签"))
+            }
+        }
+    }
+
+    @functionLog("点赞")
+    like(): void{
+        for(let i = 0;i<2; i++){
+            this.goto(-1)
+            if(scrollClick("去点赞", "点赞1个作品")){
+                this.preNum = 1
+                while(!fixedClick(id(this.packageName+":id/like_icon"))){
+                    swipeDown(Move.Fast, 400)
+                    waitRandomTime(2)
+                }
+            }
+        }
+    }
+
+    @functionLog("评论")
+    comment(): void{
+        for(let i = 0;i<2; i++){
+            this.goto(-1)
+            if(scrollClick("去评论", "评论1个作品")){
+                this.preNum = 1
+                while(!fixedClick(id(this.packageName+":id/comment_icon"))){
+                    swipeDown(Move.Fast, 400)
+                    waitRandomTime(2)
+                }
+                if(fixedClick(id(this.packageName+":id/editor_holder_text"))){
+                    let tmp = id(this.packageName+":id/editor").findOnce()
+                    if(tmp != null){
+                        tmp.setText("打卡")
+                        waitRandomTime(3)
+                        if(fixedClick(id(this.packageName+":id/finish_button"))){
+                            back()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @functionLog("收藏")
+    collect(): void{
+        for(let i = 0;i<2; i++){
+            this.goto(-1)
+            if(scrollClick("去收藏", "收藏1个作品")){
+                this.preNum = 1
+                while(!fixedClick(id(this.packageName+":id/collect_icon"))){
+                    swipeDown(Move.Fast, 400)
+                    waitRandomTime(2)
+                }
+            }
         }
     }
 
     @functionLog("领取奖励")
     reward(): void {
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
+        this.goto(-1)
+        if(fixedClick("领取奖励")){
+            closeByImageMatching()
         }
-        findAndClick("领取奖励")
     }
 
+    //自定义跳转
+    goto(num: number){
+        //任务页
+        if(num === -1){
+            if(this.tab.exists()){
+                this.goTo(this.tab, 0)
+                if(fixedClick(id(this.packageName+":id/left_btn_parent"))){
+                    fixedClick("任务中心")
+                }
+            } else {
+                this.backUntilFind(text("日常任务"))
+            }
+        } else {
+            this.goTo(this.tab, num)
+        }
+    }
 }

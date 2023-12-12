@@ -15,7 +15,6 @@ export class MarvelFree extends Base{
         this.initialComponent = this.tab
         this.initialNum = 0
         this.depth = 1
-        this.exitNum = 0
         this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 15 * 60)
         this.lowEffEstimatedTime = 0
     }
@@ -44,7 +43,6 @@ export class MarvelFree extends Base{
         if(tmp != null) {
             const weight = parseInt(tmp.text())
             this.store(BaseKey.Weight, weight)
-            this.store(BaseKey.Money, (weight/10000).toFixed(2))
         }
     }
 
@@ -72,7 +70,6 @@ export class MarvelFree extends Base{
             && textMatches("看视频领金币.+").exists()
             && scrollClick("去领取", "看视频领金币.+"))
         {
-            this.exitNum = 0
             this.watch(text("日常福利"))
         }
     }

@@ -2,6 +2,7 @@ import { Image, Point } from "images";
 import { DEVICE_HEIGHT, DEVICE_WIDTH, SHOW_CONSOLE } from "../global";
 import { Record } from "../lib/logger";
 import { findAndClick, normalClick } from './click';
+import { Move } from "./enums";
 import { Bounds } from './interfaces';
 
 
@@ -84,9 +85,27 @@ export function clearBackground(){
 export function moveDown(totalTime:number, interval:number): void{
     let watchTime = 0
     while(totalTime > watchTime){
-        gesture(200, [resizeX(random(580, 620)), resizeY(random(1750, 1850))], 
-        [resizeX(random(780, 820)), resizeY(random(250, 350))])
+        swipeDown(Move.Fast, 400)
         watchTime += waitRandomTime(interval)
+    }
+}
+
+export function swipeDown(set: Move, interval: number){
+    if(set === Move.Normal){
+        gesture(interval, [resizeX(random(580, 620)), resizeY(random(1750, 1850))],
+                 [resizeX(random(780, 820)), resizeY(random(1350, 1450))])
+    } else if(set === Move.Fast){
+        gesture(interval, [resizeX(random(580, 620)), resizeY(random(1750, 1850))], 
+                [resizeX(random(780, 820)), resizeY(random(250, 350))])
+    }
+}
+export function swipeUp(set: Move, interval:number){
+    if(set === Move.Normal){
+        gesture(interval, [resizeX(random(580, 620)), resizeY(random(1350, 1450))],
+                 [resizeX(random(780, 820)), resizeY(random(1750, 1850))])
+    } else if(set === Move.Fast){
+        gesture(interval, [resizeX(random(580, 620)), resizeY(random(950, 1050))], 
+                [resizeX(random(780, 820)), resizeY(random(1750, 1850))])
     }
 }
 
@@ -202,6 +221,9 @@ export function findPreferredCloseButton(list:Point[]){
         const distanceB = calculateDistance(b, {x:0,y:0});
         return distanceA - distanceB;
     });
+    // for(let t of sortedCoordinates){
+    //     log(t)
+    // }
     let firstCoordinate = {x:0, y:0}
     for(let i = 0;i<sortedCoordinates.length; i++){
         if(calculateDistance(firstCoordinate, sortedCoordinates[i]) > 3){
@@ -218,9 +240,6 @@ export function findPreferredCloseButton(list:Point[]){
             i--
         }
     }
-    // for(let t of sortedCoordinates){
-    //     log(t)
-    // }
     sortedCoordinates.sort((a, b) => {
         const {priority: priorityA, distance: distanceA} = calculatePriority(a);
         const {priority: priorityB, distance: distanceB} = calculatePriority(b);
@@ -262,6 +281,20 @@ export function doFuncAtGivenTime(totalTime: number, maxTime: number, func:(perT
         func(timeParameter)
         const endTime = new Date();
         totalTime -= (endTime.getTime() - startTime.getTime())/1000
+    }
+}
+
+export function doFuncAtGivenTimeByEstimate(totalTime: number, func:() => void){
+    while(totalTime >= 0){
+        const startTime = new Date();
+        func()
+        const endTime = new Date();
+        const executeTime = (endTime.getTime() - startTime.getTime())/1000
+        //执行时间小于10秒直接退出
+        if(executeTime < 10){
+            break
+        }
+        totalTime -= executeTime
     }
 }
 
@@ -311,7 +344,7 @@ export function judgeFuncIsWorkByImg(func: ()=>void, bounds:Bounds){
 }
 
 export function compareStr(str1: string, str2: string){
-    const num = similar(str1 , str2, 2)
+    const num = levenshteinDistance(str1 , str2)
     if(num > 0.6){
         return true
     }
@@ -330,51 +363,6 @@ export function randomExecute(methods:(()=> void)[]){
         method();
     });
 }
-
-//对比相似性
-export function similar(s:string, t:string, f:number) {
-    if (!s || !t) {
-      return 0
-    }
-    if(s === t){
-      return 100;
-    }
-    var l = s.length > t.length ? s.length : t.length
-    var n = s.length
-    var m = t.length
-    var d:any = []
-    f = f || 2
-    var min = function (a:number, b:number, c:number) {
-      return a < b ? (a < c ? a : c) : (b < c ? b : c)
-    }
-    var i:number, j:number, si:string, tj:string, cost:number
-    if (n === 0) return m
-    if (m === 0) return n
-    for (i = 0; i <= n; i++) {
-      d[i] = []
-      d[i][0] = i
-    }
-    for (j = 0; j <= m; j++) {
-      d[0][j] = j
-    }
-    for (i = 1; i <= n; i++) {
-      si = s.charAt(i - 1)
-      for (j = 1; j <= m; j++) {
-        tj = t.charAt(j - 1)
-        if (si === tj) {
-          cost = 0
-        } else {
-          cost = 1
-        }
-        d[i][j] = min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost)
-      }
-    }
-    let res = (1 - d[n][m] / l) *100
-    // return res.toFixed(f)
-    return res
-  }
-
-
 
 export function getGrayscaleHistogram(img:Image, rate:number = 4){
     var grayHistogram:number[] = [];
@@ -435,7 +423,6 @@ export function myBoundsContains(mainBounds: Bounds, testBounds: Bounds){
         right: testRight = device.width,
         bottom: testBottom = device.height,
     } = testBounds;
-
     // 判断 testBounds 是否在 mainBounds 内部
     return (
         testLeft >= mainLeft &&
@@ -464,4 +451,40 @@ export function mergeHistogram(hist: number[]): number[] {
     return mergedHistogram;
 }
 
+export function levenshteinDistance(str1: string, str2: string): number {
+    const len1 = str1.length;
+    const len2 = str2.length;
+
+    const dp: number[][] = [];
+
+    for (let i = 0; i <= len1; i++) {
+        dp[i] = [];
+        for (let j = 0; j <= len2; j++) {
+            if (i === 0) {
+                dp[i][j] = j;
+            } else if (j === 0) {
+                dp[i][j] = i;
+            } else {
+                const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+                dp[i][j] = Math.min(
+                    dp[i - 1][j] + 1, // Deletion
+                    dp[i][j - 1] + 1, // Insertion
+                    dp[i - 1][j - 1] + cost // Substitution
+                );
+            }
+        }
+    }
+
+    const maxLen = Math.max(len1, len2);
+    return 1 - dp[len1][len2] / maxLen; // Normalizing the distance to similarity
+}
+
+export function recognizeTextByLeftToRight(img: Image){
+    const res = ocr.recognize(img)
+    img.recycle()
+    const list = res.results.sort((a, b)=>
+        a.bounds.left - b.bounds.left
+    )
+    return list.map(obj => obj.text).join("")
+}
 

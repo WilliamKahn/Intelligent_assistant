@@ -10,6 +10,9 @@
 import { waitRandomTime } from "./common/utils";
 import { ConfigInvalidException } from "./lib/exception";
 import { LogLevel, Record as LogRecord, setToken } from "./lib/logger";
+import { Baidu } from "./scripts/Baidu";
+import { BaiduBig } from "./scripts/BaiduBig";
+import { BaiduLite } from "./scripts/BaiduLite";
 import { DeJian } from "./scripts/DeJian";
 import { EggplantFree } from "./scripts/EggplantFree";
 import { KuaiShou } from "./scripts/KuaiShou";
@@ -55,8 +58,6 @@ export const MAX_RETRY_COUNTS = 3
 export const WAIT_TIME_AFTER_CLICK = 6
 //最大循环次数
 export const MAX_CYCLES_COUNTS = 25
-//时间分配之冗余时间
-export const REDUNDANCY_TIME = 3 * 60
 //基础脚本执行时间(s)
 export const BASE_ASSIMT_TIME = 10 * 60
 //权重预估时间
@@ -70,7 +71,7 @@ export const STORAGE_DATE = "date"
 //不记录运行时间
 export const STORAGE_NO_RECORD = "noRecord"
 //存储名称29
-export const STORAGE_WEIGHT_CONTAINER = "YWfjbEVp31"
+export const STORAGE_WEIGHT_CONTAINER = "YWfjbEVp32"
 //存储
 export const STORAGE = storages.create(STORAGE_WEIGHT_CONTAINER);
 //基于设备分辨率
@@ -120,6 +121,9 @@ export const PACKAGE_READ_STARRY_SKY = "com.xk.qreader"
 export const NAME_VEDIO_TIKTOK_LITE = "抖音极速版"
 export const PACKAGE_VEDIO_TIKTOK_LITE = "com.ss.android.ugc.aweme.lite"
 
+export const NAME_VEDIO_TIKTOK_VOLCANO = "抖音火山版"
+export const PACKAGE_VEDIO_TIKTOK_VOLCANO = "com.ss.android.ugc.aweme.lite"
+
 export const NAME_VEDIO_KUAISHOU = "快手"
 export const PACKAGE_VEDIO_KUAISHOU = "com.smile.gifmaker"
 
@@ -131,6 +135,15 @@ export const PACKAGE_VEDIO_KUAISHOU_LITE = "com.kuaishou.nebula"
 
 export const NAME_VEDIO_YOUSHI = "有柿"
 export const PACKAGE_VEDIO_YOUSHI = "com.ss.android.article.search"
+
+export const NAME_VEDIO_BAIDU = "百度"
+export const PACKAGE_VEDIO_BAIDU = "com.baidu.searchbox"
+
+export const NAME_VEDIO_BAIDU_LITE = "百度极速版"
+export const PACKAGE_VEDIO_BAIDU_LITE = "com.baidu.searchbox.lite"
+
+export const NAME_VEDIO_BAIDU_BIG = "百度大字版"
+export const PACKAGE_VEDIO_BAIDU_BIG = "com.baidu.searchbox.tomas"
 
 //有柿 
 export const youShi = new YouShi()
@@ -171,6 +184,13 @@ export const speedFree = new SpeedFree()
 //得间小说
 export const deJian = new DeJian()
 
+//百度
+export const baidu = new Baidu()
+//百度极速版
+export const baiduLite = new BaiduLite()
+//百度大字版
+export const baiduBig = new BaiduBig()
+
 //望潮
 export const wanChao = new WanChao()
 
@@ -195,7 +215,9 @@ const map:Record<string, any> = {
     "12": kuaiShouFree,
     "13": speedFree,
     "14": deJian,
-    "15": wanChao
+    "15": wanChao,
+    "16": kuaiShou,
+    "17": kuaiShouLite
 }
 LogRecord.info("加载配置");
 export const {

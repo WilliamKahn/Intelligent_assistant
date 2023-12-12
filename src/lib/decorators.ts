@@ -1,6 +1,6 @@
 import { sendErrorMessage } from "../common/report";
 import { clearBackground, convertSecondsToMinutes, waitRandomTime } from "../common/utils";
-import { MAX_RETRY_COUNTS, REDUNDANCY_TIME } from "../global";
+import { MAX_RETRY_COUNTS} from "../global";
 import { BaseKey } from "../scripts/abstract/Base";
 import { ExceedMaxNumberOfAttempts, isCurrentAppBanned } from "./exception";
 import { Record } from "./logger";
@@ -95,16 +95,15 @@ export function measureExecutionTime(_: any, key: string, descriptor: PropertyDe
       const executionTime = (endTime.getTime() - startTime.getTime())/1000;
       Record.debug(`${key}执行了${convertSecondsToMinutes(executionTime)}分钟`)
       const instance = this as any;
-      const time = (executionTime / (REDUNDANCY_TIME) + 1)  * REDUNDANCY_TIME
       if(key === "highEff"){
-        Record.debug(`highEff时间调整为${convertSecondsToMinutes(time)}分钟`)
-        instance.highEffEstimatedTime = time
-        instance.store(BaseKey.HighEffEstimatedTime, time)
+        Record.debug(`highEff时间调整为${convertSecondsToMinutes(executionTime)}分钟`)
+        instance.highEffEstimatedTime = executionTime
+        instance.store(BaseKey.HighEffEstimatedTime, executionTime)
       } else if(key === "medEff") {
-        Record.debug(`medEff时间调整为${convertSecondsToMinutes(time)}分钟`)
-        instance.medEffEstimatedTime = time
-        instance.store(BaseKey.MedEffEstimatedTime, time)
-      }
+        Record.debug(`medEff时间调整为${convertSecondsToMinutes(executionTime)}分钟`)
+        instance.medEffEstimatedTime = executionTime
+        instance.store(BaseKey.MedEffEstimatedTime, executionTime)
+      } 
       
       return executionTime;
     }

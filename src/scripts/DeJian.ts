@@ -61,7 +61,6 @@ export class DeJian extends Base {
         if(tmp != null) {
             const weight = parseInt(tmp.text())
             this.store(BaseKey.Weight, weight)
-            this.store(BaseKey.Money, (weight/10000).toFixed(2))
         }
     }
 
@@ -130,7 +129,7 @@ export class DeJian extends Base {
     joinActivity(): void {
         this.goTo(desc("discovery_button"), -1)
         
-        if(findAndClick("参与活动赚金币", {cover:true})){
+        if(findAndClick("参与活动赚金币", {coverBoundsScaling:1})){
             let title = id("com.zhangyue.module.ad:id/tv_reward_video_title").findOnce()
             if(title != null){
                 const regex = /\((\d+)\/(\d+)\)/;

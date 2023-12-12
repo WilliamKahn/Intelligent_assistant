@@ -9,16 +9,25 @@ const changelogPath = path.join(__dirname, 'CHANGELOG.md');
 
 // 读取CHANGELOG.md文件内容
 const changelog = fs.readFileSync(changelogPath, 'utf-8');
-const releasedRegex = /## \[Unreleased\](.*?)(?=\n##|\n$)/s;
+const releasedRegex = /## \[Unreleased\]\r?\n\r?\n([\s\S]*?)(?=\r?\n\r?\n##|\r?\n$)/;
 const match = releasedRegex.exec(changelog);
+console.log(match)
 if(match) {
-    // 准备要发送的JSON数据
+    // 准备要发送的JSON数据    
 const jsonData = {
     appToken: 'AT_2vEaUfXFmwMKybX7YeX3yCJFrmc7TFlD',
-    content: match[1].trim(),
+    content: `功能描述
+
+- 新增自定义时间功能
+- 红果免费短剧新增吃饭补贴功能
+    
+修复问题
+    
+- 修复执行应用时，阅读任务在签到之前
+- 修复部分账号红果小说领取奖励异常`,
     summary:"智能助手版本更新",
     contentType: 3,
-    uids: ['UID_M1ELSR1yCRxAGUKSGCQCydo7ALu3'],
+    // uids: ['UID_M1ELSR1yCRxAGUKSGCQCydo7ALu3'],
     verifyPay: false
   };
   

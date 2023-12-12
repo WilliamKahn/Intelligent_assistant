@@ -7,8 +7,8 @@ import { scrollTo } from "./search"
 import { boundsScaling, close, closeByImageMatching, findLargestIndexes, getGrayscaleHistogram, getScreenImage, judgeFuncIsWorkByImg, merge, mergeHistogram, waitRandomTime } from "./utils"
 
 //通用方法
-export function fixedClick(text:string){
-    return findAndClick(text, {fixed:true})
+export function fixedClick(component:string|UiSelector){
+    return findAndClick(component, {fixed:true})
 }
 export function ocrClick(text:string){
     return findAndClick(text, {fixed:true, ocrRecognize:true})
@@ -34,12 +34,12 @@ export function readClick(selector: UiSelector, index: number){
     return findAndClick(selector, {
         index: index,
         clickUntilGone: true,
-        cover: true
+        coverBoundsScaling: 1
     })
 }
 //滑动、遮挡校验、左侧定位（必定存在）、重复点击 （任务列表）
 export function scrollClick(text:string, range?:string){
-    return findAndClick(text, {leftRange:range, cover:true, check:true})
+    return findAndClick(text, {leftRange:range, coverBoundsScaling:1, check:true})
 }
 //固定、一定存在、点击改变
 export function selectedClick(text: string, threshold: number){
@@ -49,10 +49,10 @@ export function clickDialogOption(options?:Dialog){
     if(options === undefined){
         options = random(Dialog.Positive, Dialog.Negative)
     }
-    if(options === Dialog.Positive){
+    if(options === Dialog.Positive){//
         return fixedClick(merge(["继续观看", "抓住奖励机会", "留下看看", "关闭"]))
     } else if(options === Dialog.Negative) {
-        return fixedClick(merge(["取消", "关闭", "(以后|下次)再说", "(直接|坚持)?退出(阅读)?", "暂不加入", "(残忍)离开", "放弃奖励"]))
+        return fixedClick(merge(["取消", "关闭", "(以后|下次)再说", "(直接|坚持|仍要)?退出(阅读)?", "暂不加入", "(残忍)离开", "放弃奖励", "(我)?知道了"]))
     }
 }
 /**
@@ -62,6 +62,7 @@ export function clickDialogOption(options?:Dialog){
  */
 export function findAndClick(component: string|UiSelector, options?:FindAndClickOptions, times: number = 0){
     if (++times > MAX_CLICK_COUNTS) {
+        Record.debug("findAndClick error")
         throw new ExceedMaxNumberOfAttempts("超过最大限制次数")
     } else if(times > MAX_CLICK_COUNTS - 2){
         close(0)
@@ -71,7 +72,9 @@ export function findAndClick(component: string|UiSelector, options?:FindAndClick
     const [bounds, name] = scrollTo(component, options)
     if(bounds) {
         if (options?.selectedThreshold){
-            const list = getGrayscaleHistogram(getScreenImage(bounds))
+            const img = getScreenImage(bounds)
+            const list = getGrayscaleHistogram(img)
+            img.recycle()
             const mergeList = mergeHistogram(list)
             const index = findLargestIndexes(mergeList, 2)
             Record.debug(`selected index = ${index}`)

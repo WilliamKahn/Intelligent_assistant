@@ -8,7 +8,7 @@
  */
 import { sendIncomeMessageToWxPuher, toShowString } from "./common/report";
 import { clearBackground, convertSecondsToMinutes } from "./common/utils";
-import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, STORAGE, STORAGE_APP, STORAGE_DATE, deJian, filteredList, fixedMap, highEffmap, lowEffMap, medEffMap, redFruits, shuQi, speedFree } from "./global";
+import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, STORAGE, STORAGE_APP, STORAGE_DATE, filteredList, fixedMap, highEffmap, lowEffMap, medEffMap } from "./global";
 import { ConfigInvalidException } from "./lib/exception";
 import { init } from "./lib/init";
 import { Record as LogRecord } from "./lib/logger";
@@ -20,24 +20,49 @@ init()
 main()
 function test() {
     // for(let app of filteredList){
-    //     log(`${app.appName}: ${app.fetch(BaseKey.Weight)}----${app.fetch(BaseKey.Money)}`)
+    //     log(`${app.appName}: ${app.fetch(BaseKey.Weight)}----${app.fetch(BaseKey.Executed)}`)
     // }
-    speedFree.start(300 * 60)
-}
 
-let endTime:Date
+    // for(let app of filteredList){
+    //     highEffmap[app.constructor.name] = 100
+    //     medEffMap[app.constructor.name] = 100
+    //     lowEffMap[app.constructor.name] = 100
+    // }
+    // allocateSurplus(2500,filteredList)
+    // for(let app of filteredList){
+    //     log(highEffmap[app.constructor.name], medEffMap[app.constructor.name], lowEffMap[app.constructor.name], app.fetch(BaseKey.Executed))
+    // }
+}
 
 function main() {
     while (true) {
         //实际运行列表
-        const runList = filteredList
+        let runList = filteredList
         if(runList.length == 0){
             throw new ConfigInvalidException("拿我这测试了?");
         }
-        //中断记录和获取执行总时间
-        const timePerMethod = interruptionLoggingAndGetTotalTime(runList)
+        //脚本运行当前时间
+        const startTime = new Date();
+        const endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate(), 23, 59, 59);
+        const date = startTime.getMonth().toString()+"/"+startTime.getDate().toString()
+        //断开重连
+        if(date === STORAGE.get(STORAGE_DATE)){
+            runList = runList.filter(
+                app => app.fetch(BaseKey.Executed, false) === false
+            )
+        } else {
+            for(let app of runList){
+                app.store(BaseKey.Executed, false)
+            }
+        }
+        STORAGE.put(STORAGE_DATE, date)
+        const timeDifference = endTime.getTime() - startTime.getTime();
+        //化毫秒为秒
+        const timePerMethod = timeDifference / 1000
         //将数组按照权重等级排序
-        const sortedList = runList.slice().sort((a:any,b:any) => b.fetch(BaseKey.Money, 0) * 100 - a.fetch(BaseKey.Money, 0) * 100)
+        const sortedList = runList.slice().sort((a:any,b:any) => 
+            b.fetch(BaseKey.Weight, 0) / b.exchangeRate * 100 - a.fetch(BaseKey.Weight, 0) /a.exchangeRate * 100
+        )
         //执行数组清空
         for (let app of sortedList) {
             highEffmap[app.constructor.name] = 0
@@ -65,7 +90,6 @@ function main() {
             if(executeTime > 0){
                 //权重置零 避免前天的遗留权重，导致即使昨天运行失败但是权重依然存在
                 app.store(BaseKey.Weight, 0)
-                app.store(BaseKey.Money, 0)
                 //执行流程
                 STORAGE.put(STORAGE_APP, app.constructor.name)
                 surplus = app.start(executeTime)
@@ -78,40 +102,14 @@ function main() {
         LogRecord.info("发送今日收益")
         sendIncomeMessageToWxPuher(toShowString(filteredList))
         //等待新的一天
-        waitForNewDay()
-    }
-}
-
-function waitForNewDay(){
-    const doneTime = new Date();
-    if(endTime.getTime() > doneTime.getTime()) {
-        const waitTime = (endTime.getTime() - doneTime.getTime())
-        LogRecord.log(`等待${convertSecondsToMinutes(waitTime/1000 + 1)}分钟开启新一天任务`)
-        sleep(waitTime + 60 * 1000)
-    }
-}
-
-function interruptionLoggingAndGetTotalTime(runList: any[]){
-    //脚本运行当前时间
-    const startTime = new Date();
-    endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate(), 23, 59, 59);
-    const date = startTime.getMonth().toString()+"/"+startTime.getDate().toString()
-    //断开重连
-    if(date === STORAGE.get(STORAGE_DATE)){
-        runList = runList.filter(
-            app => app.fetch(BaseKey.Executed, false) === false
-        )
-    } else {
-        for(let app of runList){
-            app.store(BaseKey.Executed, false)
+        const doneTime = new Date();
+        if(endTime.getTime() > doneTime.getTime()) {
+            const waitTime = (endTime.getTime() - doneTime.getTime())
+            LogRecord.log(`等待${convertSecondsToMinutes(waitTime/1000 + 1)}分钟开启新一天任务`)
+            sleep(waitTime + 60 * 1000)
         }
     }
-    STORAGE.put(STORAGE_DATE, date)
-    const timeDifference = endTime.getTime() - startTime.getTime();
-    //化毫秒为秒
-    return timeDifference / 1000
 }
-
 
 function allocateSurplus(surplus:number, sortedList: any[]){
     LogRecord.debug(`surplus: ${surplus}`)

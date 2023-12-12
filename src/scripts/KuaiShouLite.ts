@@ -1,25 +1,25 @@
-import { findAndClick } from "../common/click";
-import { scrollTo } from "../common/search";
-import { closeByImageMatching, doFuncAtGivenTime, moveDown } from "../common/utils";
-import { BASE_ASSIMT_TIME, NAME_VEDIO_KUAISHOU_LITE, PACKAGE_VEDIO_KUAISHOU_LITE } from "../global";
+import { dialogClick, findAndClick, fixedClick, scrollClick } from "../common/click";
+import { Move } from "../common/enums";
+import { scrollTo, searchByOcrRecognize } from "../common/search";
+import { closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, doFuncAtGivenTimeByEstimate, moveDown, randomExecute, resizeX, resizeY, swipeDown, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_VEDIO_KUAISHOU_LITE, PACKAGE_VEDIO_KUAISHOU_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
+import { Record } from "../lib/logger";
 import { Base, BaseKey } from "./abstract/Base";
 
 export class KuaiShouLite extends Base{
-
-    buttonNameList:string[] = [
-        '看内容最高可得.+', 
-    ];
 
     constructor() {
         super()
         this.appName = NAME_VEDIO_KUAISHOU_LITE
         this.packageName = PACKAGE_VEDIO_KUAISHOU_LITE
         this.tab = id(this.packageName+":id/tab_layout")
+        this.initialComponent = this.tab
+        this.initialNum = 0
         this.depth = 1
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME)
-        this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 30 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 5 * 60)
         this.lowEffEstimatedTime = 0
+        this.lowEffAssmitCount = 2
     }
 
     @measureExecutionTime
@@ -29,14 +29,15 @@ export class KuaiShouLite extends Base{
     }
 
     @measureExecutionTime
-    medEff(): void {
-        this.watchAds()
-    }
-
-    @measureExecutionTime
     lowEff(time: number): void {
-
-        doFuncAtGivenTime(time, 10 * 60, (perTime: number) => {
+        let count = 0
+        doFuncAtGivenTimeByEstimate(time/2, ()=>{
+            this.watchAds()
+            if(++count % 15 === 0){
+                this.openTreasure()
+            }
+        })
+        doFuncAtGivenTime(time/2, 10 * 60, (perTime: number) => {
             this.swipeVideo(perTime)
             this.openTreasure()
         })
@@ -44,72 +45,65 @@ export class KuaiShouLite extends Base{
 
     @measureExecutionTime
     weight(): void {
-        this.store(BaseKey.Weight, this.record())
+        this.goTo(this.tab, 2)
+        scrollTo("我的金币", {coverBoundsScaling: 1})
+        const [_, name] = searchByOcrRecognize("[0-9]+")
+        if(name != undefined){
+            const weight = parseInt(name.toString())
+            Record.debug(`weight: ${weight}`)
+            this.store(BaseKey.Weight, weight)
+        }
     }
 
     @functionLog("刷视频")
     swipeVideo(totalTime: number): void {
         this.goTo(this.tab, 0)
+        Record.log(`预计刷视频${convertSecondsToMinutes(totalTime)}分钟`)
         moveDown(totalTime, 15)
     }
 
     @functionLog("签到")
     signIn(): void {
         this.goTo(this.tab, 2)
-        if(findAndClick(text("立即领取"))) {
+        if(dialogClick("立即领取")) {
             this.watchAdsForCoin("日常福利")
             closeByImageMatching()
         }
     }
 
     @functionLog("看广告")
-    watchAds(): void {
+    watchAds(): boolean {
         this.goTo(this.tab, 2)
-        scrollTo("日常任务")
-        // let before = this.record()
-        // back()
-        // waitRandomTime(4)
-        // let flag = true
-        let cycleCounts = 0
-        // while(++cycleCounts < MAX_CYCLES_COUNTS && containInRegion(text("领福利"), textStartsWith("看广告得").findOnce()?.parent()?.parent())){
-        //     if(findAndClick(findInRegion(text("领福利"), textStartsWith("看广告得").findOnce()?.parent()?.parent()), 
-        //     RANGE_MIDDLE_SCREEN)){
-                // this.watchUntil()
-                // if(flag){
-                //     let after = this.record()
-                //     //小于40金币没有意义
-                //     if(after - before < 40){
-                //         throw "lowBenifit"
-                //     }
-                //     flag = false
-                //     back()
-                //     waitRandomTime(4)
-                // }
-        //     }
-        // }
+        if(scrollClick("领福利", "看广告得[0-9]+金币")){
+            this.watch(text("日常任务"))
+            return true
+        }
+        return false
+    }
+
+    @functionLog("看直播")
+    watchLive():void {
+        this.goTo(this.tab, 2)
+        if(scrollClick("领福利", "看6次直播领金币")){
+            for(let i = 0;i < 6;i++){
+                swipeDown(Move.Fast, 1000)
+                waitRandomTime(2)
+                if(findAndClick(id(this.packageName+":id/play_view_container"), {
+                    index: random(0,3),
+                    waitTimes: 70
+                })){
+                    this.backUntilFind(id(this.packageName+":id/play_view_container"))
+                }
+            }
+        }
     }
 
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goTo(this.tab, 2)
-        if(text("恭喜你获得").exists()){
+        this.watchAdsForCoin("日常福利")
+        if(fixedClick("开宝箱得金币")) {
             this.watchAdsForCoin("日常福利")
         }
-        if(findAndClick(text("开宝箱得金币"))) {
-            if(text("恭喜你获得").exists()){
-                this.watchAdsForCoin("日常福利")
-            }
-        }
-    }
-
-    record(): number {
-        this.goTo(this.tab, 2)
-        if(findAndClick(text("我的金币"))){
-            let tmp = textEndsWith("金币").findOnce()
-            if(tmp != null){
-                return parseInt(tmp.text())
-            }
-        }
-        return 0
     }
 }

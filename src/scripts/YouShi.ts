@@ -12,6 +12,7 @@ export class YouShi extends Base{
         this.appName = NAME_VEDIO_YOUSHI
         this.packageName = PACKAGE_VEDIO_YOUSHI
         this.tab = id("android:id/tabs")
+        this.exchangeRate = 33000
         this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME)
         this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 110 * 60)
         this.lowEffEstimatedTime = 0
@@ -60,7 +61,6 @@ export class YouShi extends Base{
                 Record.debug(`${this.constructor.name}:${tmp.text()}`)
                 const weight = parseInt(tmp.text())
                 this.store(BaseKey.Weight, weight)
-                this.store(BaseKey.Money, (weight/33000).toFixed(2))
             }
         }
     }

@@ -13,22 +13,28 @@ import { search } from "../../common/search"
 */
 export abstract class Base {
 
-    //app名称包名
+    //app名称
     appName: string = ""
+    //app包名
     packageName: string = ""
 
     //导航栏跳转参数 用于防止重复点击
     initialComponent: UiSelector = text("")
     initialNum: number = -1
 
-    randomTab: UiSelector = text("")
-    tab: UiSelector = text("")
-    depth: number = 0
+    //上一次跳转的记录
     preComponent: UiSelector = text("")
     preNum: number = -1
 
-    //观看广告
-    exitNum: number = 1
+    //随机id导航栏
+    randomTab: UiSelector = text("")
+    //导航栏
+    tab: UiSelector = text("")
+    //导航栏深度
+    depth: number = 0
+
+    //兑换汇率
+    exchangeRate: number = 10000
 
     //执行预估时间
     highEffEstimatedTime: number = BASE_ASSIMT_TIME
@@ -65,7 +71,7 @@ export abstract class Base {
                 const processTime:any = this.medEff()
                 time -= processTime
             }
-            if(time >= this.lowEffEstimatedTime) {
+            if(time > this.lowEffEstimatedTime) {
                 const processTime:any = this.lowEff(time)
                 time -= processTime
             }
@@ -123,6 +129,7 @@ export abstract class Base {
         }
         const img = getScreenImage({bottom:device.height * 1/5})
         const grayHistogram = getGrayscaleHistogram(img)
+        img.recycle()
         const [index] = findLargestIndexes(grayHistogram, 1)
         Record.debug(`read index: ${index}`)
         doFuncAtGivenTime(totalTime, 10, ()=>{
@@ -147,6 +154,7 @@ export abstract class Base {
         if(typeof exitSign === "number") {
             const img = getScreenImage({bottom:device.height * 1/5})
             const grayHistogram = getGrayscaleHistogram(img)
+            img.recycle()
             const [index] = findLargestIndexes(grayHistogram, 1)
             Record.debug(`watch index: ${index}`)
             if(index < exitSign + 10 && index > exitSign - 10){
@@ -161,6 +169,7 @@ export abstract class Base {
         }
         //三个方式都无法解决直接异常（每个可执行两遍）
         if(times > 9){
+            Record.debug("watch error")
             throw new ExceedMaxNumberOfAttempts("超过最大限制次数")
         }
         if (currentPackage() !== this.packageName) {
@@ -185,9 +194,7 @@ export abstract class Base {
         }
         close(times)
         //坚持退出 检测
-        if(times < 3){
-            clickDialogOption(Dialog.Positive)
-        } else {
+        if(times >= 3 || !clickDialogOption(Dialog.Positive)){
             clickDialogOption(Dialog.Negative)
         }
         dialogClick("领取奖励")
@@ -259,12 +266,12 @@ export abstract class Base {
 
     watchAdsForCoin(backSign: string){
         let cycleCounts = 0
-        const str = "看.*(视频|内容|广告).*(得|领|赚|收取).*([0-9]+金币|更多)"
+        const str = "(观)?看.*(视频|内容|广告).*(得|领|赚|收取).*([0-9]+金币|更多|火苗)"
         while(++cycleCounts < MAX_CYCLES_COUNTS
             && (dialogClick(str))){
             this.watch(textMatches(merge([backSign, str])))
         }
-        dialogClick(merge(["开心收下", "我知道了"]))
+        dialogClick(merge(["(开心|立即)收下", "我知道了"]))
     }
 
     /**
@@ -323,7 +330,6 @@ export abstract class Base {
 
 export enum BaseKey {
     Weight,
-    Money,
     Executed,
     HighEffEstimatedTime,
     MedEffEstimatedTime,

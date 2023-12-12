@@ -750,6 +750,13 @@ var Dialog;
   Dialog[Dialog["Positive"] = 0] = "Positive";
   Dialog[Dialog["Negative"] = 1] = "Negative";
 })(Dialog || (Dialog = {}));
+
+var Move;
+
+(function (Move) {
+  Move[Move["Normal"] = 0] = "Normal";
+  Move[Move["Fast"] = 1] = "Fast";
+})(Move || (Move = {}));
 ;// CONCATENATED MODULE: ./src/common/search.ts
 
 
@@ -769,6 +776,7 @@ function scrollTo(component, options, range, prePy, scrollTimes, avoidTimes) {
   var bottom = (options === null || options === void 0 ? void 0 : options.fixed) ? device.height : (range === null || range === void 0 ? void 0 : range.bottom) || device.height;
 
   if (scrollTimes > 2) {
+    Record.debug("scrollTo error");
     throw new ExceedMaxNumberOfAttempts("超过最大限制次数");
   }
 
@@ -792,24 +800,25 @@ function scrollTo(component, options, range, prePy, scrollTimes, avoidTimes) {
     if (prePy) {
       if (pointY == prePy) {
         closeByImageMatching();
+        clickDialogOption(Dialog.Negative);
         scrollTimes++;
       }
     }
 
     if (tmpTop < top) {
       if (tmpTop < top - bottom * 0.5) {
-        gesture(1000, [resizeX(random(580, 620)), resizeY(random(950, 1050))], [resizeX(random(780, 820)), resizeY(random(1750, 1850))]);
+        swipeUp(Move.Fast, 1000);
       } else {
-        gesture(1000, [resizeX(random(580, 620)), resizeY(random(1350, 1450))], [resizeX(random(780, 820)), resizeY(random(1750, 1850))]);
+        swipeUp(Move.Normal, 1000);
       }
 
       waitRandomTime(1);
       return scrollTo(component, options, range, pointY, scrollTimes, avoidTimes);
     } else if (tmpBottom > bottom) {
       if (tmpBottom > bottom * 1.5) {
-        gesture(1000, [resizeX(random(580, 620)), resizeY(random(1750, 1850))], [resizeX(random(780, 820)), resizeY(random(250, 350))]);
+        swipeDown(Move.Fast, 1000);
       } else {
-        gesture(1000, [resizeX(random(580, 620)), resizeY(random(1750, 1850))], [resizeX(random(780, 820)), resizeY(random(1350, 1450))]);
+        swipeDown(Move.Normal, 1000);
       }
 
       waitRandomTime(1);
@@ -817,14 +826,14 @@ function scrollTo(component, options, range, prePy, scrollTimes, avoidTimes) {
     } else {
       waitRandomTime(1);
 
-      if ((options === null || options === void 0 ? void 0 : options.cover) && text !== "" && ++avoidTimes < 3) {
+      if ((options === null || options === void 0 ? void 0 : options.coverBoundsScaling) && text !== "" && ++avoidTimes < 3) {
         Record.debug("滑动遮挡校验");
         Record.debug("text :".concat(text));
         Record.debug("bounds :".concat(bounds));
-        var img = getScreenImage(bounds);
+        var img = getScreenImage(boundsScaling(bounds, options.coverBoundsScaling));
         var bigImg = images.scale(img, 3, 3);
         var grayImg = images.cvtColor(bigImg, "BGR2GRAY");
-        var str = ocr.recognizeText(grayImg);
+        var str = recognizeTextByLeftToRight(grayImg);
         img.recycle();
         bigImg.recycle();
         grayImg.recycle();
@@ -835,8 +844,10 @@ function scrollTo(component, options, range, prePy, scrollTimes, avoidTimes) {
           if (!range) range = {};
 
           if (tmpBottom > device.height / 2) {
+            range.top = undefined;
             range.bottom = tmpTop;
           } else {
+            range.bottom = undefined;
             range.top = tmpBottom;
           }
 
@@ -887,6 +898,7 @@ function searchByLeftRange(button, options, times) {
   }
 
   if (times > 3) {
+    Record.debug("searchByLeftRange error");
     throw new ExceedMaxNumberOfAttempts("超过最大限制次数");
   }
 
@@ -900,7 +912,8 @@ function searchByLeftRange(button, options, times) {
     }
 
     if (tmp == null) {
-      utils_close(0);
+      closeByImageMatching();
+      clickDialogOption(Dialog.Negative);
       return searchByLeftRange(button, options, ++times);
     } else {
       var top = tmp.bounds().top - 10;
@@ -986,10 +999,12 @@ function searchByUiSelect(component, options) {
   var list = component.find();
 
   if (list.nonEmpty()) {
-    list = list.filter(function (element) {
-      var bounds = element.bounds();
-      return bounds.width() > 0;
-    });
+    if (options === null || options === void 0 ? void 0 : options.fixed) {
+      list = list.filter(function (element) {
+        var bounds = element.bounds();
+        return bounds.width() > 0 && bounds.height() > 0;
+      });
+    }
 
     if (options === null || options === void 0 ? void 0 : options.bounds) {
       list = list.filter(function (element) {
@@ -1014,8 +1029,8 @@ function searchByUiSelect(component, options) {
 
 
 
-function fixedClick(text) {
-  return findAndClick(text, {
+function fixedClick(component) {
+  return findAndClick(component, {
     fixed: true
   });
 }
@@ -1048,13 +1063,13 @@ function readClick(selector, index) {
   return findAndClick(selector, {
     index: index,
     clickUntilGone: true,
-    cover: true
+    coverBoundsScaling: 1
   });
 }
 function scrollClick(text, range) {
   return findAndClick(text, {
     leftRange: range,
-    cover: true,
+    coverBoundsScaling: 1,
     check: true
   });
 }
@@ -1074,7 +1089,7 @@ function clickDialogOption(options) {
   if (options === Dialog.Positive) {
     return fixedClick(merge(["继续观看", "抓住奖励机会", "留下看看", "关闭"]));
   } else if (options === Dialog.Negative) {
-    return fixedClick(merge(["取消", "关闭", "(以后|下次)再说", "(直接|坚持)?退出(阅读)?", "暂不加入", "(残忍)离开", "放弃奖励"]));
+    return fixedClick(merge(["取消", "关闭", "(以后|下次)再说", "(直接|坚持|仍要)?退出(阅读)?", "暂不加入", "(残忍)离开", "放弃奖励", "(我)?知道了"]));
   }
 }
 function findAndClick(component, options, times) {
@@ -1083,6 +1098,7 @@ function findAndClick(component, options, times) {
   }
 
   if (++times > MAX_CLICK_COUNTS) {
+    Record.debug("findAndClick error");
     throw new ExceedMaxNumberOfAttempts("超过最大限制次数");
   } else if (times > MAX_CLICK_COUNTS - 2) {
     utils_close(0);
@@ -1096,7 +1112,9 @@ function findAndClick(component, options, times) {
 
   if (bounds) {
     if (options === null || options === void 0 ? void 0 : options.selectedThreshold) {
-      var list = getGrayscaleHistogram(getScreenImage(bounds));
+      var img = getScreenImage(bounds);
+      var list = getGrayscaleHistogram(img);
+      img.recycle();
       var mergeList = mergeHistogram(list);
       var index = findLargestIndexes(mergeList, 2);
       Record.debug("selected index = ".concat(index));
@@ -1185,6 +1203,7 @@ function normalClick(x, y, options) {
 
 
 
+
 function resizeX(x) {
   return x * device.width / DEVICE_WIDTH;
 }
@@ -1248,8 +1267,22 @@ function moveDown(totalTime, interval) {
   var watchTime = 0;
 
   while (totalTime > watchTime) {
-    gesture(200, [resizeX(random(580, 620)), resizeY(random(1750, 1850))], [resizeX(random(780, 820)), resizeY(random(250, 350))]);
+    swipeDown(Move.Fast, 400);
     watchTime += waitRandomTime(interval);
+  }
+}
+function swipeDown(set, interval) {
+  if (set === Move.Normal) {
+    gesture(interval, [resizeX(random(580, 620)), resizeY(random(1750, 1850))], [resizeX(random(780, 820)), resizeY(random(1350, 1450))]);
+  } else if (set === Move.Fast) {
+    gesture(interval, [resizeX(random(580, 620)), resizeY(random(1750, 1850))], [resizeX(random(780, 820)), resizeY(random(250, 350))]);
+  }
+}
+function swipeUp(set, interval) {
+  if (set === Move.Normal) {
+    gesture(interval, [resizeX(random(580, 620)), resizeY(random(1350, 1450))], [resizeX(random(780, 820)), resizeY(random(1750, 1850))]);
+  } else if (set === Move.Fast) {
+    gesture(interval, [resizeX(random(580, 620)), resizeY(random(950, 1050))], [resizeX(random(780, 820)), resizeY(random(1750, 1850))]);
   }
 }
 function merge(buttonNameList) {
@@ -1440,6 +1473,20 @@ function doFuncAtGivenTime(totalTime, maxTime, func) {
     totalTime -= (endTime.getTime() - startTime.getTime()) / 1000;
   }
 }
+function doFuncAtGivenTimeByEstimate(totalTime, func) {
+  while (totalTime >= 0) {
+    var startTime = new Date();
+    func();
+    var endTime = new Date();
+    var executeTime = (endTime.getTime() - startTime.getTime()) / 1000;
+
+    if (executeTime < 10) {
+      break;
+    }
+
+    totalTime -= executeTime;
+  }
+}
 function matchAndJudge(str) {
   Record.debug("".concat(str));
 
@@ -1485,7 +1532,7 @@ function judgeFuncIsWorkByImg(func, bounds) {
   }
 }
 function compareStr(str1, str2) {
-  var num = similar(str1, str2, 2);
+  var num = levenshteinDistance(str1, str2);
 
   if (num > 0.6) {
     return true;
@@ -1504,57 +1551,6 @@ function randomExecute(methods) {
   methods.forEach(function (method) {
     method();
   });
-}
-function similar(s, t, f) {
-  if (!s || !t) {
-    return 0;
-  }
-
-  if (s === t) {
-    return 100;
-  }
-
-  var l = s.length > t.length ? s.length : t.length;
-  var n = s.length;
-  var m = t.length;
-  var d = [];
-  f = f || 2;
-
-  var min = function min(a, b, c) {
-    return a < b ? a < c ? a : c : b < c ? b : c;
-  };
-
-  var i, j, si, tj, cost;
-  if (n === 0) return m;
-  if (m === 0) return n;
-
-  for (i = 0; i <= n; i++) {
-    d[i] = [];
-    d[i][0] = i;
-  }
-
-  for (j = 0; j <= m; j++) {
-    d[0][j] = j;
-  }
-
-  for (i = 1; i <= n; i++) {
-    si = s.charAt(i - 1);
-
-    for (j = 1; j <= m; j++) {
-      tj = t.charAt(j - 1);
-
-      if (si === tj) {
-        cost = 0;
-      } else {
-        cost = 1;
-      }
-
-      d[i][j] = min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
-    }
-  }
-
-  var res = (1 - d[n][m] / l) * 100;
-  return res;
 }
 function getGrayscaleHistogram(img, rate) {
   if (rate === void 0) {
@@ -1644,6 +1640,39 @@ function mergeHistogram(hist) {
 
   return mergedHistogram;
 }
+function levenshteinDistance(str1, str2) {
+  var len1 = str1.length;
+  var len2 = str2.length;
+  var dp = [];
+
+  for (var i = 0; i <= len1; i++) {
+    dp[i] = [];
+
+    for (var j = 0; j <= len2; j++) {
+      if (i === 0) {
+        dp[i][j] = j;
+      } else if (j === 0) {
+        dp[i][j] = i;
+      } else {
+        var cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+      }
+    }
+  }
+
+  var maxLen = Math.max(len1, len2);
+  return 1 - dp[len1][len2] / maxLen;
+}
+function recognizeTextByLeftToRight(img) {
+  var res = ocr.recognize(img);
+  img.recycle();
+  var list = res.results.sort(function (a, b) {
+    return a.bounds.left - b.bounds.left;
+  });
+  return list.map(function (obj) {
+    return obj.text;
+  }).join("");
+}
 ;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/typeof.js
 function _typeof(obj) {
   "@babel/helpers - typeof";
@@ -1682,12 +1711,12 @@ var Base = function () {
     this.packageName = "";
     this.initialComponent = text("");
     this.initialNum = -1;
+    this.preComponent = text("");
+    this.preNum = -1;
     this.randomTab = text("");
     this.tab = text("");
     this.depth = 0;
-    this.preComponent = text("");
-    this.preNum = -1;
-    this.exitNum = 1;
+    this.exchangeRate = 10000;
     this.highEffEstimatedTime = BASE_ASSIMT_TIME;
     this.medEffEstimatedTime = MAX_ASSIMT_TIME;
     this.lowEffEstimatedTime = MAX_ASSIMT_TIME;
@@ -1718,7 +1747,7 @@ var Base = function () {
         time -= processTime;
       }
 
-      if (time >= this.lowEffEstimatedTime) {
+      if (time > this.lowEffEstimatedTime) {
         var processTime = this.lowEff(time);
         time -= processTime;
       }
@@ -1776,6 +1805,7 @@ var Base = function () {
       bottom: device.height * 1 / 5
     });
     var grayHistogram = getGrayscaleHistogram(img);
+    img.recycle();
     var index = findLargestIndexes(grayHistogram, 1)[0];
     Record.debug("read index: ".concat(index));
     doFuncAtGivenTime(totalTime, 10, function () {
@@ -1800,6 +1830,7 @@ var Base = function () {
         bottom: device.height * 1 / 5
       });
       var grayHistogram = getGrayscaleHistogram(img);
+      img.recycle();
       var index = findLargestIndexes(grayHistogram, 1)[0];
       Record.debug("watch index: ".concat(index));
 
@@ -1816,6 +1847,7 @@ var Base = function () {
     }
 
     if (times > 9) {
+      Record.debug("watch error");
       throw new ExceedMaxNumberOfAttempts("超过最大限制次数");
     }
 
@@ -1860,9 +1892,7 @@ var Base = function () {
 
     utils_close(times);
 
-    if (times < 3) {
-      clickDialogOption(Dialog.Positive);
-    } else {
+    if (times >= 3 || !clickDialogOption(Dialog.Positive)) {
       clickDialogOption(Dialog.Negative);
     }
 
@@ -1936,13 +1966,13 @@ var Base = function () {
 
   Base.prototype.watchAdsForCoin = function (backSign) {
     var cycleCounts = 0;
-    var str = "看.*(视频|内容|广告).*(得|领|赚|收取).*([0-9]+金币|更多)";
+    var str = "(观)?看.*(视频|内容|广告).*(得|领|赚|收取).*([0-9]+金币|更多|火苗)";
 
     while (++cycleCounts < MAX_CYCLES_COUNTS && dialogClick(str)) {
       this.watch(textMatches(merge([backSign, str])));
     }
 
-    dialogClick(merge(["开心收下", "我知道了"]));
+    dialogClick(merge(["(开心|立即)收下", "我知道了"]));
   };
 
   Base.prototype.reset = function () {
@@ -2006,11 +2036,10 @@ var BaseKey;
 
 (function (BaseKey) {
   BaseKey[BaseKey["Weight"] = 0] = "Weight";
-  BaseKey[BaseKey["Money"] = 1] = "Money";
-  BaseKey[BaseKey["Executed"] = 2] = "Executed";
-  BaseKey[BaseKey["HighEffEstimatedTime"] = 3] = "HighEffEstimatedTime";
-  BaseKey[BaseKey["MedEffEstimatedTime"] = 4] = "MedEffEstimatedTime";
-  BaseKey[BaseKey["LowEffEstimatedTime"] = 5] = "LowEffEstimatedTime";
+  BaseKey[BaseKey["Executed"] = 1] = "Executed";
+  BaseKey[BaseKey["HighEffEstimatedTime"] = 2] = "HighEffEstimatedTime";
+  BaseKey[BaseKey["MedEffEstimatedTime"] = 3] = "MedEffEstimatedTime";
+  BaseKey[BaseKey["LowEffEstimatedTime"] = 4] = "LowEffEstimatedTime";
 })(BaseKey || (BaseKey = {}));
 ;// CONCATENATED MODULE: ./src/lib/decorators.ts
 
@@ -2123,16 +2152,15 @@ function measureExecutionTime(_, key, descriptor) {
     var executionTime = (endTime.getTime() - startTime.getTime()) / 1000;
     Record.debug("".concat(key, "\u6267\u884C\u4E86").concat(convertSecondsToMinutes(executionTime), "\u5206\u949F"));
     var instance = this;
-    var time = (executionTime / REDUNDANCY_TIME + 1) * REDUNDANCY_TIME;
 
     if (key === "highEff") {
-      Record.debug("highEff\u65F6\u95F4\u8C03\u6574\u4E3A".concat(convertSecondsToMinutes(time), "\u5206\u949F"));
-      instance.highEffEstimatedTime = time;
-      instance.store(BaseKey.HighEffEstimatedTime, time);
+      Record.debug("highEff\u65F6\u95F4\u8C03\u6574\u4E3A".concat(convertSecondsToMinutes(executionTime), "\u5206\u949F"));
+      instance.highEffEstimatedTime = executionTime;
+      instance.store(BaseKey.HighEffEstimatedTime, executionTime);
     } else if (key === "medEff") {
-      Record.debug("medEff\u65F6\u95F4\u8C03\u6574\u4E3A".concat(convertSecondsToMinutes(time), "\u5206\u949F"));
-      instance.medEffEstimatedTime = time;
-      instance.store(BaseKey.MedEffEstimatedTime, time);
+      Record.debug("medEff\u65F6\u95F4\u8C03\u6574\u4E3A".concat(convertSecondsToMinutes(executionTime), "\u5206\u949F"));
+      instance.medEffEstimatedTime = executionTime;
+      instance.store(BaseKey.MedEffEstimatedTime, executionTime);
     }
 
     return executionTime;
@@ -2172,6 +2200,511 @@ function startDecorator(_, __, descriptor) {
 
   return descriptor;
 }
+;// CONCATENATED MODULE: ./src/scripts/Baidu.ts
+
+
+var Baidu_extends = undefined && undefined.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var Baidu_decorate = undefined && undefined.__decorate || function (decorators, target, key, desc) {
+  var c = arguments.length,
+      r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
+      d;
+  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
+    if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  }
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+
+
+
+
+
+
+
+
+
+var Baidu = function (_super) {
+  Baidu_extends(Baidu, _super);
+
+  function Baidu() {
+    var _this = _super.call(this) || this;
+
+    _this.packageName = PACKAGE_VEDIO_BAIDU;
+    _this.appName = NAME_VEDIO_BAIDU;
+    _this.tab = id("android:id/tabs");
+    _this.initialComponent = _this.tab;
+    _this.initialNum = 0;
+    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60);
+    _this.medEffEstimatedTime = _this.fetch(BaseKey.MedEffEstimatedTime, 5 * 60);
+    return _this;
+  }
+
+  Baidu.prototype.highEff = function () {
+    this.signIn();
+    this.openTreasure();
+    this.watchAds();
+  };
+
+  Baidu.prototype.medEff = function () {
+    this.swipeVideo(2 * 60);
+
+    if (fixedClick("点击提现")) {
+      this.payouts();
+    }
+  };
+
+  Baidu.prototype.weight = function () {
+    this["goto"](0);
+    scrollTo("金币收益", {
+      coverBoundsScaling: 1
+    });
+
+    var _a = searchByOcrRecognize("[0-9]+"),
+        _ = _a[0],
+        name = _a[1];
+
+    if (name != undefined) {
+      var weight = parseInt(name.toString());
+      Record.debug("weight: ".concat(weight));
+      this.store(BaseKey.Weight, weight);
+    }
+  };
+
+  Baidu.prototype.signIn = function () {
+    this["goto"](0);
+
+    if (fixedClick("额外领[0-9]+金币")) {
+      this.watch(text("金币收益"));
+      this.watchAdsForCoin("金币收益");
+    }
+  };
+
+  Baidu.prototype.watchAds = function () {
+    this["goto"](0);
+
+    while (scrollClick("去完成", "看广告赚钱.*")) {
+      this.watch(text("金币收益"));
+      this.watchAdsForCoin("金币收益");
+    }
+  };
+
+  Baidu.prototype.openTreasure = function () {
+    this["goto"](0);
+
+    if (fixedClick("开宝箱得金币")) {
+      this.watchAdsForCoin("金币收益");
+    }
+  };
+
+  Baidu.prototype.swipeVideo = function (totalTime) {
+    this.goTo(this.tab, 1);
+    moveDown(totalTime, 10);
+  };
+
+  Baidu.prototype.payouts = function () {
+    var _a;
+
+    this["goto"](1);
+
+    if (fixedClick("微信提现")) {
+      if (fixedClick("立即微信提现")) {
+        log((_a = textMatches(".+元").findOnce()) === null || _a === void 0 ? void 0 : _a.text());
+        dialogClick("继续看视频赚钱提现");
+      }
+    }
+  };
+
+  Baidu.prototype.walkEarn = function () {
+    this["goto"](1);
+
+    if (scrollClick("去领取", "走路赚钱")) {
+      dialogClick("领[0-9]+铜钱");
+      closeByImageMatching();
+    }
+  };
+
+  Baidu.prototype.watchAdsEarn = function () {
+    this["goto"](1);
+
+    while (scrollClick("去领取", "看广告领铜钱奖励.*")) {
+      this.watch(text("我的铜钱"));
+    }
+  };
+
+  Baidu.prototype["goto"] = function (num) {
+    if (num === 0) {
+      if (this.tab.exists()) {
+        this.goTo(this.tab, 4);
+        findAndClick("天天领现金", {
+          ocrRecognize: true,
+          bounds: {
+            bottom: device.height * 1 / 5
+          }
+        });
+      } else {
+        this.backUntilFind(text("金币收益"));
+      }
+    } else if (num === 1) {
+      this.goTo(this.tab, 1);
+
+      if (!text("我的铜钱").exists()) {
+        fixedClick("换现金");
+      }
+    }
+  };
+
+  Baidu_decorate([measureExecutionTime], Baidu.prototype, "highEff", null);
+
+  Baidu_decorate([measureExecutionTime], Baidu.prototype, "medEff", null);
+
+  Baidu_decorate([measureExecutionTime], Baidu.prototype, "weight", null);
+
+  Baidu_decorate([functionLog("签到")], Baidu.prototype, "signIn", null);
+
+  Baidu_decorate([functionLog("看广告")], Baidu.prototype, "watchAds", null);
+
+  Baidu_decorate([functionLog("开宝箱")], Baidu.prototype, "openTreasure", null);
+
+  Baidu_decorate([functionLog("刷视频")], Baidu.prototype, "swipeVideo", null);
+
+  Baidu_decorate([functionLog("提现")], Baidu.prototype, "payouts", null);
+
+  Baidu_decorate([functionLog("走路赚钱")], Baidu.prototype, "walkEarn", null);
+
+  Baidu_decorate([functionLog("看广告领铜钱")], Baidu.prototype, "watchAdsEarn", null);
+
+  return Baidu;
+}(Base);
+
+
+;// CONCATENATED MODULE: ./src/scripts/BaiduBig.ts
+
+
+var BaiduBig_extends = undefined && undefined.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var BaiduBig_decorate = undefined && undefined.__decorate || function (decorators, target, key, desc) {
+  var c = arguments.length,
+      r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
+      d;
+  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
+    if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  }
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+
+
+
+
+
+
+
+var BaiduBig = function (_super) {
+  BaiduBig_extends(BaiduBig, _super);
+
+  function BaiduBig() {
+    var _this = _super.call(this) || this;
+
+    _this.packageName = PACKAGE_VEDIO_BAIDU_BIG;
+    _this.appName = NAME_VEDIO_BAIDU_BIG;
+    _this.tab = id("android:id/tabs");
+    _this.initialComponent = _this.tab;
+    _this.initialNum = 0;
+    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 25 * 60);
+    return _this;
+  }
+
+  BaiduBig.prototype.highEff = function () {
+    this.signIn();
+    this.openTreasure();
+    this.watchAds();
+    this.openTreasure();
+  };
+
+  BaiduBig.prototype.weight = function () {
+    this["goto"]();
+    scrollTo("现金收益", {
+      coverBoundsScaling: 1
+    });
+
+    var _a = searchByOcrRecognize("[0-9]+", {
+      bounds: {
+        bottom: device.height * 1 / 5
+      }
+    }),
+        _ = _a[0],
+        name = _a[1];
+
+    if (name !== undefined) {
+      var weight = parseInt(name.toString());
+      this.store(BaseKey.Weight, weight);
+    }
+  };
+
+  BaiduBig.prototype.signIn = function () {
+    this["goto"]();
+
+    if (fixedClick("额外领[0-9]+金币")) {
+      this.watch(text("现金收益"));
+      this.watchAdsForCoin("现金收益");
+    }
+  };
+
+  BaiduBig.prototype.watchAds = function () {
+    this["goto"]();
+
+    while (scrollClick("去完成", "看广告赚钱.*")) {
+      this.watch(text("现金收益"));
+      this.watchAdsForCoin("现金收益");
+    }
+  };
+
+  BaiduBig.prototype.openTreasure = function () {
+    this["goto"]();
+
+    if (fixedClick("开宝箱得金币")) {
+      this.watchAdsForCoin("现金收益");
+    }
+  };
+
+  BaiduBig.prototype["goto"] = function () {
+    if (this.tab.exists()) {
+      this.goTo(this.tab, 4);
+      fixedClick("立即签到");
+    } else {
+      this.backUntilFind(text("现金收益"));
+    }
+  };
+
+  BaiduBig_decorate([measureExecutionTime], BaiduBig.prototype, "highEff", null);
+
+  BaiduBig_decorate([measureExecutionTime], BaiduBig.prototype, "weight", null);
+
+  BaiduBig_decorate([functionLog("签到")], BaiduBig.prototype, "signIn", null);
+
+  BaiduBig_decorate([functionLog("看广告")], BaiduBig.prototype, "watchAds", null);
+
+  BaiduBig_decorate([functionLog("开宝箱")], BaiduBig.prototype, "openTreasure", null);
+
+  return BaiduBig;
+}(Base);
+
+
+;// CONCATENATED MODULE: ./src/scripts/BaiduLite.ts
+
+
+var BaiduLite_extends = undefined && undefined.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var BaiduLite_decorate = undefined && undefined.__decorate || function (decorators, target, key, desc) {
+  var c = arguments.length,
+      r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
+      d;
+  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
+    if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  }
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+
+
+
+
+
+
+
+
+var BaiduLite = function (_super) {
+  BaiduLite_extends(BaiduLite, _super);
+
+  function BaiduLite() {
+    var _this = _super.call(this) || this;
+
+    _this.packageName = PACKAGE_VEDIO_BAIDU_LITE;
+    _this.appName = NAME_VEDIO_BAIDU_LITE;
+    _this.tab = id("android:id/tabs");
+    _this.initialComponent = _this.tab;
+    _this.initialNum = 1;
+    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60);
+    _this.medEffEstimatedTime = _this.fetch(BaseKey.MedEffEstimatedTime, 10 * 60);
+    return _this;
+  }
+
+  BaiduLite.prototype.highEff = function () {
+    dialogClick("立即领今日打款");
+    this.signIn();
+    this.openTreasure();
+    this.watchAds();
+  };
+
+  BaiduLite.prototype.medEff = function () {
+    this.swipeVideo(5 * 60);
+    this.payouts();
+  };
+
+  BaiduLite.prototype.lowEff = function (time) {
+    var _this = this;
+
+    doFuncAtGivenTime(time, 10 * 60, function (perTime) {
+      _this.swipeVideo(perTime);
+
+      _this.openTreasure();
+    });
+    this.reward();
+  };
+
+  BaiduLite.prototype.weight = function () {
+    this.goTo(this.tab, 4);
+
+    var _a = search("[0-9]+", {
+      index: 2
+    }),
+        _ = _a[0],
+        weight = _a[1];
+
+    this.store(BaseKey.Weight, weight);
+  };
+
+  BaiduLite.prototype.signIn = function () {
+    this.goTo(this.tab, 2);
+
+    if (fixedClick("额外领[0-9]+金币")) {
+      this.watch(text("金币收益"));
+      this.watchAdsForCoin("金币收益");
+    }
+  };
+
+  BaiduLite.prototype.watchAds = function () {
+    this.goTo(this.tab, 2);
+
+    while (scrollClick("去完成", "看广告赚钱")) {
+      this.watch(text("现金收益"));
+      this.watchAdsForCoin("现金收益");
+    }
+  };
+
+  BaiduLite.prototype.swipeVideo = function (totalTime) {
+    this.goTo(this.tab, 1);
+    moveDown(totalTime, 10);
+  };
+
+  BaiduLite.prototype.openTreasure = function () {
+    this.goTo(this.tab, 2);
+
+    if (fixedClick("开宝箱得金币")) {
+      this.watchAdsForCoin("现金收益");
+    }
+  };
+
+  BaiduLite.prototype.payouts = function () {
+    this.goTo(this.tab, 1);
+
+    if (fixedClick("换现金")) {
+      if (fixedClick("提现")) {
+        if (fixedClick("立即提现到微信")) {
+          fixedClick("确认提现");
+        }
+      }
+    }
+  };
+
+  BaiduLite_decorate([measureExecutionTime], BaiduLite.prototype, "highEff", null);
+
+  BaiduLite_decorate([measureExecutionTime], BaiduLite.prototype, "medEff", null);
+
+  BaiduLite_decorate([measureExecutionTime], BaiduLite.prototype, "lowEff", null);
+
+  BaiduLite_decorate([measureExecutionTime], BaiduLite.prototype, "weight", null);
+
+  BaiduLite_decorate([functionLog("签到")], BaiduLite.prototype, "signIn", null);
+
+  BaiduLite_decorate([functionLog("看广告")], BaiduLite.prototype, "watchAds", null);
+
+  BaiduLite_decorate([functionLog("刷视频")], BaiduLite.prototype, "swipeVideo", null);
+
+  BaiduLite_decorate([functionLog("开宝箱")], BaiduLite.prototype, "openTreasure", null);
+
+  BaiduLite_decorate([functionLog("提现")], BaiduLite.prototype, "payouts", null);
+
+  return BaiduLite;
+}(Base);
+
+
 ;// CONCATENATED MODULE: ./src/scripts/DeJian.ts
 
 
@@ -2286,7 +2819,6 @@ var DeJian = function (_super) {
     if (tmp != null) {
       var weight = parseInt(tmp.text());
       this.store(BaseKey.Weight, weight);
-      this.store(BaseKey.Money, (weight / 10000).toFixed(2));
     }
   };
 
@@ -2363,7 +2895,7 @@ var DeJian = function (_super) {
     this.goTo(desc("discovery_button"), -1);
 
     if (findAndClick("参与活动赚金币", {
-      cover: true
+      coverBoundsScaling: 1
     })) {
       var title = id("com.zhangyue.module.ad:id/tv_reward_video_title").findOnce();
 
@@ -2544,9 +3076,8 @@ var AbstractFreeNovel = function (_super) {
 
         if (match) {
           var weight = parseInt(match[0]);
-          Record.debug("".concat(this.constructor.name, ":").concat(parseInt(match[0])));
+          Record.debug("".concat(this.constructor.name, ":").concat(weight));
           this.store(BaseKey.Weight, weight);
-          this.store(BaseKey.Money, (weight / 10000).toFixed(2));
         }
       }
     }
@@ -2782,39 +3313,49 @@ var KuaiShou_decorate = undefined && undefined.__decorate || function (decorator
 
 
 
+
+
 var KuaiShou = function (_super) {
   KuaiShou_extends(KuaiShou, _super);
 
   function KuaiShou() {
     var _this = _super.call(this) || this;
 
-    _this.buttonNameList = ['看内容最高可得[0-9]+金币.*', '看视频最高可得[0-9]+金币.*'];
     _this.appName = NAME_VEDIO_KUAISHOU;
     _this.packageName = PACKAGE_VEDIO_KUAISHOU;
     _this.tab = id(_this.packageName + ":id/tab_layout");
     _this.register = id(_this.packageName + ":id/pendant_mask_bg");
+    _this.initialComponent = _this.tab;
+    _this.initialNum = 1;
     _this.depth = 1;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME);
-    _this.medEffEstimatedTime = _this.fetch(BaseKey.MedEffEstimatedTime, 15 * 60);
+    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 30 * 60);
     _this.lowEffEstimatedTime = 0;
     return _this;
   }
 
   KuaiShou.prototype.highEff = function () {
-    this.signIn();
-    this.openTreasure();
-  };
+    var _this = this;
 
-  KuaiShou.prototype.medEff = function () {
-    this.watchAds();
-    this.openTreasure();
-    this.watchlive();
+    this.signIn();
+    randomExecute([function () {
+      _this.openTreasure();
+    }, function () {
+      _this.watchAds();
+    }, function () {
+      _this.mealSupp();
+    }, function () {
+      _this.like();
+    }, function () {
+      _this.comment();
+    }, function () {
+      _this.collect();
+    }]);
   };
 
   KuaiShou.prototype.lowEff = function (time) {
     var _this = this;
 
-    doFuncAtGivenTime(time, 10 * 60, function (perTime) {
+    doFuncAtGivenTime(time, 25 * 60, function (perTime) {
       _this.swipeVideo(perTime);
 
       _this.openTreasure();
@@ -2823,114 +3364,183 @@ var KuaiShou = function (_super) {
   };
 
   KuaiShou.prototype.weight = function () {
-    if (!text("日常任务").exists()) {
-      this.goTo(this.register, -1);
-    }
-
-    scrollTo("金币收益");
+    this["goto"](-1);
+    scrollTo("[0-9]+", {
+      coverBoundsScaling: 1
+    });
     var tmp = textMatches(/(\d+)/).boundsInside(0, 0, resizeX(549), resizeY(429)).findOnce();
 
     if (tmp != null) {
-      this.store(BaseKey.Weight, parseInt(tmp.text()));
+      var weight = parseInt(tmp.text());
+      Record.debug("weight: ".concat(weight));
+      this.store(BaseKey.Weight, weight);
     }
   };
 
   KuaiShou.prototype.signIn = function () {
-    if (!text("日常任务").exists()) {
-      this.goTo(this.register, -1);
-    }
+    this["goto"](-1);
 
-    if (findAndClick("立即领取")) {
+    if (dialogClick("立即领取")) {
       this.watchAdsForCoin("日常任务");
       closeByImageMatching();
     }
   };
 
   KuaiShou.prototype.swipeVideo = function (totalTime) {
-    this.goTo(this.tab, 1);
+    this["goto"](1);
+    Record.log("\u9884\u8BA1\u5237\u89C6\u9891".concat(convertSecondsToMinutes(totalTime), "\u5206\u949F"));
     moveDown(totalTime, 10);
   };
 
   KuaiShou.prototype.openTreasure = function () {
-    if (!text("日常任务").exists()) {
-      this.goTo(this.register, -1);
-    }
+    this["goto"](-1);
 
-    if (findAndClick("立刻领[0-9]+金币")) {
+    if (fixedClick("立刻领[0-9]+金币")) {
       this.watchAdsForCoin("日常任务");
     }
   };
 
   KuaiShou.prototype.watchAds = function () {
-    if (!text("日常任务").exists()) {
-      this.goTo(this.register, -1);
-    }
-
+    this["goto"](-1);
     var cycleCounts = 0;
 
-    while (++cycleCounts < MAX_CYCLES_COUNTS && findAndClick("领福利 赚更多")) {}
+    while (++cycleCounts < MAX_CYCLES_COUNTS && findAndClick("领福利 赚更多", {
+      coverBoundsScaling: 1.2,
+      leftRange: "看广告得.*金币"
+    })) {
+      this.watch(text("日常任务"));
+    }
   };
 
   KuaiShou.prototype.watchlive = function () {
-    if (!text("日常任务").exists()) {
-      this.goTo(this.register, -1);
-    }
+    this["goto"](-1);
 
-    if (findAndClick("去观看")) {
+    if (findAndClick("去观看 限时领", {
+      coverBoundsScaling: 1.2,
+      leftRange: "看直播得.*金币"
+    })) {
       for (var i = 0; i < 6; i++) {
-        var tmp = id(this.packageName + ":id/recycler_view").findOnce();
+        swipeDown(Move.Fast, 1000);
+        waitRandomTime(2);
 
-        if (tmp != null) {
-          var child = tmp.child(0);
-
-          if (child != null) {
-            child.click();
-            waitRandomTime(40);
-            back();
-            waitRandomTime(4);
-            findAndClick("退出");
-          }
-
-          for (var j = 0; j < 2; j++) {
-            tmp.scrollForward();
-            waitRandomTime(2);
-          }
+        if (findAndClick(id(this.packageName + ":id/photo"), {
+          index: random(0, 3),
+          waitTimes: 40
+        })) {
+          this.backUntilFind(id(this.packageName + ":id/photo"));
         }
       }
 
       this.backUntilFind(text("日常任务"));
 
-      if (findAndClick("领金币 限时领")) {
-        findAndClick("知道了");
+      if (findAndClick("领金币 限时领", {
+        coverBoundsScaling: 1.2,
+        leftRange: "看直播得.*金币"
+      })) {
+        dialogClick("知道了");
       }
     }
   };
 
   KuaiShou.prototype.mealSupp = function () {
-    if (!text("日常任务").exists()) {
-      this.goTo(this.register, -1);
-    }
+    this["goto"](-1);
 
-    if (findAndClick("去领取")) {
-      if (findAndClick("领取饭补")) {
-        this.watchAdsForCoin("日常任务");
+    if (scrollClick("去查看|去领取", "到饭点领饭补")) {
+      var cycleCounts = 0;
+
+      if (fixedClick("领取饭补")) {
+        this.watchAdsForCoin("看直播");
       }
 
-      this.backUntilFind(text("日常任务"));
+      while (cycleCounts < MAX_CYCLES_COUNTS && fixedClick(".*待补签")) {
+        this.watch(text("已补签"));
+      }
+    }
+  };
+
+  KuaiShou.prototype.like = function () {
+    for (var i = 0; i < 2; i++) {
+      this["goto"](-1);
+
+      if (scrollClick("去点赞", "点赞1个作品")) {
+        this.preNum = 1;
+
+        while (!fixedClick(id(this.packageName + ":id/like_icon"))) {
+          swipeDown(Move.Fast, 400);
+          waitRandomTime(2);
+        }
+      }
+    }
+  };
+
+  KuaiShou.prototype.comment = function () {
+    for (var i = 0; i < 2; i++) {
+      this["goto"](-1);
+
+      if (scrollClick("去评论", "评论1个作品")) {
+        this.preNum = 1;
+
+        while (!fixedClick(id(this.packageName + ":id/comment_icon"))) {
+          swipeDown(Move.Fast, 400);
+          waitRandomTime(2);
+        }
+
+        if (fixedClick(id(this.packageName + ":id/editor_holder_text"))) {
+          var tmp = id(this.packageName + ":id/editor").findOnce();
+
+          if (tmp != null) {
+            tmp.setText("打卡");
+            waitRandomTime(3);
+
+            if (fixedClick(id(this.packageName + ":id/finish_button"))) {
+              back();
+            }
+          }
+        }
+      }
+    }
+  };
+
+  KuaiShou.prototype.collect = function () {
+    for (var i = 0; i < 2; i++) {
+      this["goto"](-1);
+
+      if (scrollClick("去收藏", "收藏1个作品")) {
+        this.preNum = 1;
+
+        while (!fixedClick(id(this.packageName + ":id/collect_icon"))) {
+          swipeDown(Move.Fast, 400);
+          waitRandomTime(2);
+        }
+      }
     }
   };
 
   KuaiShou.prototype.reward = function () {
-    if (!text("日常任务").exists()) {
-      this.goTo(this.register, -1);
-    }
+    this["goto"](-1);
 
-    findAndClick("领取奖励");
+    if (fixedClick("领取奖励")) {
+      closeByImageMatching();
+    }
+  };
+
+  KuaiShou.prototype["goto"] = function (num) {
+    if (num === -1) {
+      if (this.tab.exists()) {
+        this.goTo(this.tab, 0);
+
+        if (fixedClick(id(this.packageName + ":id/left_btn_parent"))) {
+          fixedClick("任务中心");
+        }
+      } else {
+        this.backUntilFind(text("日常任务"));
+      }
+    } else {
+      this.goTo(this.tab, num);
+    }
   };
 
   KuaiShou_decorate([measureExecutionTime], KuaiShou.prototype, "highEff", null);
-
-  KuaiShou_decorate([measureExecutionTime], KuaiShou.prototype, "medEff", null);
 
   KuaiShou_decorate([measureExecutionTime], KuaiShou.prototype, "lowEff", null);
 
@@ -2942,11 +3552,17 @@ var KuaiShou = function (_super) {
 
   KuaiShou_decorate([functionLog("开宝箱")], KuaiShou.prototype, "openTreasure", null);
 
-  KuaiShou_decorate([functionLog("看视频")], KuaiShou.prototype, "watchAds", null);
+  KuaiShou_decorate([functionLog("看广告")], KuaiShou.prototype, "watchAds", null);
 
   KuaiShou_decorate([functionLog("看直播")], KuaiShou.prototype, "watchlive", null);
 
   KuaiShou_decorate([functionLog("领饭补")], KuaiShou.prototype, "mealSupp", null);
+
+  KuaiShou_decorate([functionLog("点赞")], KuaiShou.prototype, "like", null);
+
+  KuaiShou_decorate([functionLog("评论")], KuaiShou.prototype, "comment", null);
+
+  KuaiShou_decorate([functionLog("收藏")], KuaiShou.prototype, "collect", null);
 
   KuaiShou_decorate([functionLog("领取奖励")], KuaiShou.prototype, "reward", null);
 
@@ -3014,7 +3630,6 @@ var KuaiShouFree = function (_super) {
     _this.tab = id(_this.packageName + ":id/home_bottom_bar");
     _this.initialComponent = _this.tab;
     _this.initialNum = 1;
-    _this.exitNum = 2;
     _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60);
     _this.lowEffEstimatedTime = 0;
     return _this;
@@ -3042,7 +3657,6 @@ var KuaiShouFree = function (_super) {
   KuaiShouFree.prototype.weight = function () {
     var weight = this.record() - this.coin;
     this.store(BaseKey.Weight, weight);
-    this.store(BaseKey.Money, (weight / 10000).toFixed(2));
   };
 
   KuaiShouFree.prototype.signIn = function () {
@@ -3094,12 +3708,14 @@ var KuaiShouFree = function (_super) {
 
   KuaiShouFree.prototype.record = function () {
     this.goTo(this.tab, 2);
-    var str = ocr.recognizeText(getScreenImage({
+    var img = getScreenImage({
       left: resizeX(78),
       top: resizeY(339),
       right: resizeX(360),
       bottom: resizeY(438)
-    }));
+    });
+    var str = ocr.recognizeText(img);
+    img.recycle();
     var match = str.match("[0-9]+");
 
     if (match) {
@@ -3177,20 +3793,23 @@ var KuaiShouLite_decorate = undefined && undefined.__decorate || function (decor
 
 
 
+
+
 var KuaiShouLite = function (_super) {
   KuaiShouLite_extends(KuaiShouLite, _super);
 
   function KuaiShouLite() {
     var _this = _super.call(this) || this;
 
-    _this.buttonNameList = ['看内容最高可得.+'];
     _this.appName = NAME_VEDIO_KUAISHOU_LITE;
     _this.packageName = PACKAGE_VEDIO_KUAISHOU_LITE;
     _this.tab = id(_this.packageName + ":id/tab_layout");
+    _this.initialComponent = _this.tab;
+    _this.initialNum = 0;
     _this.depth = 1;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME);
-    _this.medEffEstimatedTime = _this.fetch(BaseKey.MedEffEstimatedTime, 30 * 60);
+    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 5 * 60);
     _this.lowEffEstimatedTime = 0;
+    _this.lowEffAssmitCount = 2;
     return _this;
   }
 
@@ -3199,14 +3818,18 @@ var KuaiShouLite = function (_super) {
     this.openTreasure();
   };
 
-  KuaiShouLite.prototype.medEff = function () {
-    this.watchAds();
-  };
-
   KuaiShouLite.prototype.lowEff = function (time) {
     var _this = this;
 
-    doFuncAtGivenTime(time, 10 * 60, function (perTime) {
+    var count = 0;
+    doFuncAtGivenTimeByEstimate(time / 2, function () {
+      _this.watchAds();
+
+      if (++count % 15 === 0) {
+        _this.openTreasure();
+      }
+    });
+    doFuncAtGivenTime(time / 2, 10 * 60, function (perTime) {
       _this.swipeVideo(perTime);
 
       _this.openTreasure();
@@ -3214,18 +3837,32 @@ var KuaiShouLite = function (_super) {
   };
 
   KuaiShouLite.prototype.weight = function () {
-    this.store(BaseKey.Weight, this.record());
+    this.goTo(this.tab, 2);
+    scrollTo("我的金币", {
+      coverBoundsScaling: 1
+    });
+
+    var _a = searchByOcrRecognize("[0-9]+"),
+        _ = _a[0],
+        name = _a[1];
+
+    if (name != undefined) {
+      var weight = parseInt(name.toString());
+      Record.debug("weight: ".concat(weight));
+      this.store(BaseKey.Weight, weight);
+    }
   };
 
   KuaiShouLite.prototype.swipeVideo = function (totalTime) {
     this.goTo(this.tab, 0);
+    Record.log("\u9884\u8BA1\u5237\u89C6\u9891".concat(convertSecondsToMinutes(totalTime), "\u5206\u949F"));
     moveDown(totalTime, 15);
   };
 
   KuaiShouLite.prototype.signIn = function () {
     this.goTo(this.tab, 2);
 
-    if (findAndClick(text("立即领取"))) {
+    if (dialogClick("立即领取")) {
       this.watchAdsForCoin("日常福利");
       closeByImageMatching();
     }
@@ -3233,41 +3870,43 @@ var KuaiShouLite = function (_super) {
 
   KuaiShouLite.prototype.watchAds = function () {
     this.goTo(this.tab, 2);
-    scrollTo("日常任务");
-    var cycleCounts = 0;
+
+    if (scrollClick("领福利", "看广告得[0-9]+金币")) {
+      this.watch(text("日常任务"));
+      return true;
+    }
+
+    return false;
+  };
+
+  KuaiShouLite.prototype.watchLive = function () {
+    this.goTo(this.tab, 2);
+
+    if (scrollClick("领福利", "看6次直播领金币")) {
+      for (var i = 0; i < 6; i++) {
+        swipeDown(Move.Fast, 1000);
+        waitRandomTime(2);
+
+        if (findAndClick(id(this.packageName + ":id/play_view_container"), {
+          index: random(0, 3),
+          waitTimes: 70
+        })) {
+          this.backUntilFind(id(this.packageName + ":id/play_view_container"));
+        }
+      }
+    }
   };
 
   KuaiShouLite.prototype.openTreasure = function () {
     this.goTo(this.tab, 2);
+    this.watchAdsForCoin("日常福利");
 
-    if (text("恭喜你获得").exists()) {
+    if (fixedClick("开宝箱得金币")) {
       this.watchAdsForCoin("日常福利");
     }
-
-    if (findAndClick(text("开宝箱得金币"))) {
-      if (text("恭喜你获得").exists()) {
-        this.watchAdsForCoin("日常福利");
-      }
-    }
-  };
-
-  KuaiShouLite.prototype.record = function () {
-    this.goTo(this.tab, 2);
-
-    if (findAndClick(text("我的金币"))) {
-      var tmp = textEndsWith("金币").findOnce();
-
-      if (tmp != null) {
-        return parseInt(tmp.text());
-      }
-    }
-
-    return 0;
   };
 
   KuaiShouLite_decorate([measureExecutionTime], KuaiShouLite.prototype, "highEff", null);
-
-  KuaiShouLite_decorate([measureExecutionTime], KuaiShouLite.prototype, "medEff", null);
 
   KuaiShouLite_decorate([measureExecutionTime], KuaiShouLite.prototype, "lowEff", null);
 
@@ -3278,6 +3917,8 @@ var KuaiShouLite = function (_super) {
   KuaiShouLite_decorate([functionLog("签到")], KuaiShouLite.prototype, "signIn", null);
 
   KuaiShouLite_decorate([functionLog("看广告")], KuaiShouLite.prototype, "watchAds", null);
+
+  KuaiShouLite_decorate([functionLog("看直播")], KuaiShouLite.prototype, "watchLive", null);
 
   KuaiShouLite_decorate([functionLog("开宝箱")], KuaiShouLite.prototype, "openTreasure", null);
 
@@ -3345,7 +3986,6 @@ var MarvelFree = function (_super) {
     _this.initialComponent = _this.tab;
     _this.initialNum = 0;
     _this.depth = 1;
-    _this.exitNum = 0;
     _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 15 * 60);
     _this.lowEffEstimatedTime = 0;
     return _this;
@@ -3377,7 +4017,6 @@ var MarvelFree = function (_super) {
     if (tmp != null) {
       var weight = parseInt(tmp.text());
       this.store(BaseKey.Weight, weight);
-      this.store(BaseKey.Money, (weight / 10000).toFixed(2));
     }
   };
 
@@ -3402,7 +4041,6 @@ var MarvelFree = function (_super) {
     var cycleCounts = 0;
 
     while (++cycleCounts < MAX_CYCLES_COUNTS && textMatches("看视频领金币.+").exists() && scrollClick("去领取", "看视频领金币.+")) {
-      this.exitNum = 0;
       this.watch(text("日常福利"));
     }
   };
@@ -3531,7 +4169,10 @@ var AbstractTomato = function (_super) {
   AbstractTomato_extends(AbstractTomato, _super);
 
   function AbstractTomato() {
-    return _super.call(this) || this;
+    var _this = _super.call(this) || this;
+
+    _this.exchangeRate = 33000;
+    return _this;
   }
 
   AbstractTomato.prototype.sign = function () {
@@ -3619,6 +4260,7 @@ var RedFruits = function (_super) {
   function RedFruits() {
     var _this = _super.call(this) || this;
 
+    _this.list = ["阅读赚金币"];
     _this.appName = NAME_READ_RED_FRUITS;
     _this.packageName = PACKAGE_READ_RED_FRUITS;
     _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60);
@@ -3638,8 +4280,23 @@ var RedFruits = function (_super) {
   RedFruits.prototype.lowEff = function (time) {
     var _this = this;
 
+    this.goTo(text("福利"), -1);
+    var flag = false;
+
+    if (textMatches("看短剧(自动)?赚金币").exists()) {
+      if (textMatches("看短剧赚金币").exists()) {
+        this.list.push("看短剧赚金币");
+      }
+
+      flag = true;
+    }
+
     doFuncAtGivenTime(time / 2, 10 * 60, function (perTime) {
-      _this.swipeVideo(perTime);
+      if (flag) {
+        _this.swipeVideo(perTime);
+      } else {
+        _this.readBook(perTime);
+      }
 
       _this.openTreasure();
 
@@ -3662,7 +4319,6 @@ var RedFruits = function (_super) {
     if (tmp != null) {
       var weight = parseInt(tmp.text());
       this.store(BaseKey.Weight, weight);
-      this.store(BaseKey.Money, (weight / 33000).toFixed(2));
     }
   };
 
@@ -3694,7 +4350,7 @@ var RedFruits = function (_super) {
     if (selectedClick("经典", 170)) {
       if (findAndClick(id(this.packageName + ":id/name_tv"), {
         leftRange: random(1, 8).toString(),
-        cover: true
+        coverBoundsScaling: 1
       })) {
         this.read(totalTime);
       }
@@ -3704,10 +4360,9 @@ var RedFruits = function (_super) {
   RedFruits.prototype.reward = function () {
     this.goTo(text("福利"), -1);
     var cycleCounts = 0;
-    var list = ["看短剧(自动)?赚金币", "阅读赚金币"];
 
-    for (var _i = 0, list_1 = list; _i < list_1.length; _i++) {
-      var range = list_1[_i];
+    for (var _i = 0, _a = this.list; _i < _a.length; _i++) {
+      var range = _a[_i];
 
       while (++cycleCounts < MAX_CYCLES_COUNTS && scrollClick("立即领取", range)) {
         this.watchAdsForCoin("日常福利");
@@ -3743,14 +4398,14 @@ var RedFruits = function (_super) {
 
     if (scrollClick("去领取", "吃饭补贴")) {
       if (fixedClick("领.*补贴[0-9]+金币")) {
-        this.watchAdsForCoin("已按时吃饭[0-9]天");
+        this.watchAdsForCoin("已按时吃饭.*天");
       }
 
       var cycleCounts = 0;
 
       while (++cycleCounts < MAX_CYCLES_COUNTS && fixedClick("看视频补领一次补贴")) {
-        this.watch(textMatches("已按时吃饭[0-9]天"));
-        this.watchAdsForCoin("已按时吃饭[0-9]天");
+        this.watch(textMatches("已按时吃饭.*天|恭喜获得"));
+        this.watchAdsForCoin("已按时吃饭.*天");
       }
     }
   };
@@ -3847,7 +4502,6 @@ var SevenCatsFree = function (_super) {
       if (match) {
         var weight = parseInt(match[0]);
         this.store(BaseKey.Weight, weight);
-        this.store(BaseKey.Money, (weight / 10000).toFixed(2));
       }
     }
   };
@@ -3919,13 +4573,11 @@ var ShuQi = function (_super) {
   function ShuQi() {
     var _this = _super.call(this) || this;
 
-    _this.coin = 0;
     _this.appName = NAME_READ_SHUQI;
     _this.packageName = PACKAGE_READ_SHUQI;
     _this.tab = id("android:id/tabs");
     _this.initialComponent = _this.tab;
     _this.initialNum = 1;
-    _this.exitNum = 0;
     _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 15 * 60);
     _this.lowEffEstimatedTime = 0;
     return _this;
@@ -3954,7 +4606,6 @@ var ShuQi = function (_super) {
     if (tmp != null) {
       var weight = parseInt(tmp.text());
       this.store(BaseKey.Weight, weight);
-      this.store(BaseKey.Money, (weight / 10000).toFixed(2));
     }
   };
 
@@ -4078,6 +4729,7 @@ var SpeedFree = function (_super) {
     _this.appName = NAME_READ_SPEED_FREE;
     _this.packageName = PACKAGE_READ_SPEED_FREE;
     _this.initialComponent = desc("bookstore_button");
+    _this.exchangeRate = 33000;
     _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 120 * 60);
     _this.lowEffEstimatedTime = 0;
     return _this;
@@ -4111,7 +4763,6 @@ var SpeedFree = function (_super) {
     if (tmp != null) {
       var weight = parseInt(tmp.text());
       this.store(BaseKey.Weight, weight);
-      this.store(BaseKey.Money, (weight / 33000).toFixed(2));
     }
   };
 
@@ -4318,17 +4969,17 @@ var TikTokLite_decorate = undefined && undefined.__decorate || function (decorat
 
 
 
+
 var TikTokLite = function (_super) {
   TikTokLite_extends(TikTokLite, _super);
 
   function TikTokLite() {
     var _this = _super.call(this) || this;
 
-    _this.buttonNameList = ['看广告视频再赚'];
     _this.appName = NAME_VEDIO_TIKTOK_LITE;
     _this.packageName = PACKAGE_VEDIO_TIKTOK_LITE;
     _this.register = className("android.widget.ImageView").depth(19).drawingOrder(1);
-    _this.tab = id(_this.packageName + ":id/root_view");
+    _this.tab = id(_this.packageName + ":id/root_view").boundsInside(0, device.height * 4 / 5, device.width, device.height);
     return _this;
   }
 
@@ -4369,20 +5020,17 @@ var TikTokLite = function (_super) {
   };
 
   TikTokLite.prototype.signIn = function () {
-    if (!text("日常任务").exists()) {
-      this.goTo(this.register, -1);
+    if (dialogClick("立即签到.+")) {
+      this.watchAdsForCoin("日常福利");
     }
-
-    findAndClick(text("点击领取"));
-    this.watchAdsForCoin("日常福利");
   };
 
   TikTokLite.prototype.openTreasure = function () {
-    if (!text("日常任务").exists()) {
-      this.goTo(this.register, -1);
-    }
+    this["goto"](-1);
 
-    if (findAndClick(text("开宝箱得金币"))) {}
+    if (findAndClick(text("开宝箱得金币"))) {
+      this.watchAdsForCoin("日常任务");
+    }
   };
 
   TikTokLite.prototype.watchAds = function () {
@@ -4437,6 +5085,20 @@ var TikTokLite = function (_super) {
   TikTokLite.prototype.swipeVideo = function (totalTime) {
     this.goTo(this.tab, 0);
     moveDown(totalTime, 10);
+  };
+
+  TikTokLite.prototype["goto"] = function (num) {
+    if (num === -1) {
+      if (this.tab.exists()) {
+        log(this.tab.findOnce());
+        this.goTo(this.register, num);
+      } else {
+        Record.log("日常任务");
+        this.backUntilFind(text("日常任务"));
+      }
+    } else {
+      this.goTo(this.tab, num);
+    }
   };
 
   TikTokLite_decorate([measureExecutionTime], TikTokLite.prototype, "highEff", null);
@@ -4581,7 +5243,6 @@ var Tomato = function (_super) {
     if (tmp != null) {
       var weight = parseInt(tmp.text());
       this.store(BaseKey.Weight, weight);
-      this.store(BaseKey.Money, (weight / 30000).toFixed(2));
     }
   };
 
@@ -4641,7 +5302,7 @@ var Tomato = function (_super) {
     if (selectedClick("推荐", 170)) {
       findAndClick(className("android.widget.TextView"), {
         leftRange: random(1, 4).toString(),
-        cover: true
+        coverBoundsScaling: 1
       });
 
       while (!text("阅读电子书").exists()) {
@@ -4651,7 +5312,7 @@ var Tomato = function (_super) {
         waitRandomTime(3);
         findAndClick(className("android.widget.TextView"), {
           leftRange: random(1, 4).toString(),
-          cover: true
+          coverBoundsScaling: 1
         });
       }
 
@@ -4832,7 +5493,6 @@ var TomatoFree = function (_super) {
     if (tmp != null) {
       var weight = parseInt(tmp.text());
       this.store(BaseKey.Weight, weight);
-      this.store(BaseKey.Money, (weight / 30000).toFixed(2));
     }
   };
 
@@ -4857,7 +5517,7 @@ var TomatoFree = function (_super) {
     if (selectedClick("听书", 170)) {
       if (findAndClick(className("android.widget.TextView"), {
         leftRange: random(1, 4).toString(),
-        cover: true
+        coverBoundsScaling: 1
       })) {
         fixedClick(merge(["全部播放", "续播"]));
       }
@@ -4880,7 +5540,7 @@ var TomatoFree = function (_super) {
     if (selectedClick("经典", 170)) {
       if (findAndClick(className("android.widget.TextView"), {
         leftRange: random(1, 3).toString(),
-        cover: true
+        coverBoundsScaling: 1
       })) {
         this.read(totalTime);
       }
@@ -4916,7 +5576,7 @@ var TomatoFree = function (_super) {
     if (selectedClick("看剧", 170)) {
       if (findAndClick("[0-9]*\.?[0-9]+万", {
         index: random(0, 8),
-        cover: true
+        coverBoundsScaling: 1
       })) {
         Record.log("\u8BA1\u5212\u65F6\u95F4: ".concat(convertSecondsToMinutes(totalTime), "\u5206\u949F"));
         var watchTime = 0;
@@ -5053,7 +5713,6 @@ var TomatoLite = function (_super) {
     if (tmp != null) {
       var weight = parseInt(tmp.text());
       this.store(BaseKey.Weight, weight);
-      this.store(BaseKey.Money, (weight / 30000).toFixed(2));
     }
   };
 
@@ -5241,7 +5900,7 @@ var WanChao = function (_super) {
 
       while (++cycleCounts < MAX_CYCLES_COUNTS && findAndClick("待完成", {
         waitTimes: 10,
-        cover: true
+        coverBoundsScaling: 1
       })) {
         back();
         waitRandomTime(4);
@@ -5265,7 +5924,7 @@ var WanChao = function (_super) {
 
           if (money != null) {
             Record.log("\u4E2D\u5956".concat(money.text()));
-            this.store(BaseKey.Money, parseFloat(money.text()));
+            this.store(BaseKey.Weight, parseFloat(money.text()) * this.exchangeRate);
           }
         }
       }
@@ -5389,6 +6048,7 @@ var YouShi = function (_super) {
     _this.appName = NAME_VEDIO_YOUSHI;
     _this.packageName = PACKAGE_VEDIO_YOUSHI;
     _this.tab = id("android:id/tabs");
+    _this.exchangeRate = 33000;
     _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME);
     _this.medEffEstimatedTime = _this.fetch(BaseKey.MedEffEstimatedTime, 110 * 60);
     _this.lowEffEstimatedTime = 0;
@@ -5448,7 +6108,6 @@ var YouShi = function (_super) {
         Record.debug("".concat(this.constructor.name, ":").concat(tmp.text()));
         var weight = parseInt(tmp.text());
         this.store(BaseKey.Weight, weight);
-        this.store(BaseKey.Money, (weight / 33000).toFixed(2));
       }
     }
   };
@@ -5606,6 +6265,9 @@ var _a;
 
 
 
+
+
+
 var PROJECT_NAME = "智能助手";
 var VERSION = "0.4.3";
 var WX_PUSHER_URL = "https://wxpusher.zjiecode.com/api/send/message";
@@ -5615,14 +6277,13 @@ var MAX_CLICK_COUNTS = 8;
 var MAX_RETRY_COUNTS = 3;
 var WAIT_TIME_AFTER_CLICK = 6;
 var MAX_CYCLES_COUNTS = 25;
-var REDUNDANCY_TIME = 3 * 60;
 var BASE_ASSIMT_TIME = 10 * 60;
 var WEIGHT_ASSIMT_TIME = (/* unused pure expression or super */ null && (5 * 60));
 var MAX_ASSIMT_TIME = 24 * 60 * 60;
 var STORAGE_APP = "app";
 var STORAGE_DATE = "date";
 var STORAGE_NO_RECORD = "noRecord";
-var STORAGE_WEIGHT_CONTAINER = "YWfjbEVp31";
+var STORAGE_WEIGHT_CONTAINER = "YWfjbEVp32";
 var STORAGE = storages.create(STORAGE_WEIGHT_CONTAINER);
 var DEVICE_WIDTH = 1080;
 var DEVICE_HEIGHT = 2340;
@@ -5654,6 +6315,8 @@ var NAME_READ_STARRY_SKY = "星空免费小说";
 var PACKAGE_READ_STARRY_SKY = "com.xk.qreader";
 var NAME_VEDIO_TIKTOK_LITE = "抖音极速版";
 var PACKAGE_VEDIO_TIKTOK_LITE = "com.ss.android.ugc.aweme.lite";
+var NAME_VEDIO_TIKTOK_VOLCANO = "抖音火山版";
+var PACKAGE_VEDIO_TIKTOK_VOLCANO = "com.ss.android.ugc.aweme.lite";
 var NAME_VEDIO_KUAISHOU = "快手";
 var PACKAGE_VEDIO_KUAISHOU = "com.smile.gifmaker";
 var NAME_READ_KUAISHOU_FREE = "快手免费小说";
@@ -5662,6 +6325,12 @@ var NAME_VEDIO_KUAISHOU_LITE = "快手极速版";
 var PACKAGE_VEDIO_KUAISHOU_LITE = "com.kuaishou.nebula";
 var NAME_VEDIO_YOUSHI = "有柿";
 var PACKAGE_VEDIO_YOUSHI = "com.ss.android.article.search";
+var NAME_VEDIO_BAIDU = "百度";
+var PACKAGE_VEDIO_BAIDU = "com.baidu.searchbox";
+var NAME_VEDIO_BAIDU_LITE = "百度极速版";
+var PACKAGE_VEDIO_BAIDU_LITE = "com.baidu.searchbox.lite";
+var NAME_VEDIO_BAIDU_BIG = "百度大字版";
+var PACKAGE_VEDIO_BAIDU_BIG = "com.baidu.searchbox.tomas";
 var youShi = new YouShi();
 var shuQi = new ShuQi();
 var starrySky = new StarrySky();
@@ -5677,8 +6346,11 @@ var kuaiShouFree = new KuaiShouFree();
 var kuaiShou = new KuaiShou();
 var kuaiShouLite = new KuaiShouLite();
 var tikTokLite = new TikTokLite();
-var global_speedFree = new SpeedFree();
+var speedFree = new SpeedFree();
 var deJian = new DeJian();
+var baidu = new Baidu();
+var baiduLite = new BaiduLite();
+var baiduBig = new BaiduBig();
 var wanChao = new WanChao();
 var highEffmap = {};
 var medEffMap = {};
@@ -5697,9 +6369,11 @@ var map = {
   "10": tomatoLite,
   "11": redFruits,
   "12": kuaiShouFree,
-  "13": global_speedFree,
+  "13": speedFree,
   "14": deJian,
-  "15": wanChao
+  "15": wanChao,
+  "16": kuaiShou,
+  "17": kuaiShouLite
 };
 Record.info("加载配置");
 var _TOKEN = (_a = hamibot.env, _a._TOKEN),
@@ -5802,11 +6476,11 @@ function toShowString(list) {
   for (var _i = 0, list_1 = list; _i < list_1.length; _i++) {
     var app_1 = list_1[_i];
     var weight = parseInt(app_1.fetch(BaseKey.Weight, 0));
-    var money = parseFloat(app_1.fetch(BaseKey.Money, 0));
+    var money = weight / app_1.exchangeRate;
     Record.debug("".concat(app_1.appName, ": ").concat(weight));
     sumWeight += weight;
     sumMoney += money;
-    stack.push("".concat(app_1.appName, ": ").concat(weight, " - - - ").concat(money, "\u5143"));
+    stack.push("".concat(app_1.appName, ": ").concat(weight, " - - - ").concat(money.toFixed(2), "\u5143"));
   }
 
   stack.push("\n\u4ECA\u65E5\u603B\u6536\u76CA: ".concat(sumWeight, "\u91D1\u5E01 - - - ").concat(sumMoney.toFixed(2), "\u5143"));
@@ -5897,11 +6571,7 @@ function init() {
 init();
 main();
 
-function test() {
-  speedFree.start(300 * 60);
-}
-
-var endTime;
+function test() {}
 
 function main() {
   while (true) {
@@ -5911,27 +6581,44 @@ function main() {
       throw new ConfigInvalidException("拿我这测试了?");
     }
 
-    var timePerMethod = interruptionLoggingAndGetTotalTime(runList);
+    var startTime = new Date();
+    var endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate(), 23, 59, 59);
+    var date = startTime.getMonth().toString() + "/" + startTime.getDate().toString();
+
+    if (date === STORAGE.get(STORAGE_DATE)) {
+      runList = runList.filter(function (app) {
+        return app.fetch(BaseKey.Executed, false) === false;
+      });
+    } else {
+      for (var _i = 0, runList_1 = runList; _i < runList_1.length; _i++) {
+        var app_1 = runList_1[_i];
+        app_1.store(BaseKey.Executed, false);
+      }
+    }
+
+    STORAGE.put(STORAGE_DATE, date);
+    var timeDifference = endTime.getTime() - startTime.getTime();
+    var timePerMethod = timeDifference / 1000;
     var sortedList = runList.slice().sort(function (a, b) {
-      return b.fetch(BaseKey.Money, 0) * 100 - a.fetch(BaseKey.Money, 0) * 100;
+      return b.fetch(BaseKey.Weight, 0) / b.exchangeRate * 100 - a.fetch(BaseKey.Weight, 0) / a.exchangeRate * 100;
     });
 
-    for (var _i = 0, sortedList_1 = sortedList; _i < sortedList_1.length; _i++) {
-      var app_1 = sortedList_1[_i];
-      highEffmap[app_1.constructor.name] = 0;
-      medEffMap[app_1.constructor.name] = 0;
-      lowEffMap[app_1.constructor.name] = 0;
-      Record.debug("".concat(app_1.appName));
+    for (var _a = 0, sortedList_1 = sortedList; _a < sortedList_1.length; _a++) {
+      var app_2 = sortedList_1[_a];
+      highEffmap[app_2.constructor.name] = 0;
+      medEffMap[app_2.constructor.name] = 0;
+      lowEffMap[app_2.constructor.name] = 0;
+      Record.debug("".concat(app_2.appName));
     }
 
     appTimeAllocation(timePerMethod, sortedList);
 
-    for (var _a = 0, runList_1 = runList; _a < runList_1.length; _a++) {
-      var app_2 = runList_1[_a];
-      var sum = highEffmap[app_2.constructor.name] + medEffMap[app_2.constructor.name] + lowEffMap[app_2.constructor.name];
+    for (var _b = 0, runList_2 = runList; _b < runList_2.length; _b++) {
+      var app_3 = runList_2[_b];
+      var sum = highEffmap[app_3.constructor.name] + medEffMap[app_3.constructor.name] + lowEffMap[app_3.constructor.name];
 
       if (sum != 0) {
-        Record.log("".concat(app_2.appName, ": ").concat(convertSecondsToMinutes(sum), "\u5206\u949F"));
+        Record.log("".concat(app_3.appName, ": ").concat(convertSecondsToMinutes(sum), "\u5206\u949F"));
       }
     }
 
@@ -5939,16 +6626,15 @@ function main() {
     Record.info("进入主流程");
     clearBackground();
 
-    for (var _b = 0, runList_2 = runList; _b < runList_2.length; _b++) {
-      var app_3 = runList_2[_b];
-      var executeTime = surplus + highEffmap[app_3.constructor.name] + medEffMap[app_3.constructor.name] + lowEffMap[app_3.constructor.name];
+    for (var _c = 0, runList_3 = runList; _c < runList_3.length; _c++) {
+      var app_4 = runList_3[_c];
+      var executeTime = surplus + highEffmap[app_4.constructor.name] + medEffMap[app_4.constructor.name] + lowEffMap[app_4.constructor.name];
 
       if (executeTime > 0) {
-        app_3.store(BaseKey.Weight, 0);
-        app_3.store(BaseKey.Money, 0);
-        STORAGE.put(STORAGE_APP, app_3.constructor.name);
-        surplus = app_3.start(executeTime);
-        app_3.store(BaseKey.Executed, true);
+        app_4.store(BaseKey.Weight, 0);
+        STORAGE.put(STORAGE_APP, app_4.constructor.name);
+        surplus = app_4.start(executeTime);
+        app_4.store(BaseKey.Executed, true);
         allocateSurplus(surplus, sortedList);
         clearBackground();
       }
@@ -5956,39 +6642,14 @@ function main() {
 
     Record.info("发送今日收益");
     sendIncomeMessageToWxPuher(toShowString(filteredList));
-    waitForNewDay();
-  }
-}
+    var doneTime = new Date();
 
-function waitForNewDay() {
-  var doneTime = new Date();
-
-  if (endTime.getTime() > doneTime.getTime()) {
-    var waitTime = endTime.getTime() - doneTime.getTime();
-    Record.log("\u7B49\u5F85".concat(convertSecondsToMinutes(waitTime / 1000 + 1), "\u5206\u949F\u5F00\u542F\u65B0\u4E00\u5929\u4EFB\u52A1"));
-    sleep(waitTime + 60 * 1000);
-  }
-}
-
-function interruptionLoggingAndGetTotalTime(runList) {
-  var startTime = new Date();
-  endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate(), 23, 59, 59);
-  var date = startTime.getMonth().toString() + "/" + startTime.getDate().toString();
-
-  if (date === STORAGE.get(STORAGE_DATE)) {
-    runList = runList.filter(function (app) {
-      return app.fetch(BaseKey.Executed, false) === false;
-    });
-  } else {
-    for (var _i = 0, runList_3 = runList; _i < runList_3.length; _i++) {
-      var app_4 = runList_3[_i];
-      app_4.store(BaseKey.Executed, false);
+    if (endTime.getTime() > doneTime.getTime()) {
+      var waitTime = endTime.getTime() - doneTime.getTime();
+      Record.log("\u7B49\u5F85".concat(convertSecondsToMinutes(waitTime / 1000 + 1), "\u5206\u949F\u5F00\u542F\u65B0\u4E00\u5929\u4EFB\u52A1"));
+      sleep(waitTime + 60 * 1000);
     }
   }
-
-  STORAGE.put(STORAGE_DATE, date);
-  var timeDifference = endTime.getTime() - startTime.getTime();
-  return timeDifference / 1000;
 }
 
 function allocateSurplus(surplus, sortedList) {

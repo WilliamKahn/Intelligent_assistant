@@ -44,7 +44,6 @@ export class TomatoLite extends AbstractTomato {
         if(tmp != null) {
             const weight = parseInt(tmp.text())
             this.store(BaseKey.Weight, weight)
-            this.store(BaseKey.Money, (weight/30000).toFixed(2))
         }
     }
 

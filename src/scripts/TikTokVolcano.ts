@@ -6,7 +6,7 @@ import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { Base, BaseKey } from "./abstract/Base";
 
-export class TikTokLite extends Base{
+export class TikTokVolcano extends Base{
 
     register: UiSelector
 
@@ -52,10 +52,8 @@ export class TikTokLite extends Base{
 
     @functionLog("签到")
     signIn(): void {
-        //this.goto(-1)
-        if(dialogClick("立即签到.+")){
-            this.watchAdsForCoin("日常福利")
-        }
+        this.goto(-1)
+        this.watchAdsForCoin("日常福利")
     }
 
     @functionLog("开宝箱")

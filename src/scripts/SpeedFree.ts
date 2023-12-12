@@ -12,6 +12,7 @@ export class SpeedFree extends Base {
         this.appName = NAME_READ_SPEED_FREE
         this.packageName = PACKAGE_READ_SPEED_FREE
         this.initialComponent = desc("bookstore_button")
+        this.exchangeRate = 33000
         this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 120 * 60)
         this.lowEffEstimatedTime = 0
     }
@@ -42,7 +43,6 @@ export class SpeedFree extends Base {
         if(tmp != null) {
             const weight = parseInt(tmp.text())
             this.store(BaseKey.Weight, weight)
-            this.store(BaseKey.Money, (weight/33000).toFixed(2))
         }
     }
 

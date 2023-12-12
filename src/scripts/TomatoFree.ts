@@ -62,7 +62,6 @@ export class TomatoFree extends AbstractTomato {
         if(tmp != null) {
             const weight = parseInt(tmp.text())
             this.store(BaseKey.Weight, weight)
-            this.store(BaseKey.Money, (weight/30000).toFixed(2))
         }
     }
 
@@ -84,7 +83,7 @@ export class TomatoFree extends AbstractTomato {
         if(selectedClick("听书", 170)){
             if(findAndClick(className("android.widget.TextView"), {
                 leftRange:random(1,4).toString(),
-                cover:true
+                coverBoundsScaling:1
             })){
                 fixedClick(merge(["全部播放", "续播"]))
             }
@@ -107,7 +106,7 @@ export class TomatoFree extends AbstractTomato {
         if(selectedClick("经典", 170)){
             if(findAndClick(className("android.widget.TextView"),{
                 leftRange: random(1,3).toString(),
-                cover:true
+                coverBoundsScaling:1
             })){
                 this.read(totalTime)
             }
@@ -144,7 +143,7 @@ export class TomatoFree extends AbstractTomato {
         if(selectedClick("看剧", 170)){
             if(findAndClick("[0-9]*\.?[0-9]+万", {
                 index:random(0,8),
-                cover:true
+                coverBoundsScaling:1
             })){
                 Record.log(`计划时间: ${convertSecondsToMinutes(totalTime)}分钟`)
                 let watchTime=0;

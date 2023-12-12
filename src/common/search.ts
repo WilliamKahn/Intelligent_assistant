@@ -2,9 +2,9 @@ import { OcrResultDetail } from "ocr"
 import { ExceedMaxNumberOfAttempts } from "../lib/exception"
 import { Record } from "../lib/logger"
 import { clickDialogOption } from "./click"
-import { Dialog } from "./enums"
+import { Dialog, Move } from "./enums"
 import { Bounds, ScrollToOptions, SearchByLeftRangeOptions, SearchByOcrRecognizeOptions, SearchByUiSelectOptions, SearchOptions } from "./interfaces"
-import { close, closeByImageMatching, compareStr, getScreenImage, myBoundsContains, resizeX, resizeY, waitRandomTime } from "./utils"
+import { boundsScaling, close, closeByImageMatching, compareStr, getScreenImage, myBoundsContains, recognizeTextByLeftToRight, resizeX, resizeY, swipeDown, swipeUp, waitRandomTime } from "./utils"
 
 /**
  * todo 躲避遮挡目标时会触发关闭按钮
@@ -20,6 +20,7 @@ export function scrollTo(component: string|UiSelector, options?: ScrollToOptions
     const bottom = options?.fixed? device.height: range?.bottom || device.height
     //返回超过三次则异常
     if (scrollTimes > 2) {
+        Record.debug("scrollTo error")
         throw new ExceedMaxNumberOfAttempts("超过最大限制次数")
     }
     const [bounds, text] = search(component, options)
@@ -39,33 +40,24 @@ export function scrollTo(component: string|UiSelector, options?: ScrollToOptions
         if(prePy) {
             if(pointY == prePy) {
                 closeByImageMatching()
+                clickDialogOption(Dialog.Negative)
                 scrollTimes++
             }
         }
         if(tmpTop < top) {
-            //向下滑动
             if(tmpTop < top - bottom * 0.5) {
-                //快速移动
-                gesture(1000, [resizeX(random(580, 620)), resizeY(random(950, 1050))], 
-                [resizeX(random(780, 820)), resizeY(random(1750, 1850))])
+                swipeUp(Move.Fast, 1000)
             } else {
-                //慢速移动
-                gesture(1000, [resizeX(random(580, 620)), resizeY(random(1350, 1450))],
-                 [resizeX(random(780, 820)), resizeY(random(1750, 1850))])
+                swipeUp(Move.Normal, 1000)
             }
             //滑动等待
             waitRandomTime(1)
             return scrollTo(component, options, range, pointY, scrollTimes, avoidTimes)
         } else if (tmpBottom > bottom) {
-            //向上滑动
             if(tmpBottom > bottom * 1.5) {
-                //快速移动
-                gesture(1000, [resizeX(random(580, 620)), resizeY(random(1750, 1850))], 
-                [resizeX(random(780, 820)), resizeY(random(250, 350))])
+                swipeDown(Move.Fast, 1000)
             } else {
-                //慢速移动
-                gesture(1000, [resizeX(random(580, 620)), resizeY(random(1750, 1850))],
-                 [resizeX(random(780, 820)), resizeY(random(1350, 1450))])
+                swipeDown(Move.Normal, 1000)
             }
             //滑动等待
             waitRandomTime(1)
@@ -74,14 +66,15 @@ export function scrollTo(component: string|UiSelector, options?: ScrollToOptions
             //确定位置等待
             waitRandomTime(1)
             //列表项才需要ocr识别
-            if(options?.cover && text !== "" && ++avoidTimes < 3){
+            if(options?.coverBoundsScaling && text !== "" && ++avoidTimes < 3){
                 Record.debug("滑动遮挡校验")
                 Record.debug(`text :${text}`)
                 Record.debug(`bounds :${bounds}`)
-                const img = getScreenImage(bounds)
+                const img = getScreenImage(boundsScaling(bounds, options.coverBoundsScaling))
                 const bigImg = images.scale(img, 3, 3)
                 const grayImg = images.cvtColor(bigImg, "BGR2GRAY")
-                const str = ocr.recognizeText(grayImg)
+                //const str = ocr.recognizeText(grayImg)
+                const str = recognizeTextByLeftToRight(grayImg)
                 // grayImg.saveTo("/sdcard/result.jpg")
                 // app.viewFile("/sdcard/result.jpg")
                 img.recycle()
@@ -92,8 +85,10 @@ export function scrollTo(component: string|UiSelector, options?: ScrollToOptions
                     Record.debug("按钮被遮挡")
                     if(!range) range = {}
                     if(tmpBottom > device.height/2){
+                        range.top = undefined
                         range.bottom = tmpTop
                     } else {
+                        range.bottom = undefined
                         range.top = tmpBottom
                     }
                     return scrollTo(component, options, range, undefined, scrollTimes, avoidTimes)
@@ -142,6 +137,7 @@ export function search(component:string|UiSelector, options?:SearchOptions){
  */
 export function searchByLeftRange(button: string|UiSelector, options:SearchByLeftRangeOptions, times: number = 0) {
     if(times > 3) {
+        Record.debug("searchByLeftRange error")
         throw new ExceedMaxNumberOfAttempts("超过最大限制次数")
     }
     let tmp:UiObject|null
@@ -153,7 +149,8 @@ export function searchByLeftRange(button: string|UiSelector, options:SearchByLef
             tmp = searchByUiSelect(options.leftRange)
         }
         if (tmp == null) {
-            close(0)
+            closeByImageMatching()
+            clickDialogOption(Dialog.Negative)
             return searchByLeftRange(button, options, ++times)
         } else {
             //let result = eval(button.toString())
@@ -232,10 +229,12 @@ export function searchByUiSelect(component:UiSelector, options?:SearchByUiSelect
     }
     let list:any = component.find()
     if(list.nonEmpty()){
-        list = list.filter(element => {
-            const bounds = element.bounds()
-            return bounds.width() > 0
-        })
+        if(options?.fixed){
+            list = list.filter(element => {
+                const bounds = element.bounds()
+                return bounds.width() > 0 && bounds.height() > 0
+            })
+        }
         if(options?.bounds){
             list = list.filter(element => {
                 const bounds = element.bounds()

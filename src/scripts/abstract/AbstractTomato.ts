@@ -7,6 +7,7 @@ export abstract class AbstractTomato extends Base {
 
     constructor() {
         super()
+        this.exchangeRate = 33000
     }
     
     sign(): void {

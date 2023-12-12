@@ -6,8 +6,6 @@ import { Base, BaseKey } from "./abstract/Base";
 
 export class ShuQi extends Base{
 
-    coin: number = 0
-
     constructor(){
         super()
         this.appName = NAME_READ_SHUQI
@@ -15,7 +13,6 @@ export class ShuQi extends Base{
         this.tab = id("android:id/tabs")
         this.initialComponent = this.tab
         this.initialNum = 1
-        this.exitNum = 0
         this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 15 * 60)
         this.lowEffEstimatedTime = 0
     }
@@ -40,7 +37,6 @@ export class ShuQi extends Base{
         if(tmp != null){
             const weight = parseInt(tmp.text())
             this.store(BaseKey.Weight, weight)
-            this.store(BaseKey.Money, (weight/10000).toFixed(2))
         }
     }
 

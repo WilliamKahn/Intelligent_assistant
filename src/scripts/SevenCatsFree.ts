@@ -23,7 +23,6 @@ export class SevenCatsFree extends AbstractFreeNovel{
             if(match){
                 const weight = parseInt(match[0])
                 this.store(BaseKey.Weight, weight)
-                this.store(BaseKey.Money, (weight/10000).toFixed(2))
             }
         }
     }

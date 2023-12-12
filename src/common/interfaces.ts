@@ -20,10 +20,8 @@ export type RandomClickOptions = NormalClickOptions & {
 }
 
 export type ScrollToOptions = SearchOptions & {
-    //是否需要滑动
-    fixed?:boolean,
-    //是否需要遮挡校验
-    cover?:boolean
+    //遮挡范围系数
+    coverBoundsScaling?:number
 }
 
 export type SearchOptions = SearchByLeftRangeOptions & {
@@ -36,6 +34,8 @@ export type SearchByLeftRangeOptions = SearchByUiSelectOptions & {
 }
 
 export type SearchByUiSelectOptions = SearchByOcrRecognizeOptions & {
+    //是否需要滑动
+    fixed?:boolean,
     //延迟等待
     waitFor?:boolean
 }
