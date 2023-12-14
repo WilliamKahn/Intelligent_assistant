@@ -4,7 +4,7 @@ import { Record } from "../lib/logger"
 import { clickDialogOption } from "./click"
 import { Dialog, Move } from "./enums"
 import { Bounds, ScrollToOptions, SearchByLeftRangeOptions, SearchByOcrRecognizeOptions, SearchByUiSelectOptions, SearchOptions } from "./interfaces"
-import { boundsScaling, close, closeByImageMatching, compareStr, getScreenImage, myBoundsContains, recognizeTextByLeftToRight, resizeX, resizeY, swipeDown, swipeUp, waitRandomTime } from "./utils"
+import { boundsScaling, closeByImageMatching, compareStr, getScreenImage, myBoundsContains, recognizeTextByLeftToRight, swipeDown, swipeUp, waitRandomTime } from "./utils"
 
 /**
  * todo 躲避遮挡目标时会触发关闭按钮
@@ -174,12 +174,14 @@ export function searchByLeftRange(button: string|UiSelector, options:SearchByLef
 export function searchByOcrRecognize(str: string, options?:SearchByOcrRecognizeOptions){
     const img = getScreenImage(options?.bounds)
     const grayImg = images.cvtColor(img, "BGR2GRAY")
+    const adaptiveImg = images.adaptiveThreshold(grayImg, 255, "GAUSSIAN_C", "BINARY", 25, 0)
     // const adaptiveImg = images.adaptiveThreshold(grayImg, 255, "GAUSSIAN_C", "BINARY", 9, 0)
     // adaptiveImg.saveTo("/sdcard/exit-big.png")
     // app.viewFile("/sdcard/exit-big.png")
-    const res = ocr.recognize(grayImg)
+    const res = ocr.recognize(adaptiveImg)
     img.recycle()
     grayImg.recycle()
+    adaptiveImg.recycle()
     let list:OcrResultDetail[] = []
     for(let item of res.results){
         if(RegExp("^"+str+"$").test(item.text)){
@@ -229,10 +231,14 @@ export function searchByUiSelect(component:UiSelector, options?:SearchByUiSelect
     }
     let list:any = component.find()
     if(list.nonEmpty()){
+        list = list.filter(element => {
+            const bounds = element.bounds()
+            return bounds.width() > 0
+        })
         if(options?.fixed){
             list = list.filter(element => {
                 const bounds = element.bounds()
-                return bounds.width() > 0 && bounds.height() > 0
+                return bounds.height() > 0
             })
         }
         if(options?.bounds){

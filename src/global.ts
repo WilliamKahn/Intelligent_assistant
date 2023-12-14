@@ -42,7 +42,7 @@ export const PROJECT_NAME = "智能助手"
 export const VERSION = "0.4.3";
 
 // export const LISTENER_INTERVAL = 100
-// export const EVENT = events.emitter()
+export const EVENT = events.emitter()
 
 //微信推送url
 export const WX_PUSHER_URL = "https://wxpusher.zjiecode.com/api/send/message"

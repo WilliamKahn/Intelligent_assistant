@@ -1,6 +1,6 @@
 import { dialogClick, findAndClick, fixedClick, scrollClick } from "../common/click";
 import { scrollTo, searchByOcrRecognize } from "../common/search";
-import { closeByImageMatching, moveDown } from "../common/utils";
+import { closeByImageMatching, convertSecondsToMinutes, moveDown } from "../common/utils";
 import { NAME_VEDIO_BAIDU, NAME_VEDIO_BAIDU_BIG, PACKAGE_VEDIO_BAIDU, PACKAGE_VEDIO_BAIDU_BIG } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
@@ -30,6 +30,7 @@ export class Baidu extends Base {
     medEff(): void {
         this.swipeVideo(2 * 60)
         if(fixedClick("点击提现")){
+
             this.payouts()
         }
     }
@@ -75,6 +76,7 @@ export class Baidu extends Base {
     @functionLog("刷视频")
     swipeVideo(totalTime: number): void {
         this.goTo(this.tab, 1)
+        Record.log(`预计刷视频${convertSecondsToMinutes(totalTime)}分钟`)
         moveDown(totalTime, 10)
     }
 
@@ -82,6 +84,17 @@ export class Baidu extends Base {
     payouts(): void{
         this.goto(1)
         if(fixedClick("微信提现")){
+            if(fixedClick("立即微信提现")){
+                log(textMatches(".+元").findOnce()?.text())
+                dialogClick("继续看视频赚钱提现")
+            }
+        }
+    }
+
+    @functionLog("去提现")
+    toPayouts(): void{
+        this.goto(1)
+        if(scrollClick("去提现", "今日提现特权")){
             if(fixedClick("立即微信提现")){
                 log(textMatches(".+元").findOnce()?.text())
                 dialogClick("继续看视频赚钱提现")

@@ -1,6 +1,6 @@
 import { dialogClick, fixedClick, scrollClick } from "../common/click";
 import { search } from "../common/search";
-import { doFuncAtGivenTime, moveDown } from "../common/utils";
+import { closeByImageMatching, doFuncAtGivenTime, moveDown } from "../common/utils";
 import { NAME_VEDIO_BAIDU_LITE, PACKAGE_VEDIO_BAIDU_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Base, BaseKey } from "./abstract/Base";
@@ -20,7 +20,9 @@ export class BaiduLite extends Base {
 
     @measureExecutionTime
     highEff(): void {
-        dialogClick("立即领今日打款")
+        if(dialogClick("立即领今日打款")){
+            closeByImageMatching()
+        }
         this.signIn()
         this.openTreasure()
         this.watchAds()
@@ -50,6 +52,7 @@ export class BaiduLite extends Base {
 
     @functionLog("签到")
     signIn(): void {
+        this.goTo(this.tab, 0)
         this.goTo(this.tab, 2)
         if(fixedClick("额外领[0-9]+金币")){
             this.watch(text("金币收益"))

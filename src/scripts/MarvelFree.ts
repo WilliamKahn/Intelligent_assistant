@@ -78,7 +78,7 @@ export class MarvelFree extends Base{
     readBook(totalTime: number): void {
         this.goTo(this.tab, 0)
         if(selectedClick("推荐", 170)){
-            if(readClick(id(PACKAGE_READ_MARVEL_FREE+":id/tv_book_name"), random(0,7))){
+            if(readClick(id(this.packageName+":id/tv_book_name"), random(0,3) * 2)){
                 this.read(totalTime)
             }
         }   

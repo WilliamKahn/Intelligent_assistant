@@ -1,6 +1,7 @@
 import { findAndClick, fixedClick, dialogClick, scrollClick, selectedClick } from "../common/click";
+import { Move } from "../common/enums";
 import { scrollTo } from "../common/search";
-import { doFuncAtGivenTime, merge, randomExecute, resizeX, resizeY, waitRandomTime, } from "../common/utils";
+import { doFuncAtGivenTime, merge, randomExecute, resizeX, resizeY, swipeUp, waitRandomTime, } from "../common/utils";
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_TOMATO, PACKAGE_READ_TOMATO } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { AbstractTomato } from "./abstract/AbstractTomato";
@@ -83,7 +84,7 @@ export class Tomato extends AbstractTomato {
     reward(): void {
         this.goTo(this.tab, 2)
         let cycleCounts = 0
-        let list = ["听书赚金币", "阅读赚金币"]
+        let list = ["听书赚金币", "阅读赚金币", "听书额外存金币"]
         for(let range of list) {
             while(++cycleCounts < MAX_CYCLES_COUNTS &&
                 scrollClick("(?:立即|翻倍)领取", range))
@@ -126,8 +127,7 @@ export class Tomato extends AbstractTomato {
             while(!text("阅读电子书").exists()){
                 back()
                 waitRandomTime(3)
-                gesture(1000, [resizeX(random(580, 620)), resizeY(random(950, 1050))], 
-                [resizeX(random(780, 820)), resizeY(random(1750, 1850))])
+                swipeUp(Move.Fast, 1000)
                 waitRandomTime(3)
                 findAndClick(className("android.widget.TextView"), {
                     leftRange:random(1,4).toString(),
@@ -167,7 +167,12 @@ export class Tomato extends AbstractTomato {
     winGoldCoin(): void {
         this.goTo(this.tab, 2)
         if(scrollClick("去抽奖", "天天抽奖赢金币")){
-            dialogClick("抽奖")
+            if(findAndClick("抽奖", {fixed:true, waitTimes:10})){
+                let cycleCounts = 0
+                while(++cycleCounts < MAX_CYCLES_COUNTS && scrollClick("待领取")){
+                    this.watchAdsForCoin("已领取")
+                }
+            }
         }
     }
 

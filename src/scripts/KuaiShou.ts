@@ -1,7 +1,7 @@
 import { dialogClick, findAndClick, fixedClick, scrollClick } from "../common/click";
 import { Move } from "../common/enums";
 import { scrollTo } from "../common/search";
-import { close, closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, moveDown, randomExecute, resizeX, resizeY, swipeDown, waitRandomTime } from "../common/utils";
+import { closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, doFuncAtGivenTimeByEstimate, moveDown, randomExecute, resizeX, resizeY, swipeDown, waitRandomTime } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_VEDIO_KUAISHOU, PACKAGE_VEDIO_KUAISHOU } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
@@ -29,7 +29,6 @@ export class KuaiShou extends Base{
         this.signIn()
         randomExecute([
             ()=>{this.openTreasure()},
-            ()=>{this.watchAds()},
             ()=>{this.mealSupp()},
             ()=>{this.like()},
             ()=>{this.comment()},
@@ -38,7 +37,14 @@ export class KuaiShou extends Base{
     }
     @measureExecutionTime
     lowEff(time: number): void {
-        doFuncAtGivenTime(time, 25 * 60, (perTime: number) => {
+        let count = 0
+        doFuncAtGivenTimeByEstimate(time/2, ()=>{
+            this.watchAds()
+            if(++count % 25 === 0){
+                this.openTreasure()
+            }
+        })
+        doFuncAtGivenTime(time/2, 25 * 60, (perTime: number) => {
             this.swipeVideo(perTime)
             this.openTreasure()
         })
@@ -82,13 +88,13 @@ export class KuaiShou extends Base{
     }
 
     @functionLog("看广告")
-    watchAds(): void {
+    watchAds(): boolean {
         this.goto(-1)
-        let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS
-            && findAndClick("领福利 赚更多", {coverBoundsScaling:1.2, leftRange:"看广告得.*金币"})){
+        if(findAndClick("领福利 赚更多", {coverBoundsScaling:1.2, leftRange:"看广告得.*金币"})){
             this.watch(text("日常任务"))
+            return true
         }
+        return false
     }
 
     @functionLog("看直播")

@@ -130,19 +130,20 @@ export function convertSecondsToMinutes(seconds: number) {
  * @description 关闭广告方法
  * @param times 1:右上角图标 2:左上角图标 0:图像识别
  */
-export function close(times: number){
-    if(!closeByImageMatching()){
-        switch(times % 2){
+export function close(){
+    const times = random(0,1)
+    if(!closeByImageMatching(true)){
+        switch(times){
             case 0:
                 if(!findAndClick(classNameMatches("android\.widget\.(ImageView|Button)"),
-                {fixed:true, bounds:{left:device.width * 3 / 5, bottom:device.height * 4 / 5}})){
+                {fixed:true, bounds:{left:device.width * 3 / 5, bottom:device.height * 1 / 5}})){
                     back()
                     waitRandomTime(4)
                 }
                 break
             case 1:
                 if(!findAndClick(classNameMatches("android\.widget\.(ImageView|Button)"), 
-                {fixed:true, bounds:{right:device.width * 2 / 5, bottom:device.height * 4 / 5}})){
+                {fixed:true, bounds:{right:device.width * 2 / 5, bottom:device.height * 1 / 5}})){
                     back()
                     waitRandomTime(4)
                 }
@@ -155,7 +156,7 @@ export function close(times: number){
  * @description 关闭任意带有叉叉的弹窗,基于视觉处理
  * @returns true: 关闭成功, false: 未发现控件
  */
-export function closeByImageMatching(): boolean {
+export function closeByImageMatching(filter?: boolean): boolean {
     const img = getScreenImage()
     const threshold = 0.7
     //需要从网络远程获取
@@ -203,7 +204,7 @@ export function closeByImageMatching(): boolean {
             adaptiveImg.recycle()
         }
         if(list != null){
-            const point = findPreferredCloseButton(list)
+            const point = findPreferredCloseButton(list, filter)
             if(point != null){
                 Record.debug(`close(${point.x},${point.y})`)
                 normalClick(point.x, point.y)
@@ -214,7 +215,7 @@ export function closeByImageMatching(): boolean {
     img.recycle()
     return false
 }
-export function findPreferredCloseButton(list:Point[]){
+export function findPreferredCloseButton(list:Point[], filter?:boolean){
     //距离原点排序
     const sortedCoordinates = list.slice().sort((a, b) => {
         const distanceA = calculateDistance(a, {x:0,y:0});
@@ -228,12 +229,14 @@ export function findPreferredCloseButton(list:Point[]){
     for(let i = 0;i<sortedCoordinates.length; i++){
         if(calculateDistance(firstCoordinate, sortedCoordinates[i]) > 3){
             firstCoordinate = sortedCoordinates[i]
-            const component = boundsInside(firstCoordinate.x - 100, firstCoordinate.y - 100, firstCoordinate.x + 100, firstCoordinate.y + 100).findOnce()
-            //筛选控件
-            if(firstCoordinate.y > device.height * 1 / 5 
-            && !(component != null && component.text() === "")){
-                sortedCoordinates.splice(i)
-                i--
+            if(filter){
+                const component = boundsInside(firstCoordinate.x - 100, firstCoordinate.y - 100, firstCoordinate.x + 100, firstCoordinate.y + 100).findOnce()
+                //筛选控件
+                if(firstCoordinate.y > device.height * 1 / 5 
+                && !(component != null && component.text() === "")){
+                    sortedCoordinates.splice(i)
+                    i--
+                }
             }
         } else {
             sortedCoordinates.splice(i)
@@ -260,10 +263,12 @@ export function calculateDistance(pointA: Point, pointB: Point): number {
 export function calculatePriority(point: Point) {
     const centerX = device.width/2
     const centerY = device.height/2
+    const leftPriority = random(1,2)
+    const rightPriority = 3 - leftPriority
     if(point.x < centerX && point.y < centerY){
-        return {priority:1, distance:calculateDistance(point, {x:0, y:0})}
+        return {priority:leftPriority, distance:calculateDistance(point, {x:0, y:0})}
     } else if(point.x > centerX && point.y < centerY){
-        return {priority:2, distance:calculateDistance(point, {x:device.width, y:0})}
+        return {priority:rightPriority, distance:calculateDistance(point, {x:centerX, y:centerY})}
     } else{
         return {priority:3, distance:Math.abs(point.x - centerX)}
     }

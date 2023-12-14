@@ -321,7 +321,7 @@ var DEFAULT_LOG_RECORD_CONFIG = {
   skipCallerNumber: 1
 };
 
-var Record = function () {
+var logger_Record = function () {
   function Record() {}
 
   Record.setRecordLevel = function (level) {
@@ -570,7 +570,7 @@ var exception_extends = undefined && undefined.__extends || function () {
 
 var ERROR_EVENTS = events.emitter();
 ERROR_EVENTS.on("error", function errorListener(err) {
-  Record.customLog(LoggerSchemes.error, {
+  logger_Record.customLog(LoggerSchemes.error, {
     needPrint: false,
     needRecord: true,
     skipCallerNumber: 2
@@ -726,7 +726,7 @@ function isWidgetNotFoundException(error) {
   return __isExceptionType(error, 'WidgetNotFoundException');
 }
 
-var ConfigInvalidException = function (_super) {
+var exception_ConfigInvalidException = function (_super) {
   exception_extends(ConfigInvalidException, _super);
 
   function ConfigInvalidException(fieldName, helpInfo) {
@@ -776,7 +776,7 @@ function scrollTo(component, options, range, prePy, scrollTimes, avoidTimes) {
   var bottom = (options === null || options === void 0 ? void 0 : options.fixed) ? device.height : (range === null || range === void 0 ? void 0 : range.bottom) || device.height;
 
   if (scrollTimes > 2) {
-    Record.debug("scrollTo error");
+    logger_Record.debug("scrollTo error");
     throw new ExceedMaxNumberOfAttempts("超过最大限制次数");
   }
 
@@ -827,9 +827,9 @@ function scrollTo(component, options, range, prePy, scrollTimes, avoidTimes) {
       waitRandomTime(1);
 
       if ((options === null || options === void 0 ? void 0 : options.coverBoundsScaling) && text !== "" && ++avoidTimes < 3) {
-        Record.debug("滑动遮挡校验");
-        Record.debug("text :".concat(text));
-        Record.debug("bounds :".concat(bounds));
+        logger_Record.debug("滑动遮挡校验");
+        logger_Record.debug("text :".concat(text));
+        logger_Record.debug("bounds :".concat(bounds));
         var img = getScreenImage(boundsScaling(bounds, options.coverBoundsScaling));
         var bigImg = images.scale(img, 3, 3);
         var grayImg = images.cvtColor(bigImg, "BGR2GRAY");
@@ -837,10 +837,10 @@ function scrollTo(component, options, range, prePy, scrollTimes, avoidTimes) {
         img.recycle();
         bigImg.recycle();
         grayImg.recycle();
-        Record.debug("ocr str:".concat(str));
+        logger_Record.debug("ocr str:".concat(str));
 
         if (str.search(text) == -1 && !compareStr(text, str)) {
-          Record.debug("按钮被遮挡");
+          logger_Record.debug("按钮被遮挡");
           if (!range) range = {};
 
           if (tmpBottom > device.height / 2) {
@@ -886,7 +886,7 @@ function search(component, options) {
   }
 
   if (bounds === undefined && (options === null || options === void 0 ? void 0 : options.waitFor)) {
-    Record.debug(component.toString());
+    logger_Record.debug(component.toString());
     throw "控件不存在";
   }
 
@@ -898,7 +898,7 @@ function searchByLeftRange(button, options, times) {
   }
 
   if (times > 3) {
-    Record.debug("searchByLeftRange error");
+    logger_Record.debug("searchByLeftRange error");
     throw new ExceedMaxNumberOfAttempts("超过最大限制次数");
   }
 
@@ -935,9 +935,11 @@ function searchByLeftRange(button, options, times) {
 function searchByOcrRecognize(str, options) {
   var img = getScreenImage(options === null || options === void 0 ? void 0 : options.bounds);
   var grayImg = images.cvtColor(img, "BGR2GRAY");
-  var res = ocr.recognize(grayImg);
+  var adaptiveImg = images.adaptiveThreshold(grayImg, 255, "GAUSSIAN_C", "BINARY", 25, 0);
+  var res = ocr.recognize(adaptiveImg);
   img.recycle();
   grayImg.recycle();
+  adaptiveImg.recycle();
   var list = [];
 
   for (var _i = 0, _a = res.results; _i < _a.length; _i++) {
@@ -948,7 +950,7 @@ function searchByOcrRecognize(str, options) {
     }
   }
 
-  Record.debug("list length: ".concat(list.length));
+  logger_Record.debug("list length: ".concat(list.length));
 
   if (list.length > 0) {
     var result = null;
@@ -999,10 +1001,15 @@ function searchByUiSelect(component, options) {
   var list = component.find();
 
   if (list.nonEmpty()) {
+    list = list.filter(function (element) {
+      var bounds = element.bounds();
+      return bounds.width() > 0;
+    });
+
     if (options === null || options === void 0 ? void 0 : options.fixed) {
       list = list.filter(function (element) {
         var bounds = element.bounds();
-        return bounds.width() > 0 && bounds.height() > 0;
+        return bounds.height() > 0;
       });
     }
 
@@ -1087,9 +1094,9 @@ function clickDialogOption(options) {
   }
 
   if (options === Dialog.Positive) {
-    return fixedClick(merge(["继续观看", "抓住奖励机会", "留下看看", "关闭"]));
+    return fixedClick(merge(["继续观看", "抓住奖励机会", "留下看看", "关闭", "领取奖励"]));
   } else if (options === Dialog.Negative) {
-    return fixedClick(merge(["取消", "关闭", "(以后|下次)再说", "(直接|坚持|仍要)?退出(阅读)?", "暂不加入", "(残忍)离开", "放弃奖励", "(我)?知道了"]));
+    return fixedClick(merge(["取消", "关闭", "(以后|下次)再说", "(直接|坚持|仍要)?退出(阅读)?", "暂不(加入|添加)", "(残忍)离开", "放弃奖励", "(我)?知道了"]));
   }
 }
 function findAndClick(component, options, times) {
@@ -1098,10 +1105,11 @@ function findAndClick(component, options, times) {
   }
 
   if (++times > MAX_CLICK_COUNTS) {
-    Record.debug("findAndClick error");
+    logger_Record.debug("findAndClick error");
     throw new ExceedMaxNumberOfAttempts("超过最大限制次数");
   } else if (times > MAX_CLICK_COUNTS - 2) {
-    utils_close(0);
+    closeByImageMatching();
+    clickDialogOption(Dialog.Negative);
   } else if (times > MAX_CLICK_COUNTS - 4) {
     closeByImageMatching();
   }
@@ -1117,7 +1125,7 @@ function findAndClick(component, options, times) {
       img.recycle();
       var mergeList = mergeHistogram(list);
       var index = findLargestIndexes(mergeList, 2);
-      Record.debug("selected index = ".concat(index));
+      logger_Record.debug("selected index = ".concat(index));
 
       if (Math.abs(index[0] - index[1]) > options.selectedThreshold) {
         return true;
@@ -1125,7 +1133,7 @@ function findAndClick(component, options, times) {
     }
 
     if (name && name !== "" && !/^[0-9]+$/.test(name)) {
-      Record.log(name);
+      logger_Record.log(name);
     }
 
     randomClick(bounds, options);
@@ -1144,7 +1152,7 @@ function randomClick(bounds, options) {
   var sbounds = boundsScaling(bounds, 0.5);
   var randomX = random(sbounds.left, sbounds.right);
   var randomY = random(sbounds.top, sbounds.bottom);
-  Record.debug("click(".concat(randomX, ", ").concat(randomY, ")"));
+  logger_Record.debug("click(".concat(randomX, ", ").concat(randomY, ")"));
 
   if (options === null || options === void 0 ? void 0 : options.check) {
     var cycleCounts = 0;
@@ -1167,9 +1175,12 @@ function normalClick(x, y, options) {
   if (options === null || options === void 0 ? void 0 : options.feedback) {
     var thread = threads.start(function () {
       events.observeToast();
-      events.on("toast", function (toast) {
-        result.setAndNotify(toast.getText());
-        events.removeAllListeners("toast");
+      events.once("toast", function (toast) {
+        if (toast) {
+          result.setAndNotify(toast.getText());
+        } else {
+          result.setAndNotify(toast);
+        }
       });
     });
     thread.waitFor();
@@ -1185,12 +1196,14 @@ function normalClick(x, y, options) {
   }
 
   if (options === null || options === void 0 ? void 0 : options.feedback) {
-    threads.start(function () {
+    var thread = threads.start(function () {
       waitRandomTime(time);
-      result.setAndNotify(undefined);
+      events.emit("toast");
     });
+    thread.waitFor();
     var str = result.blockedGet();
-    Record.debug(str);
+    threads.shutDownAll();
+    logger_Record.debug(str);
 
     if (str.match("失败|异常|领取过奖励")) {
       throw new CurrentAppBanned(str);
@@ -1251,7 +1264,7 @@ function waitRandomTime(waitTime) {
   sleep(time * 1000);
   return time;
 }
-function clearBackground() {
+function utils_clearBackground() {
   if (home()) {
     waitRandomTime(4);
 
@@ -1288,19 +1301,21 @@ function swipeUp(set, interval) {
 function merge(buttonNameList) {
   return buttonNameList.join('|');
 }
-function convertSecondsToMinutes(seconds) {
+function utils_convertSecondsToMinutes(seconds) {
   var minutes = Math.floor(seconds / 60);
   return minutes;
 }
-function utils_close(times) {
-  if (!closeByImageMatching()) {
-    switch (times % 2) {
+function utils_close() {
+  var times = random(0, 1);
+
+  if (!closeByImageMatching(true)) {
+    switch (times) {
       case 0:
         if (!findAndClick(classNameMatches("android\.widget\.(ImageView|Button)"), {
           fixed: true,
           bounds: {
             left: device.width * 3 / 5,
-            bottom: device.height * 4 / 5
+            bottom: device.height * 1 / 5
           }
         })) {
           back();
@@ -1314,7 +1329,7 @@ function utils_close(times) {
           fixed: true,
           bounds: {
             right: device.width * 2 / 5,
-            bottom: device.height * 4 / 5
+            bottom: device.height * 1 / 5
           }
         })) {
           back();
@@ -1325,7 +1340,7 @@ function utils_close(times) {
     }
   }
 }
-function closeByImageMatching() {
+function closeByImageMatching(filter) {
   var img = getScreenImage();
   var threshold = 0.7;
   var tmp = images.read('/sdcard/exit.png');
@@ -1370,10 +1385,10 @@ function closeByImageMatching() {
     }
 
     if (list != null) {
-      var point = findPreferredCloseButton(list);
+      var point = findPreferredCloseButton(list, filter);
 
       if (point != null) {
-        Record.debug("close(".concat(point.x, ",").concat(point.y, ")"));
+        logger_Record.debug("close(".concat(point.x, ",").concat(point.y, ")"));
         normalClick(point.x, point.y);
         return true;
       }
@@ -1383,7 +1398,7 @@ function closeByImageMatching() {
   img.recycle();
   return false;
 }
-function findPreferredCloseButton(list) {
+function findPreferredCloseButton(list, filter) {
   var sortedCoordinates = list.slice().sort(function (a, b) {
     var distanceA = calculateDistance(a, {
       x: 0,
@@ -1403,11 +1418,14 @@ function findPreferredCloseButton(list) {
   for (var i = 0; i < sortedCoordinates.length; i++) {
     if (calculateDistance(firstCoordinate, sortedCoordinates[i]) > 3) {
       firstCoordinate = sortedCoordinates[i];
-      var component = boundsInside(firstCoordinate.x - 100, firstCoordinate.y - 100, firstCoordinate.x + 100, firstCoordinate.y + 100).findOnce();
 
-      if (firstCoordinate.y > device.height * 1 / 5 && !(component != null && component.text() === "")) {
-        sortedCoordinates.splice(i);
-        i--;
+      if (filter) {
+        var component = boundsInside(firstCoordinate.x - 100, firstCoordinate.y - 100, firstCoordinate.x + 100, firstCoordinate.y + 100).findOnce();
+
+        if (firstCoordinate.y > device.height * 1 / 5 && !(component != null && component.text() === "")) {
+          sortedCoordinates.splice(i);
+          i--;
+        }
       }
     } else {
       sortedCoordinates.splice(i);
@@ -1440,10 +1458,12 @@ function calculateDistance(pointA, pointB) {
 function calculatePriority(point) {
   var centerX = device.width / 2;
   var centerY = device.height / 2;
+  var leftPriority = random(1, 2);
+  var rightPriority = 3 - leftPriority;
 
   if (point.x < centerX && point.y < centerY) {
     return {
-      priority: 1,
+      priority: leftPriority,
       distance: calculateDistance(point, {
         x: 0,
         y: 0
@@ -1451,10 +1471,10 @@ function calculatePriority(point) {
     };
   } else if (point.x > centerX && point.y < centerY) {
     return {
-      priority: 2,
+      priority: rightPriority,
       distance: calculateDistance(point, {
-        x: device.width,
-        y: 0
+        x: centerX,
+        y: centerY
       })
     };
   } else {
@@ -1488,7 +1508,7 @@ function doFuncAtGivenTimeByEstimate(totalTime, func) {
   }
 }
 function matchAndJudge(str) {
-  Record.debug("".concat(str));
+  logger_Record.debug("".concat(str));
 
   if (str) {
     str = str.replace(/\d+:\d+/, "x");
@@ -1503,7 +1523,7 @@ function matchAndJudge(str) {
       }
 
       if (swipe_1) {
-        Record.log("滑动浏览广告");
+        logger_Record.log("滑动浏览广告");
         moveDown(totalTime, 4);
       } else {
         return totalTime;
@@ -1524,10 +1544,10 @@ function judgeFuncIsWorkByImg(func, bounds) {
   after.recycle();
 
   if (compare) {
-    Record.debug("操作失效");
+    logger_Record.debug("操作失效");
     return false;
   } else {
-    Record.debug("操作生效");
+    logger_Record.debug("操作生效");
     return true;
   }
 }
@@ -1717,9 +1737,9 @@ var Base = function () {
     this.tab = text("");
     this.depth = 0;
     this.exchangeRate = 10000;
-    this.highEffEstimatedTime = BASE_ASSIMT_TIME;
-    this.medEffEstimatedTime = MAX_ASSIMT_TIME;
-    this.lowEffEstimatedTime = MAX_ASSIMT_TIME;
+    this.highEffEstimatedTime = global_BASE_ASSIMT_TIME;
+    this.medEffEstimatedTime = global_MAX_ASSIMT_TIME;
+    this.lowEffEstimatedTime = global_MAX_ASSIMT_TIME;
     this.lowEffAssmitCount = 1;
   }
 
@@ -1732,7 +1752,7 @@ var Base = function () {
   Base.prototype.start = function (time) {
     if (this.lauchApp()) {
       this.reset();
-      Record.info("".concat(this.appName, "\u9884\u8BA1\u6267\u884C").concat(convertSecondsToMinutes(time), "\u5206\u949F"));
+      logger_Record.info("".concat(this.appName, "\u9884\u8BA1\u6267\u884C").concat(utils_convertSecondsToMinutes(time), "\u5206\u949F"));
       this.reSearchTab();
       var flag = false;
 
@@ -1753,7 +1773,7 @@ var Base = function () {
       }
 
       if (flag) {
-        Record.info("统计当前app金币");
+        logger_Record.info("统计当前app金币");
         this.weight();
       }
     }
@@ -1766,7 +1786,7 @@ var Base = function () {
       if (tmp != null) {
         this.tab = id(tmp.id());
         this.initialComponent = this.tab;
-        Record.debug("".concat(this.tab));
+        logger_Record.debug("".concat(this.tab));
       } else {
         throw "id定位失败";
       }
@@ -1774,7 +1794,7 @@ var Base = function () {
   };
 
   Base.prototype.lauchApp = function () {
-    Record.log("\u5C1D\u8BD5\u542F\u52A8".concat(this.appName));
+    logger_Record.log("\u5C1D\u8BD5\u542F\u52A8".concat(this.appName));
     var isLauchApp = launchPackage(this.packageName);
 
     if (isLauchApp) {
@@ -1782,10 +1802,10 @@ var Base = function () {
       findAndClick(className("android.widget.Button").textMatches("打开"), {
         fixed: true
       });
-      Record.log("".concat(this.appName, "\u5DF2\u542F\u52A8"));
+      logger_Record.log("".concat(this.appName, "\u5DF2\u542F\u52A8"));
       waitRandomTime(13);
     } else {
-      Record.log("".concat(this.appName, "\u5E94\u7528\u672A\u5B89\u88C5"));
+      logger_Record.log("".concat(this.appName, "\u5E94\u7528\u672A\u5B89\u88C5"));
     }
 
     return isLauchApp;
@@ -1794,7 +1814,7 @@ var Base = function () {
   Base.prototype.read = function (totalTime) {
     var _this = this;
 
-    Record.log("\u51C6\u5907\u770B\u4E66".concat(convertSecondsToMinutes(totalTime), "\u5206\u949F"));
+    logger_Record.log("\u51C6\u5907\u770B\u4E66".concat(utils_convertSecondsToMinutes(totalTime), "\u5206\u949F"));
     var readTime = 0;
 
     if (text("简介").exists()) {
@@ -1807,7 +1827,7 @@ var Base = function () {
     var grayHistogram = getGrayscaleHistogram(img);
     img.recycle();
     var index = findLargestIndexes(grayHistogram, 1)[0];
-    Record.debug("read index: ".concat(index));
+    logger_Record.debug("read index: ".concat(index));
     doFuncAtGivenTime(totalTime, 10, function () {
       readTime += waitRandomTime(10);
 
@@ -1832,7 +1852,7 @@ var Base = function () {
       var grayHistogram = getGrayscaleHistogram(img);
       img.recycle();
       var index = findLargestIndexes(grayHistogram, 1)[0];
-      Record.debug("watch index: ".concat(index));
+      logger_Record.debug("watch index: ".concat(index));
 
       if (index < exitSign + 10 && index > exitSign - 10) {
         flag = true;
@@ -1842,12 +1862,12 @@ var Base = function () {
     }
 
     if (flag) {
-      Record.debug("watch return");
+      logger_Record.debug("watch return");
       return;
     }
 
     if (times > 9) {
-      Record.debug("watch error");
+      logger_Record.debug("watch error");
       throw new ExceedMaxNumberOfAttempts("超过最大限制次数");
     }
 
@@ -1865,7 +1885,7 @@ var Base = function () {
         name = _a[1];
 
     var waitTime = matchAndJudge(name);
-    Record.debug("watchTimes = ".concat(times, ", waitTime = ").concat(waitTime));
+    logger_Record.debug("watchTimes = ".concat(times, ", waitTime = ").concat(waitTime));
 
     if (text("该视频提到的内容是").findOne(waitTime * 1000)) {
       back();
@@ -1890,13 +1910,12 @@ var Base = function () {
       }
     }
 
-    utils_close(times);
+    utils_close();
 
     if (times >= 3 || !clickDialogOption(Dialog.Positive)) {
       clickDialogOption(Dialog.Negative);
     }
 
-    dialogClick("领取奖励");
     this.watch(exitSign, ++times);
   };
 
@@ -1945,7 +1964,7 @@ var Base = function () {
 
     if (tmp == null) {
       if (times >= MAX_BACK_COUNTS - 2) {
-        Record.warn("尝试矫正");
+        logger_Record.warn("尝试矫正");
         closeByImageMatching();
       } else {
         back();
@@ -1983,13 +2002,13 @@ var Base = function () {
   };
 
   Base.prototype.store = function (key, value) {
-    var object = STORAGE.get(this.constructor.name, {});
+    var object = global_STORAGE.get(this.constructor.name, {});
     object[key] = value;
-    STORAGE.put(this.constructor.name, object);
+    global_STORAGE.put(this.constructor.name, object);
   };
 
   Base.prototype.fetch = function (key, defaultValue) {
-    var object = STORAGE.get(this.constructor.name, {});
+    var object = global_STORAGE.get(this.constructor.name, {});
 
     if (defaultValue != undefined && (object === undefined || object[key] === undefined)) {
       return defaultValue;
@@ -2032,7 +2051,7 @@ var Base = function () {
 }();
 
 
-var BaseKey;
+var Base_BaseKey;
 
 (function (BaseKey) {
   BaseKey[BaseKey["Weight"] = 0] = "Weight";
@@ -2040,7 +2059,7 @@ var BaseKey;
   BaseKey[BaseKey["HighEffEstimatedTime"] = 2] = "HighEffEstimatedTime";
   BaseKey[BaseKey["MedEffEstimatedTime"] = 3] = "MedEffEstimatedTime";
   BaseKey[BaseKey["LowEffEstimatedTime"] = 4] = "LowEffEstimatedTime";
-})(BaseKey || (BaseKey = {}));
+})(Base_BaseKey || (Base_BaseKey = {}));
 ;// CONCATENATED MODULE: ./src/lib/decorators.ts
 
 
@@ -2065,7 +2084,7 @@ function functionLog(message) {
       try {
         if (isEnabled) {
           waitRandomTime(4);
-          Record.info("\u6267\u884C\u4E0B\u4E00\u6B65\u4EFB\u52A1\uFF1A".concat(message));
+          logger_Record.info("\u6267\u884C\u4E0B\u4E00\u6B65\u4EFB\u52A1\uFF1A".concat(message));
           var result = originalMethod.apply(this, args);
 
           if (result === false) {
@@ -2078,7 +2097,7 @@ function functionLog(message) {
         if (isCurrentAppBanned(error)) {
           throw error;
         } else {
-          Record.debug("".concat(error.message));
+          logger_Record.debug("".concat(error.message));
         }
 
         var instance = this;
@@ -2094,15 +2113,15 @@ function functionLog(message) {
             }
           }
 
-          Record.warn("\u5C1D\u8BD5\u7B2C".concat(retries, "\u6B21\u91CD\u542F"));
+          logger_Record.warn("\u5C1D\u8BD5\u7B2C".concat(retries, "\u6B21\u91CD\u542F"));
 
           try {
             startTime = new Date();
-            clearBackground();
+            utils_clearBackground();
 
             if (instance.lauchApp()) {
               waitRandomTime(4);
-              Record.info("\u6267\u884C\u4E0B\u4E00\u6B65\u4EFB\u52A1\uFF1A".concat(message));
+              logger_Record.info("\u6267\u884C\u4E0B\u4E00\u6B65\u4EFB\u52A1\uFF1A".concat(message));
               instance.reset();
               var result = originalMethod.apply(this, args);
 
@@ -2115,7 +2134,7 @@ function functionLog(message) {
 
             break;
           } catch (error) {
-            Record.debug("".concat(error.message));
+            logger_Record.debug("".concat(error.message));
             sendErrorMessage(error.message);
             retries++;
           }
@@ -2150,17 +2169,17 @@ function measureExecutionTime(_, key, descriptor) {
     originalMethod.apply(this, args);
     var endTime = new Date();
     var executionTime = (endTime.getTime() - startTime.getTime()) / 1000;
-    Record.debug("".concat(key, "\u6267\u884C\u4E86").concat(convertSecondsToMinutes(executionTime), "\u5206\u949F"));
+    logger_Record.debug("".concat(key, "\u6267\u884C\u4E86").concat(utils_convertSecondsToMinutes(executionTime), "\u5206\u949F"));
     var instance = this;
 
     if (key === "highEff") {
-      Record.debug("highEff\u65F6\u95F4\u8C03\u6574\u4E3A".concat(convertSecondsToMinutes(executionTime), "\u5206\u949F"));
+      logger_Record.debug("highEff\u65F6\u95F4\u8C03\u6574\u4E3A".concat(utils_convertSecondsToMinutes(executionTime), "\u5206\u949F"));
       instance.highEffEstimatedTime = executionTime;
-      instance.store(BaseKey.HighEffEstimatedTime, executionTime);
+      instance.store(Base_BaseKey.HighEffEstimatedTime, executionTime);
     } else if (key === "medEff") {
-      Record.debug("medEff\u65F6\u95F4\u8C03\u6574\u4E3A".concat(convertSecondsToMinutes(executionTime), "\u5206\u949F"));
+      logger_Record.debug("medEff\u65F6\u95F4\u8C03\u6574\u4E3A".concat(utils_convertSecondsToMinutes(executionTime), "\u5206\u949F"));
       instance.medEffEstimatedTime = executionTime;
-      instance.store(BaseKey.MedEffEstimatedTime, executionTime);
+      instance.store(Base_BaseKey.MedEffEstimatedTime, executionTime);
     }
 
     return executionTime;
@@ -2184,17 +2203,17 @@ function startDecorator(_, __, descriptor) {
       originalMethod.apply(this, args);
     } catch (error) {
       if (isCurrentAppBanned(error)) {
-        Record.error("\u8D26\u53F7\u5F02\u5E38");
+        logger_Record.error("\u8D26\u53F7\u5F02\u5E38");
       } else {
-        Record.error("\u5F53\u524Dapp\u53D1\u751F\u5F02\u5E38: ".concat(error.message));
+        logger_Record.error("\u5F53\u524Dapp\u53D1\u751F\u5F02\u5E38: ".concat(error.message));
         sendErrorMessage(error.message);
       }
     }
 
     var endTime = new Date();
     var executionTime = (endTime.getTime() - startTime.getTime()) / 1000;
-    Record.info("即将执行下一个app");
-    Record.debug("\u5269\u4F59".concat(convertSecondsToMinutes(args[0] - executionTime), "\u5206\u949F"));
+    logger_Record.info("即将执行下一个app");
+    logger_Record.debug("\u5269\u4F59".concat(utils_convertSecondsToMinutes(args[0] - executionTime), "\u5206\u949F"));
     return args[0] - executionTime;
   };
 
@@ -2260,8 +2279,8 @@ var Baidu = function (_super) {
     _this.tab = id("android:id/tabs");
     _this.initialComponent = _this.tab;
     _this.initialNum = 0;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60);
-    _this.medEffEstimatedTime = _this.fetch(BaseKey.MedEffEstimatedTime, 5 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, 20 * 60);
+    _this.medEffEstimatedTime = _this.fetch(Base_BaseKey.MedEffEstimatedTime, 5 * 60);
     return _this;
   }
 
@@ -2291,8 +2310,8 @@ var Baidu = function (_super) {
 
     if (name != undefined) {
       var weight = parseInt(name.toString());
-      Record.debug("weight: ".concat(weight));
-      this.store(BaseKey.Weight, weight);
+      logger_Record.debug("weight: ".concat(weight));
+      this.store(Base_BaseKey.Weight, weight);
     }
   };
 
@@ -2324,6 +2343,7 @@ var Baidu = function (_super) {
 
   Baidu.prototype.swipeVideo = function (totalTime) {
     this.goTo(this.tab, 1);
+    logger_Record.log("\u9884\u8BA1\u5237\u89C6\u9891".concat(utils_convertSecondsToMinutes(totalTime), "\u5206\u949F"));
     moveDown(totalTime, 10);
   };
 
@@ -2333,6 +2353,19 @@ var Baidu = function (_super) {
     this["goto"](1);
 
     if (fixedClick("微信提现")) {
+      if (fixedClick("立即微信提现")) {
+        log((_a = textMatches(".+元").findOnce()) === null || _a === void 0 ? void 0 : _a.text());
+        dialogClick("继续看视频赚钱提现");
+      }
+    }
+  };
+
+  Baidu.prototype.toPayouts = function () {
+    var _a;
+
+    this["goto"](1);
+
+    if (scrollClick("去提现", "今日提现特权")) {
       if (fixedClick("立即微信提现")) {
         log((_a = textMatches(".+元").findOnce()) === null || _a === void 0 ? void 0 : _a.text());
         dialogClick("继续看视频赚钱提现");
@@ -2394,6 +2427,8 @@ var Baidu = function (_super) {
   Baidu_decorate([functionLog("刷视频")], Baidu.prototype, "swipeVideo", null);
 
   Baidu_decorate([functionLog("提现")], Baidu.prototype, "payouts", null);
+
+  Baidu_decorate([functionLog("去提现")], Baidu.prototype, "toPayouts", null);
 
   Baidu_decorate([functionLog("走路赚钱")], Baidu.prototype, "walkEarn", null);
 
@@ -2461,7 +2496,7 @@ var BaiduBig = function (_super) {
     _this.tab = id("android:id/tabs");
     _this.initialComponent = _this.tab;
     _this.initialNum = 0;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 25 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, 25 * 60);
     return _this;
   }
 
@@ -2488,7 +2523,7 @@ var BaiduBig = function (_super) {
 
     if (name !== undefined) {
       var weight = parseInt(name.toString());
-      this.store(BaseKey.Weight, weight);
+      this.store(Base_BaseKey.Weight, weight);
     }
   };
 
@@ -2600,13 +2635,16 @@ var BaiduLite = function (_super) {
     _this.tab = id("android:id/tabs");
     _this.initialComponent = _this.tab;
     _this.initialNum = 1;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60);
-    _this.medEffEstimatedTime = _this.fetch(BaseKey.MedEffEstimatedTime, 10 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, 20 * 60);
+    _this.medEffEstimatedTime = _this.fetch(Base_BaseKey.MedEffEstimatedTime, 10 * 60);
     return _this;
   }
 
   BaiduLite.prototype.highEff = function () {
-    dialogClick("立即领今日打款");
+    if (dialogClick("立即领今日打款")) {
+      closeByImageMatching();
+    }
+
     this.signIn();
     this.openTreasure();
     this.watchAds();
@@ -2637,10 +2675,11 @@ var BaiduLite = function (_super) {
         _ = _a[0],
         weight = _a[1];
 
-    this.store(BaseKey.Weight, weight);
+    this.store(Base_BaseKey.Weight, weight);
   };
 
   BaiduLite.prototype.signIn = function () {
+    this.goTo(this.tab, 0);
     this.goTo(this.tab, 2);
 
     if (fixedClick("额外领[0-9]+金币")) {
@@ -2763,8 +2802,8 @@ var DeJian = function (_super) {
     _this.appName = NAME_READ_DEJIAN;
     _this.packageName = PACKAGE_READ_DEJIAN;
     _this.initialComponent = desc("bookstore_button");
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME);
-    _this.medEffEstimatedTime = _this.fetch(BaseKey.MedEffEstimatedTime, 45 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, global_BASE_ASSIMT_TIME);
+    _this.medEffEstimatedTime = _this.fetch(Base_BaseKey.MedEffEstimatedTime, 45 * 60);
     _this.lowEffEstimatedTime = 0;
     return _this;
   }
@@ -2818,13 +2857,13 @@ var DeJian = function (_super) {
 
     if (tmp != null) {
       var weight = parseInt(tmp.text());
-      this.store(BaseKey.Weight, weight);
+      this.store(Base_BaseKey.Weight, weight);
     }
   };
 
   DeJian.prototype.readBook = function (totalTime) {
     this.goTo(desc("bookstore_button"), -1);
-    var tmp = id("com.chaozh.iReader.dj:id/channel_tab").findOnce();
+    var tmp = id(this.packageName + ":id/channel_tab").findOnce();
 
     if (tmp != null && findAndClick("推荐", {
       fixed: true,
@@ -2909,11 +2948,11 @@ var DeJian = function (_super) {
               fixed: true,
               clickUntilGone: true
             });
-            Record.log("\u53C2\u4E0E\u6D3B\u52A8, \u6B63\u5728\u89C2\u770B".concat(i + 1, "/").concat(match[2], "\u4E2A\u5E7F\u544A"));
+            logger_Record.log("\u53C2\u4E0E\u6D3B\u52A8, \u6B63\u5728\u89C2\u770B".concat(i + 1, "/").concat(match[2], "\u4E2A\u5E7F\u544A"));
             this.watch(text("金币收益"));
           }
         } else {
-          Record.log("活动已完成");
+          logger_Record.log("活动已完成");
         }
       }
 
@@ -3016,7 +3055,7 @@ var AbstractFreeNovel = function (_super) {
     _this.tab = id(packageName + ":id/home_activity_navigation_bar");
     _this.initialComponent = _this.tab;
     _this.initialNum = 1;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 15 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, 15 * 60);
     _this.lowEffEstimatedTime = 0;
     _this.lowEffAssmitCount = 2;
     return _this;
@@ -3076,8 +3115,8 @@ var AbstractFreeNovel = function (_super) {
 
         if (match) {
           var weight = parseInt(match[0]);
-          Record.debug("".concat(this.constructor.name, ":").concat(weight));
-          this.store(BaseKey.Weight, weight);
+          logger_Record.debug("".concat(this.constructor.name, ":").concat(weight));
+          this.store(Base_BaseKey.Weight, weight);
         }
       }
     }
@@ -3149,7 +3188,7 @@ var AbstractFreeNovel = function (_super) {
         var count = tmp.text().match("[0-9]+");
 
         if (count) {
-          Record.debug("".concat(count));
+          logger_Record.debug("".concat(count));
 
           for (var i = 0; i < parseInt(count[0]); i++) {
             findAndClick("抽奖", {
@@ -3328,7 +3367,7 @@ var KuaiShou = function (_super) {
     _this.initialComponent = _this.tab;
     _this.initialNum = 1;
     _this.depth = 1;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 30 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, 30 * 60);
     _this.lowEffEstimatedTime = 0;
     return _this;
   }
@@ -3339,8 +3378,6 @@ var KuaiShou = function (_super) {
     this.signIn();
     randomExecute([function () {
       _this.openTreasure();
-    }, function () {
-      _this.watchAds();
     }, function () {
       _this.mealSupp();
     }, function () {
@@ -3355,7 +3392,15 @@ var KuaiShou = function (_super) {
   KuaiShou.prototype.lowEff = function (time) {
     var _this = this;
 
-    doFuncAtGivenTime(time, 25 * 60, function (perTime) {
+    var count = 0;
+    doFuncAtGivenTimeByEstimate(time / 2, function () {
+      _this.watchAds();
+
+      if (++count % 25 === 0) {
+        _this.openTreasure();
+      }
+    });
+    doFuncAtGivenTime(time / 2, 25 * 60, function (perTime) {
       _this.swipeVideo(perTime);
 
       _this.openTreasure();
@@ -3372,8 +3417,8 @@ var KuaiShou = function (_super) {
 
     if (tmp != null) {
       var weight = parseInt(tmp.text());
-      Record.debug("weight: ".concat(weight));
-      this.store(BaseKey.Weight, weight);
+      logger_Record.debug("weight: ".concat(weight));
+      this.store(Base_BaseKey.Weight, weight);
     }
   };
 
@@ -3388,7 +3433,7 @@ var KuaiShou = function (_super) {
 
   KuaiShou.prototype.swipeVideo = function (totalTime) {
     this["goto"](1);
-    Record.log("\u9884\u8BA1\u5237\u89C6\u9891".concat(convertSecondsToMinutes(totalTime), "\u5206\u949F"));
+    logger_Record.log("\u9884\u8BA1\u5237\u89C6\u9891".concat(utils_convertSecondsToMinutes(totalTime), "\u5206\u949F"));
     moveDown(totalTime, 10);
   };
 
@@ -3402,14 +3447,16 @@ var KuaiShou = function (_super) {
 
   KuaiShou.prototype.watchAds = function () {
     this["goto"](-1);
-    var cycleCounts = 0;
 
-    while (++cycleCounts < MAX_CYCLES_COUNTS && findAndClick("领福利 赚更多", {
+    if (findAndClick("领福利 赚更多", {
       coverBoundsScaling: 1.2,
       leftRange: "看广告得.*金币"
     })) {
       this.watch(text("日常任务"));
+      return true;
     }
+
+    return false;
   };
 
   KuaiShou.prototype.watchlive = function () {
@@ -3630,7 +3677,7 @@ var KuaiShouFree = function (_super) {
     _this.tab = id(_this.packageName + ":id/home_bottom_bar");
     _this.initialComponent = _this.tab;
     _this.initialNum = 1;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, 20 * 60);
     _this.lowEffEstimatedTime = 0;
     return _this;
   }
@@ -3656,7 +3703,7 @@ var KuaiShouFree = function (_super) {
 
   KuaiShouFree.prototype.weight = function () {
     var weight = this.record() - this.coin;
-    this.store(BaseKey.Weight, weight);
+    this.store(Base_BaseKey.Weight, weight);
   };
 
   KuaiShouFree.prototype.signIn = function () {
@@ -3807,7 +3854,7 @@ var KuaiShouLite = function (_super) {
     _this.initialComponent = _this.tab;
     _this.initialNum = 0;
     _this.depth = 1;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 5 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, 5 * 60);
     _this.lowEffEstimatedTime = 0;
     _this.lowEffAssmitCount = 2;
     return _this;
@@ -3848,14 +3895,14 @@ var KuaiShouLite = function (_super) {
 
     if (name != undefined) {
       var weight = parseInt(name.toString());
-      Record.debug("weight: ".concat(weight));
-      this.store(BaseKey.Weight, weight);
+      logger_Record.debug("weight: ".concat(weight));
+      this.store(Base_BaseKey.Weight, weight);
     }
   };
 
   KuaiShouLite.prototype.swipeVideo = function (totalTime) {
     this.goTo(this.tab, 0);
-    Record.log("\u9884\u8BA1\u5237\u89C6\u9891".concat(convertSecondsToMinutes(totalTime), "\u5206\u949F"));
+    logger_Record.log("\u9884\u8BA1\u5237\u89C6\u9891".concat(utils_convertSecondsToMinutes(totalTime), "\u5206\u949F"));
     moveDown(totalTime, 15);
   };
 
@@ -3986,7 +4033,7 @@ var MarvelFree = function (_super) {
     _this.initialComponent = _this.tab;
     _this.initialNum = 0;
     _this.depth = 1;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 15 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, 15 * 60);
     _this.lowEffEstimatedTime = 0;
     return _this;
   }
@@ -4016,7 +4063,7 @@ var MarvelFree = function (_super) {
 
     if (tmp != null) {
       var weight = parseInt(tmp.text());
-      this.store(BaseKey.Weight, weight);
+      this.store(Base_BaseKey.Weight, weight);
     }
   };
 
@@ -4049,7 +4096,7 @@ var MarvelFree = function (_super) {
     this.goTo(this.tab, 0);
 
     if (selectedClick("推荐", 170)) {
-      if (readClick(id(PACKAGE_READ_MARVEL_FREE + ":id/tv_book_name"), random(0, 7))) {
+      if (readClick(id(this.packageName + ":id/tv_book_name"), random(0, 3) * 2)) {
         this.read(totalTime);
       }
     }
@@ -4263,7 +4310,7 @@ var RedFruits = function (_super) {
     _this.list = ["阅读赚金币"];
     _this.appName = NAME_READ_RED_FRUITS;
     _this.packageName = PACKAGE_READ_RED_FRUITS;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, 20 * 60);
     _this.initialComponent = text("首页");
     _this.lowEffEstimatedTime = 0;
     _this.lowEffAssmitCount = 2;
@@ -4318,7 +4365,7 @@ var RedFruits = function (_super) {
 
     if (tmp != null) {
       var weight = parseInt(tmp.text());
-      this.store(BaseKey.Weight, weight);
+      this.store(Base_BaseKey.Weight, weight);
     }
   };
 
@@ -4330,7 +4377,7 @@ var RedFruits = function (_super) {
       index: 1
     })) {
       if (readClick(id(this.packageName + ":id/title_tv"), random(0, 7))) {
-        Record.log("\u8BA1\u5212\u65F6\u95F4: ".concat(convertSecondsToMinutes(totalTime), "\u5206\u949F"));
+        logger_Record.log("\u8BA1\u5212\u65F6\u95F4: ".concat(utils_convertSecondsToMinutes(totalTime), "\u5206\u949F"));
         var watchTime = 0;
 
         while (totalTime > watchTime) {
@@ -4501,7 +4548,7 @@ var SevenCatsFree = function (_super) {
 
       if (match) {
         var weight = parseInt(match[0]);
-        this.store(BaseKey.Weight, weight);
+        this.store(Base_BaseKey.Weight, weight);
       }
     }
   };
@@ -4578,7 +4625,7 @@ var ShuQi = function (_super) {
     _this.tab = id("android:id/tabs");
     _this.initialComponent = _this.tab;
     _this.initialNum = 1;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 15 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, 15 * 60);
     _this.lowEffEstimatedTime = 0;
     return _this;
   }
@@ -4605,7 +4652,7 @@ var ShuQi = function (_super) {
 
     if (tmp != null) {
       var weight = parseInt(tmp.text());
-      this.store(BaseKey.Weight, weight);
+      this.store(Base_BaseKey.Weight, weight);
     }
   };
 
@@ -4730,7 +4777,7 @@ var SpeedFree = function (_super) {
     _this.packageName = PACKAGE_READ_SPEED_FREE;
     _this.initialComponent = desc("bookstore_button");
     _this.exchangeRate = 33000;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 120 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, 120 * 60);
     _this.lowEffEstimatedTime = 0;
     return _this;
   }
@@ -4762,7 +4809,7 @@ var SpeedFree = function (_super) {
 
     if (tmp != null) {
       var weight = parseInt(tmp.text());
-      this.store(BaseKey.Weight, weight);
+      this.store(Base_BaseKey.Weight, weight);
     }
   };
 
@@ -5015,7 +5062,7 @@ var TikTokLite = function (_super) {
     var tmp = textMatches(/(\d+)/).boundsInside(0, 0, resizeX(328), resizeY(594)).findOnce();
 
     if (tmp != null) {
-      this.store(BaseKey.Weight, parseInt(tmp.text()));
+      this.store(Base_BaseKey.Weight, parseInt(tmp.text()));
     }
   };
 
@@ -5093,7 +5140,7 @@ var TikTokLite = function (_super) {
         log(this.tab.findOnce());
         this.goTo(this.register, num);
       } else {
-        Record.log("日常任务");
+        logger_Record.log("日常任务");
         this.backUntilFind(text("日常任务"));
       }
     } else {
@@ -5176,6 +5223,7 @@ var Tomato_decorate = undefined && undefined.__decorate || function (decorators,
 
 
 
+
 var Tomato = function (_super) {
   Tomato_extends(Tomato, _super);
 
@@ -5186,8 +5234,8 @@ var Tomato = function (_super) {
     _this.packageName = PACKAGE_READ_TOMATO;
     _this.randomTab = className("android.widget.RadioGroup").boundsInside(0, device.height - 300, device.width, device.height).boundsContains(0, device.height - 100, device.width, device.height - 50);
     _this.initialNum = 0;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME);
-    _this.medEffEstimatedTime = _this.fetch(BaseKey.MedEffEstimatedTime, 90 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, global_BASE_ASSIMT_TIME);
+    _this.medEffEstimatedTime = _this.fetch(Base_BaseKey.MedEffEstimatedTime, 90 * 60);
     _this.lowEffEstimatedTime = 0;
     return _this;
   }
@@ -5242,7 +5290,7 @@ var Tomato = function (_super) {
 
     if (tmp != null) {
       var weight = parseInt(tmp.text());
-      this.store(BaseKey.Weight, weight);
+      this.store(Base_BaseKey.Weight, weight);
     }
   };
 
@@ -5261,7 +5309,7 @@ var Tomato = function (_super) {
   Tomato.prototype.reward = function () {
     this.goTo(this.tab, 2);
     var cycleCounts = 0;
-    var list = ["听书赚金币", "阅读赚金币"];
+    var list = ["听书赚金币", "阅读赚金币", "听书额外存金币"];
 
     for (var _i = 0, list_1 = list; _i < list_1.length; _i++) {
       var range = list_1[_i];
@@ -5308,7 +5356,7 @@ var Tomato = function (_super) {
       while (!text("阅读电子书").exists()) {
         back();
         waitRandomTime(3);
-        gesture(1000, [resizeX(random(580, 620)), resizeY(random(950, 1050))], [resizeX(random(780, 820)), resizeY(random(1750, 1850))]);
+        swipeUp(Move.Fast, 1000);
         waitRandomTime(3);
         findAndClick(className("android.widget.TextView"), {
           leftRange: random(1, 4).toString(),
@@ -5354,7 +5402,16 @@ var Tomato = function (_super) {
     this.goTo(this.tab, 2);
 
     if (scrollClick("去抽奖", "天天抽奖赢金币")) {
-      dialogClick("抽奖");
+      if (findAndClick("抽奖", {
+        fixed: true,
+        waitTimes: 10
+      })) {
+        var cycleCounts = 0;
+
+        while (++cycleCounts < MAX_CYCLES_COUNTS && scrollClick("待领取")) {
+          this.watchAdsForCoin("已领取");
+        }
+      }
     }
   };
 
@@ -5434,6 +5491,7 @@ var TomatoFree_decorate = undefined && undefined.__decorate || function (decorat
 
 
 
+
 var TomatoFree = function (_super) {
   TomatoFree_extends(TomatoFree, _super);
 
@@ -5442,9 +5500,10 @@ var TomatoFree = function (_super) {
 
     _this.appName = NAME_READ_TOMATO_FREE;
     _this.packageName = PACKAGE_READ_TOMATO_FREE;
-    _this.randomTab = className("android.view.ViewGroup").boundsInside(0, device.height - 300, device.width, device.height).boundsContains(100, device.height - 100, device.width - 100, device.height - 50);
+    _this.tab = id(_this.packageName + ":id/radio_group");
+    _this.initialComponent = _this.tab;
     _this.initialNum = 0;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 35 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, 35 * 60);
     _this.lowEffEstimatedTime = 0;
     _this.lowEffAssmitCount = 2;
     return _this;
@@ -5492,22 +5551,19 @@ var TomatoFree = function (_super) {
 
     if (tmp != null) {
       var weight = parseInt(tmp.text());
-      this.store(BaseKey.Weight, weight);
+      this.store(Base_BaseKey.Weight, weight);
     }
   };
 
   TomatoFree.prototype.signIn = function () {
     this.goTo(this.tab, 2);
+    this.sign();
+    scrollTo("金币献爱心", {
+      waitFor: true
+    });
 
-    if (selectedClick("福利中心", 40)) {
+    if (scrollClick("去签到")) {
       this.sign();
-      scrollTo("金币献爱心", {
-        waitFor: true
-      });
-
-      if (scrollClick("去签到")) {
-        this.sign();
-      }
     }
   };
 
@@ -5515,7 +5571,7 @@ var TomatoFree = function (_super) {
     this.goTo(this.tab, 0);
 
     if (selectedClick("听书", 170)) {
-      if (findAndClick(className("android.widget.TextView"), {
+      if (findAndClick(id(this.packageName + ":id/name_tv"), {
         leftRange: random(1, 4).toString(),
         coverBoundsScaling: 1
       })) {
@@ -5528,7 +5584,7 @@ var TomatoFree = function (_super) {
     this.goTo(this.tab, 2);
 
     if (scrollClick("去领取", "吃饭补贴")) {
-      if (dialogClick("领取.*补贴[0-9]+金币")) {
+      if (fixedClick("领取.*补贴[0-9]+金币")) {
         this.watchAdsForCoin("日常福利");
       }
     }
@@ -5537,9 +5593,9 @@ var TomatoFree = function (_super) {
   TomatoFree.prototype.readBook = function (totalTime) {
     this.goTo(this.tab, 0);
 
-    if (selectedClick("经典", 170)) {
-      if (findAndClick(className("android.widget.TextView"), {
-        leftRange: random(1, 3).toString(),
+    if (selectedClick("知识", 170)) {
+      if (findAndClick(id(this.packageName + ":id/name_tv"), {
+        leftRange: random(1, 4).toString(),
         coverBoundsScaling: 1
       })) {
         this.read(totalTime);
@@ -5574,16 +5630,13 @@ var TomatoFree = function (_super) {
     this.goTo(this.tab, 0);
 
     if (selectedClick("看剧", 170)) {
-      if (findAndClick("[0-9]*\.?[0-9]+万", {
-        index: random(0, 8),
-        coverBoundsScaling: 1
-      })) {
-        Record.log("\u8BA1\u5212\u65F6\u95F4: ".concat(convertSecondsToMinutes(totalTime), "\u5206\u949F"));
+      if (readClick(id(this.packageName + ":id/title_tv"), random(0, 8))) {
+        logger_Record.log("\u8BA1\u5212\u65F6\u95F4: ".concat(utils_convertSecondsToMinutes(totalTime), "\u5206\u949F"));
         var watchTime = 0;
 
         while (totalTime > watchTime) {
           if (textMatches(merge(["上滑查看下一集", "上滑继续观看短剧"])).exists()) {
-            gesture(1000, [resizeX(random(380, 420)), resizeY(random(1750, 1850))], [resizeX(random(780, 820)), resizeY(random(250, 350))]);
+            swipeDown(Move.Fast, 200);
           }
 
           watchTime += waitRandomTime(30);
@@ -5683,7 +5736,7 @@ var TomatoLite = function (_super) {
     _this.packageName = PACKAGE_READ_TOMATO_LITE;
     _this.randomTab = className("android.widget.RadioGroup").boundsInside(0, device.height - 300, device.width, device.height).boundsContains(0, device.height - 100, device.width, device.height - 50);
     _this.initialNum = 0;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, 35 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, 35 * 60);
     return _this;
   }
 
@@ -5712,7 +5765,7 @@ var TomatoLite = function (_super) {
 
     if (tmp != null) {
       var weight = parseInt(tmp.text());
-      this.store(BaseKey.Weight, weight);
+      this.store(Base_BaseKey.Weight, weight);
     }
   };
 
@@ -5764,7 +5817,7 @@ var TomatoLite = function (_super) {
     var cycleCounts = 0;
 
     while (++cycleCounts < MAX_CYCLES_COUNTS && scrollClick("立即观看", "看视频赚金币")) {
-      Record.log("\u6B63\u5728\u89C2\u770B\u7B2C".concat(cycleCounts, "\u4E2A\u5E7F\u544A"));
+      logger_Record.log("\u6B63\u5728\u89C2\u770B\u7B2C".concat(cycleCounts, "\u4E2A\u5E7F\u544A"));
       this.watch(text("日常福利"));
 
       if (cycleCounts % 3 === 0) {
@@ -5877,7 +5930,7 @@ var WanChao = function (_super) {
 
     _this.appName = NAME_READ_WANCHAO;
     _this.packageName = PACKAGE_READ_WANCHAO;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, global_BASE_ASSIMT_TIME);
     return _this;
   }
 
@@ -5886,7 +5939,7 @@ var WanChao = function (_super) {
   };
 
   WanChao.prototype.weight = function () {
-    this.store(BaseKey.Weight, 0);
+    this.store(Base_BaseKey.Weight, 0);
   };
 
   WanChao.prototype.readForMoney = function () {
@@ -5923,8 +5976,8 @@ var WanChao = function (_super) {
           var money = textMatches("[0-9]+\.[0-9]+元").boundsInside(resizeX(108), resizeY(1140), resizeX(972), resizeY(1323)).findOnce();
 
           if (money != null) {
-            Record.log("\u4E2D\u5956".concat(money.text()));
-            this.store(BaseKey.Weight, parseFloat(money.text()) * this.exchangeRate);
+            logger_Record.log("\u4E2D\u5956".concat(money.text()));
+            this.store(Base_BaseKey.Weight, parseFloat(money.text()) * this.exchangeRate);
           }
         }
       }
@@ -6049,8 +6102,8 @@ var YouShi = function (_super) {
     _this.packageName = PACKAGE_VEDIO_YOUSHI;
     _this.tab = id("android:id/tabs");
     _this.exchangeRate = 33000;
-    _this.highEffEstimatedTime = _this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME);
-    _this.medEffEstimatedTime = _this.fetch(BaseKey.MedEffEstimatedTime, 110 * 60);
+    _this.highEffEstimatedTime = _this.fetch(Base_BaseKey.HighEffEstimatedTime, global_BASE_ASSIMT_TIME);
+    _this.medEffEstimatedTime = _this.fetch(Base_BaseKey.MedEffEstimatedTime, 110 * 60);
     _this.lowEffEstimatedTime = 0;
     return _this;
   }
@@ -6105,9 +6158,9 @@ var YouShi = function (_super) {
       var tmp = textMatches(/(\d+)/).findOnce();
 
       if (tmp != null) {
-        Record.debug("".concat(this.constructor.name, ":").concat(tmp.text()));
+        logger_Record.debug("".concat(this.constructor.name, ":").concat(tmp.text()));
         var weight = parseInt(tmp.text());
-        this.store(BaseKey.Weight, weight);
+        this.store(Base_BaseKey.Weight, weight);
       }
     }
   };
@@ -6147,7 +6200,7 @@ var YouShi = function (_super) {
 
   YouShi.prototype.swipeVideo = function (totalTime) {
     this.goTo(this.tab, 1);
-    Record.log("\u9884\u8BA1\u5237\u89C6\u9891".concat(convertSecondsToMinutes(totalTime), "\u5206\u949F"));
+    logger_Record.log("\u9884\u8BA1\u5237\u89C6\u9891".concat(utils_convertSecondsToMinutes(totalTime), "\u5206\u949F"));
     moveDown(totalTime, 15);
   };
 
@@ -6270,21 +6323,22 @@ var _a;
 
 var PROJECT_NAME = "智能助手";
 var VERSION = "0.4.3";
-var WX_PUSHER_URL = "https://wxpusher.zjiecode.com/api/send/message";
-var APP_TOKEN = "AT_2vEaUfXFmwMKybX7YeX3yCJFrmc7TFlD";
+var EVENT = events.emitter();
+var global_WX_PUSHER_URL = "https://wxpusher.zjiecode.com/api/send/message";
+var global_APP_TOKEN = "AT_2vEaUfXFmwMKybX7YeX3yCJFrmc7TFlD";
 var MAX_BACK_COUNTS = 10;
 var MAX_CLICK_COUNTS = 8;
 var MAX_RETRY_COUNTS = 3;
 var WAIT_TIME_AFTER_CLICK = 6;
 var MAX_CYCLES_COUNTS = 25;
-var BASE_ASSIMT_TIME = 10 * 60;
+var global_BASE_ASSIMT_TIME = 10 * 60;
 var WEIGHT_ASSIMT_TIME = (/* unused pure expression or super */ null && (5 * 60));
-var MAX_ASSIMT_TIME = 24 * 60 * 60;
-var STORAGE_APP = "app";
-var STORAGE_DATE = "date";
+var global_MAX_ASSIMT_TIME = 24 * 60 * 60;
+var global_STORAGE_APP = "app";
+var global_STORAGE_DATE = "date";
 var STORAGE_NO_RECORD = "noRecord";
 var STORAGE_WEIGHT_CONTAINER = "YWfjbEVp32";
-var STORAGE = storages.create(STORAGE_WEIGHT_CONTAINER);
+var global_STORAGE = storages.create(STORAGE_WEIGHT_CONTAINER);
 var DEVICE_WIDTH = 1080;
 var DEVICE_HEIGHT = 2340;
 var NAME_READ_TOMATO = "番茄畅听";
@@ -6352,10 +6406,10 @@ var baidu = new Baidu();
 var baiduLite = new BaiduLite();
 var baiduBig = new BaiduBig();
 var wanChao = new WanChao();
-var highEffmap = {};
-var medEffMap = {};
-var lowEffMap = {};
-var fixedMap = {};
+var global_highEffmap = {};
+var global_medEffMap = {};
+var global_lowEffMap = {};
+var global_fixedMap = {};
 var map = {
   "1": youShi,
   "2": shuQi,
@@ -6375,18 +6429,18 @@ var map = {
   "16": kuaiShou,
   "17": kuaiShouLite
 };
-Record.info("加载配置");
-var _TOKEN = (_a = hamibot.env, _a._TOKEN),
+logger_Record.info("加载配置");
+var global_TOKEN = (_a = hamibot.env, _a._TOKEN),
     _SHOW_CONSOLE = _a._SHOW_CONSOLE,
     APP_ENV = _a.APP_ENV,
-    ROBOT_ID = _a.ROBOT_ID,
+    global_ROBOT_ID = _a.ROBOT_ID,
     ORDER = _a.ORDER,
     RESET = _a.RESET;
 var SHOW_CONSOLE = _SHOW_CONSOLE;
 var list = [];
 
 if (ORDER != undefined) {
-  Record.info("调整执行顺序");
+  logger_Record.info("调整执行顺序");
   var orderList = ORDER.split(" ");
 
   if (orderList.length > 0) {
@@ -6404,7 +6458,7 @@ if (ORDER != undefined) {
 
         if (!isNaN(time)) {
           var app_1 = map[key];
-          if (app_1 != undefined) fixedMap[app_1.constructor.name] = time * 60;
+          if (app_1 != undefined) global_fixedMap[app_1.constructor.name] = time * 60;
         }
       }
 
@@ -6422,40 +6476,40 @@ if (list.length != map.length) {
   }
 }
 
-var filteredList = list.filter(function (item) {
+var global_filteredList = list.filter(function (item) {
   return hamibot.env[item.constructor.name] !== false;
 });
-Record.info("\u6B63\u5728\u542F\u52A8...\n\n\t\u5F53\u524D\u811A\u672C\u7248\u672C: ".concat(VERSION, "\n"));
+logger_Record.info("\u6B63\u5728\u542F\u52A8...\n\n\t\u5F53\u524D\u811A\u672C\u7248\u672C: ".concat(VERSION, "\n"));
 
 if (APP_ENV === 'production') {
-  Record.setDisplayLevel(LogLevel.Log);
+  logger_Record.setDisplayLevel(LogLevel.Log);
 } else if (APP_ENV === 'development') {
-  Record.debug("处于开发环境");
+  logger_Record.debug("处于开发环境");
 }
 
 if (RESET === true) {
-  Record.info("脚本重置");
-  STORAGE.clear();
+  logger_Record.info("脚本重置");
+  global_STORAGE.clear();
 }
 
 events.on("exit", function () {
   threads.shutDownAll();
-  Record.info("结束...");
+  logger_Record.info("结束...");
   waitRandomTime(5);
   console.hide();
 });
 
-if (_TOKEN && _TOKEN !== "" && setToken(_TOKEN) == false) {
-  throw new ConfigInvalidException("pushplus token", "needs to be a 32-bit hexadecimal number");
+if (global_TOKEN && global_TOKEN !== "" && setToken(global_TOKEN) == false) {
+  throw new exception_ConfigInvalidException("pushplus token", "needs to be a 32-bit hexadecimal number");
 }
 
-Record.info("开始执行脚本");
+logger_Record.info("开始执行脚本");
 ;// CONCATENATED MODULE: ./src/common/report.ts
 
 
 
 
-function sendIncomeMessageToWxPuher(str) {
+function report_sendIncomeMessageToWxPuher(str) {
   if (_TOKEN && _TOKEN !== "") {
     var res = http.postJson(WX_PUSHER_URL, {
       "appToken": APP_TOKEN,
@@ -6468,7 +6522,7 @@ function sendIncomeMessageToWxPuher(str) {
     return res.statusCode === 200;
   }
 }
-function toShowString(list) {
+function report_toShowString(list) {
   var stack = ["id: ".concat(ROBOT_ID, "\n")];
   var sumWeight = 0;
   var sumMoney = 0;
@@ -6518,17 +6572,17 @@ function init() {
 
     auto.waitFor();
   } else {
-    Record.verbose("已启用无障碍辅助功能权限");
+    logger_Record.verbose("已启用无障碍辅助功能权限");
   }
 
   if (device.height === 0 || device.width === 0) {
     throw new ServiceNotEnabled('Failed to get the screen size. ' + 'Please try restarting the service or re-installing Hamibot');
   } else {
-    Record.debug("分辨率: " + device.height + " x " + device.width);
+    logger_Record.debug("分辨率: " + device.height + " x " + device.width);
   }
 
   var thread = threads.start(function () {
-    Record.debug("子线程启动");
+    logger_Record.debug("子线程启动");
     findAndClick(className("android.widget.Button").textMatches(".?立即开始.?|.?允许.?"), {
       waitFor: true,
       clickUntilGone: true,
@@ -6540,11 +6594,11 @@ function init() {
   if (!requestScreenCapture()) {
     throw new PermissionException("Accessibility permission obtaining failure.");
   } else {
-    Record.debug("启动视觉识别");
+    logger_Record.debug("启动视觉识别");
   }
 
   if (!files.exists("/sdcard/exit.png")) {
-    Record.debug("正在加载资源");
+    logger_Record.debug("正在加载资源");
     var img = images.load("https://hamibot-1304500632.cos.ap-nanjing.myqcloud.com/exit.png");
 
     if (img != null) {
@@ -6569,9 +6623,11 @@ function init() {
 
 
 init();
-main();
+test();
 
-function test() {}
+function test() {
+  kuaiShou.watchAds();
+}
 
 function main() {
   while (true) {
@@ -6598,7 +6654,7 @@ function main() {
 
     STORAGE.put(STORAGE_DATE, date);
     var timeDifference = endTime.getTime() - startTime.getTime();
-    var timePerMethod = timeDifference / 1000;
+    var timePerMethod = timeDifference / 1000 - runList.length * 60;
     var sortedList = runList.slice().sort(function (a, b) {
       return b.fetch(BaseKey.Weight, 0) / b.exchangeRate * 100 - a.fetch(BaseKey.Weight, 0) / a.exchangeRate * 100;
     });
@@ -6608,7 +6664,7 @@ function main() {
       highEffmap[app_2.constructor.name] = 0;
       medEffMap[app_2.constructor.name] = 0;
       lowEffMap[app_2.constructor.name] = 0;
-      Record.debug("".concat(app_2.appName));
+      LogRecord.debug("".concat(app_2.appName));
     }
 
     appTimeAllocation(timePerMethod, sortedList);
@@ -6618,12 +6674,12 @@ function main() {
       var sum = highEffmap[app_3.constructor.name] + medEffMap[app_3.constructor.name] + lowEffMap[app_3.constructor.name];
 
       if (sum != 0) {
-        Record.log("".concat(app_3.appName, ": ").concat(convertSecondsToMinutes(sum), "\u5206\u949F"));
+        LogRecord.log("".concat(app_3.appName, ": ").concat(convertSecondsToMinutes(sum), "\u5206\u949F"));
       }
     }
 
     var surplus = 0;
-    Record.info("进入主流程");
+    LogRecord.info("进入主流程");
     clearBackground();
 
     for (var _c = 0, runList_3 = runList; _c < runList_3.length; _c++) {
@@ -6640,20 +6696,20 @@ function main() {
       }
     }
 
-    Record.info("发送今日收益");
+    LogRecord.info("发送今日收益");
     sendIncomeMessageToWxPuher(toShowString(filteredList));
     var doneTime = new Date();
 
     if (endTime.getTime() > doneTime.getTime()) {
       var waitTime = endTime.getTime() - doneTime.getTime();
-      Record.log("\u7B49\u5F85".concat(convertSecondsToMinutes(waitTime / 1000 + 1), "\u5206\u949F\u5F00\u542F\u65B0\u4E00\u5929\u4EFB\u52A1"));
+      LogRecord.log("\u7B49\u5F85".concat(convertSecondsToMinutes(waitTime / 1000 + 1), "\u5206\u949F\u5F00\u542F\u65B0\u4E00\u5929\u4EFB\u52A1"));
       sleep(waitTime + 60 * 1000);
     }
   }
 }
 
 function allocateSurplus(surplus, sortedList) {
-  Record.debug("surplus: ".concat(surplus));
+  LogRecord.debug("surplus: ".concat(surplus));
   var remainingAllocation = 30 * 60;
 
   if (surplus < 0) {
@@ -6680,7 +6736,7 @@ function allocateSurplus(surplus, sortedList) {
 }
 
 function appTimeAllocation(timePerMethod, sortedList) {
-  Record.info("分配执行时间");
+  LogRecord.info("分配执行时间");
 
   for (var _i = 0, sortedList_3 = sortedList; _i < sortedList_3.length; _i++) {
     var app_5 = sortedList_3[_i];
@@ -6729,13 +6785,17 @@ function appTimeAllocation(timePerMethod, sortedList) {
   var count = 1;
 
   if (sortedList.length > 0) {
-    while (timePerMethod >= BASE_ASSIMT_TIME) {
+    var flag = true;
+
+    while (flag && timePerMethod >= BASE_ASSIMT_TIME) {
       var time = count * BASE_ASSIMT_TIME;
+      flag = false;
 
       for (var _c = 0, sortedList_6 = sortedList; _c < sortedList_6.length; _c++) {
         var app_8 = sortedList_6[_c];
 
         if (app_8.lowEffEstimatedTime != MAX_ASSIMT_TIME && fixedMap[app_8.constructor.name] === undefined && highEffmap[app_8.constructor.name] > 0) {
+          flag = true;
           var allocaTime = Math.min(time * app_8.lowEffAssmitCount, timePerMethod);
           lowEffMap[app_8.constructor.name] += allocaTime;
           timePerMethod -= allocaTime;

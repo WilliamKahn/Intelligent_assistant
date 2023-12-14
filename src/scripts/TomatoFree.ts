@@ -1,6 +1,7 @@
 import { findAndClick, fixedClick, dialogClick, readClick, scrollClick, selectedClick } from "../common/click";
+import { Move } from "../common/enums";
 import { scrollTo } from "../common/search";
-import { convertSecondsToMinutes, doFuncAtGivenTime, merge, randomExecute, resizeX, resizeY, waitRandomTime } from "../common/utils";
+import { convertSecondsToMinutes, doFuncAtGivenTime, merge, randomExecute, resizeX, resizeY, swipeDown, swipeUp, waitRandomTime } from "../common/utils";
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_TOMATO_FREE, PACKAGE_READ_TOMATO_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
@@ -15,9 +16,11 @@ export class TomatoFree extends AbstractTomato {
         super()
         this.appName = NAME_READ_TOMATO_FREE
         this.packageName = PACKAGE_READ_TOMATO_FREE
-        this.randomTab = className("android.view.ViewGroup")
-        .boundsInside(0, device.height-300, device.width, device.height)
-        .boundsContains(100, device.height - 100,device.width-100, device.height - 50)
+        // this.randomTab = className("android.view.ViewGroup")
+        // .boundsInside(0, device.height-300, device.width, device.height)
+        // .boundsContains(100, device.height - 100,device.width-100, device.height - 50)
+        this.tab = id(this.packageName+":id/radio_group")
+        this.initialComponent = this.tab
         this.initialNum = 0
         this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 35 * 60)
         this.lowEffEstimatedTime = 0
@@ -68,12 +71,10 @@ export class TomatoFree extends AbstractTomato {
     @functionLog("签到")
     signIn(): void{
         this.goTo(this.tab, 2)
-        if(selectedClick("福利中心", 40)){
+        this.sign()
+        scrollTo("金币献爱心", {waitFor:true})
+        if(scrollClick("去签到")) {
             this.sign()
-            scrollTo("金币献爱心", {waitFor:true})
-            if(scrollClick("去签到")) {
-                this.sign()
-            }
         }
     }
     
@@ -81,9 +82,9 @@ export class TomatoFree extends AbstractTomato {
     listenBook(): void {
         this.goTo(this.tab, 0)
         if(selectedClick("听书", 170)){
-            if(findAndClick(className("android.widget.TextView"), {
+            if(findAndClick(id(this.packageName+":id/name_tv"), {
                 leftRange:random(1,4).toString(),
-                coverBoundsScaling:1
+                coverBoundsScaling:1,
             })){
                 fixedClick(merge(["全部播放", "续播"]))
             }
@@ -94,7 +95,7 @@ export class TomatoFree extends AbstractTomato {
     mealSupp(): void{
         this.goTo(this.tab, 2)
         if(scrollClick("去领取", "吃饭补贴")){
-            if(dialogClick("领取.*补贴[0-9]+金币")) {
+            if(fixedClick("领取.*补贴[0-9]+金币")) {
                 this.watchAdsForCoin("日常福利")
             }
         }
@@ -103,10 +104,10 @@ export class TomatoFree extends AbstractTomato {
     @functionLog("阅读")
     readBook(totalTime: number): void {
         this.goTo(this.tab, 0)
-        if(selectedClick("经典", 170)){
-            if(findAndClick(className("android.widget.TextView"),{
-                leftRange: random(1,3).toString(),
-                coverBoundsScaling:1
+        if(selectedClick("知识", 170)){
+            if(findAndClick(id(this.packageName+":id/name_tv"), {
+                leftRange:random(1,4).toString(),
+                coverBoundsScaling:1,
             })){
                 this.read(totalTime)
             }
@@ -141,16 +142,12 @@ export class TomatoFree extends AbstractTomato {
     swipeVideo(totalTime: number) {
         this.goTo(this.tab, 0)
         if(selectedClick("看剧", 170)){
-            if(findAndClick("[0-9]*\.?[0-9]+万", {
-                index:random(0,8),
-                coverBoundsScaling:1
-            })){
+            if(readClick(id(this.packageName+":id/title_tv"), random(0,8))){
                 Record.log(`计划时间: ${convertSecondsToMinutes(totalTime)}分钟`)
                 let watchTime=0;
                 while(totalTime > watchTime){
                     if(textMatches(merge(["上滑查看下一集", "上滑继续观看短剧"])).exists()){
-                        gesture(1000, [resizeX(random(380, 420)), resizeY(random(1750, 1850))], 
-                        [resizeX(random(780, 820)), resizeY(random(250, 350))])
+                        swipeDown(Move.Fast, 200)
                     }
                     watchTime += waitRandomTime(30)
                 }

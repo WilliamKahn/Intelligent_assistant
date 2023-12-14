@@ -192,12 +192,11 @@ export abstract class Base {
                 return
             }
         }
-        close(times)
+        close()
         //坚持退出 检测
         if(times >= 3 || !clickDialogOption(Dialog.Positive)){
             clickDialogOption(Dialog.Negative)
         }
-        dialogClick("领取奖励")
         this.watch(exitSign, ++times)
     }
 

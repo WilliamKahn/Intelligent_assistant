@@ -1,4 +1,4 @@
-import { MAX_CLICK_COUNTS, SHOW_CONSOLE, WAIT_TIME_AFTER_CLICK } from "../global"
+import { EVENT, MAX_CLICK_COUNTS, SHOW_CONSOLE, WAIT_TIME_AFTER_CLICK } from "../global"
 import { CurrentAppBanned, ExceedMaxNumberOfAttempts } from "../lib/exception"
 import { Record } from "../lib/logger"
 import { Dialog } from "./enums"
@@ -50,9 +50,9 @@ export function clickDialogOption(options?:Dialog){
         options = random(Dialog.Positive, Dialog.Negative)
     }
     if(options === Dialog.Positive){//
-        return fixedClick(merge(["继续观看", "抓住奖励机会", "留下看看", "关闭"]))
+        return fixedClick(merge(["继续观看", "抓住奖励机会", "留下看看", "关闭", "领取奖励"]))
     } else if(options === Dialog.Negative) {
-        return fixedClick(merge(["取消", "关闭", "(以后|下次)再说", "(直接|坚持|仍要)?退出(阅读)?", "暂不加入", "(残忍)离开", "放弃奖励", "(我)?知道了"]))
+        return fixedClick(merge(["取消", "关闭", "(以后|下次)再说", "(直接|坚持|仍要)?退出(阅读)?", "暂不(加入|添加)", "(残忍)离开", "放弃奖励", "(我)?知道了"]))
     }
 }
 /**
@@ -65,7 +65,8 @@ export function findAndClick(component: string|UiSelector, options?:FindAndClick
         Record.debug("findAndClick error")
         throw new ExceedMaxNumberOfAttempts("超过最大限制次数")
     } else if(times > MAX_CLICK_COUNTS - 2){
-        close(0)
+        closeByImageMatching()
+        clickDialogOption(Dialog.Negative)
     } else if(times > MAX_CLICK_COUNTS - 4){
         closeByImageMatching()
     }
@@ -133,10 +134,12 @@ export function normalClick(x: number, y: number, options?: NormalClickOptions){
         const thread = threads.start(function(){
             // 在新线程中开启一个Toast监听
             events.observeToast();
-            events.on("toast", function(toast){
-                // 当监听到Toast时，将Toast的内容存储到公共变量中
-                result.setAndNotify(toast.getText())
-                events.removeAllListeners("toast")
+            events.once("toast", function(toast){
+                if(toast){
+                    result.setAndNotify(toast.getText())    
+                } else {
+                    result.setAndNotify(toast)
+                }
             })
         })
         thread.waitFor()
@@ -150,11 +153,13 @@ export function normalClick(x: number, y: number, options?: NormalClickOptions){
         click(x, y)
     }
     if(options?.feedback){
-        threads.start(function(){
+        const thread = threads.start(function(){
             waitRandomTime(time)
-            result.setAndNotify(undefined)
+            events.emit("toast")
         })
+        thread.waitFor()
         const str = result.blockedGet()
+        threads.shutDownAll()
         Record.debug(str)
         if(str.match("失败|异常|领取过奖励")){
             throw new CurrentAppBanned(str)

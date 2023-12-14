@@ -8,7 +8,7 @@
  */
 import { sendIncomeMessageToWxPuher, toShowString } from "./common/report";
 import { clearBackground, convertSecondsToMinutes } from "./common/utils";
-import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, STORAGE, STORAGE_APP, STORAGE_DATE, filteredList, fixedMap, highEffmap, lowEffMap, medEffMap } from "./global";
+import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, STORAGE, STORAGE_APP, STORAGE_DATE, filteredList, fixedMap, highEffmap, kuaiShou, lowEffMap, medEffMap } from "./global";
 import { ConfigInvalidException } from "./lib/exception";
 import { init } from "./lib/init";
 import { Record as LogRecord } from "./lib/logger";
@@ -20,18 +20,20 @@ init()
 main()
 function test() {
     // for(let app of filteredList){
-    //     log(`${app.appName}: ${app.fetch(BaseKey.Weight)}----${app.fetch(BaseKey.Executed)}`)
+    //     log(`${app.appName}: ${app.fetch(BaseKey.Weight)}----${convertSecondsToMinutes(app.highEffEstimatedTime)}分钟`)
     // }
 
     // for(let app of filteredList){
-    //     highEffmap[app.constructor.name] = 100
-    //     medEffMap[app.constructor.name] = 100
-    //     lowEffMap[app.constructor.name] = 100
+    //     highEffmap[app.constructor.name] = 0
+    //     medEffMap[app.constructor.name] = 0
+    //     lowEffMap[app.constructor.name] = 0
     // }
     // allocateSurplus(2500,filteredList)
+    // appTimeAllocation(1 * 60, filteredList)
     // for(let app of filteredList){
     //     log(highEffmap[app.constructor.name], medEffMap[app.constructor.name], lowEffMap[app.constructor.name], app.fetch(BaseKey.Executed))
-    // }
+    // }0 2 4 6
+    kuaiShou.watchAds()
 }
 
 function main() {
@@ -58,7 +60,7 @@ function main() {
         STORAGE.put(STORAGE_DATE, date)
         const timeDifference = endTime.getTime() - startTime.getTime();
         //化毫秒为秒
-        const timePerMethod = timeDifference / 1000
+        const timePerMethod = timeDifference / 1000 - runList.length * 60
         //将数组按照权重等级排序
         const sortedList = runList.slice().sort((a:any,b:any) => 
             b.fetch(BaseKey.Weight, 0) / b.exchangeRate * 100 - a.fetch(BaseKey.Weight, 0) /a.exchangeRate * 100
@@ -188,14 +190,17 @@ function appTimeAllocation(timePerMethod: number, sortedList: any[]){
     //耗时任务时间分配
     let count = 1
     if(sortedList.length > 0){
+        let flag = true
         //等时间分配结束
-        while(timePerMethod >= BASE_ASSIMT_TIME){
+        while(flag && timePerMethod >= BASE_ASSIMT_TIME){
             //时间按照10，20，30，30分配
             const time = count * BASE_ASSIMT_TIME
+            flag = false
             for (let app of sortedList) {
                 if (app.lowEffEstimatedTime != MAX_ASSIMT_TIME
                     && fixedMap[app.constructor.name] === undefined
                     && highEffmap[app.constructor.name] > 0) {
+                    flag = true
                     const allocaTime = Math.min(time * app.lowEffAssmitCount, timePerMethod)
                     lowEffMap[app.constructor.name] += allocaTime
                     timePerMethod -= allocaTime
