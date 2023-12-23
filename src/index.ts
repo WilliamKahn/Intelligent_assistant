@@ -8,7 +8,7 @@
  */
 import { sendIncomeMessageToWxPuher, toShowString } from "./common/report";
 import { clearBackground, convertSecondsToMinutes } from "./common/utils";
-import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, STORAGE, STORAGE_APP, STORAGE_DATE, filteredList, fixedMap, highEffmap, kuaiShou, lowEffMap, medEffMap } from "./global";
+import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, STORAGE, STORAGE_APP, STORAGE_DATE, filteredList, fixedMap, highEffmap, lowEffMap, medEffMap } from "./global";
 import { ConfigInvalidException } from "./lib/exception";
 import { init } from "./lib/init";
 import { Record as LogRecord } from "./lib/logger";
@@ -20,20 +20,10 @@ init()
 main()
 function test() {
     // for(let app of filteredList){
-    //     log(`${app.appName}: ${app.fetch(BaseKey.Weight)}----${convertSecondsToMinutes(app.highEffEstimatedTime)}分钟`)
+    //     log(`${app.appName}: ${app.fetch(BaseKey.Weight)}----${app.fetch(BaseKey.Executed)}`)
     // }
-
-    // for(let app of filteredList){
-    //     highEffmap[app.constructor.name] = 0
-    //     medEffMap[app.constructor.name] = 0
-    //     lowEffMap[app.constructor.name] = 0
-    // }
-    // allocateSurplus(2500,filteredList)
-    // appTimeAllocation(1 * 60, filteredList)
-    // for(let app of filteredList){
-    //     log(highEffmap[app.constructor.name], medEffMap[app.constructor.name], lowEffMap[app.constructor.name], app.fetch(BaseKey.Executed))
-    // }0 2 4 6
-    kuaiShou.watchAds()
+    //tikTokLite.shoppingHot()
+    
 }
 
 function main() {
@@ -56,6 +46,7 @@ function main() {
             for(let app of runList){
                 app.store(BaseKey.Executed, false)
             }
+            STORAGE.remove(STORAGE_APP)
         }
         STORAGE.put(STORAGE_DATE, date)
         const timeDifference = endTime.getTime() - startTime.getTime();

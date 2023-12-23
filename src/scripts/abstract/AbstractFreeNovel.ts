@@ -1,4 +1,5 @@
-import { dialogClick, findAndClick, goneClick, normalClick, ocrClick, readClick, scrollClick, selectedClick } from "../../common/click";
+import { dialogClick, findAndClick, fixedClick, goneClick, normalClick, ocrClick, readClick, scrollClick, selectedClick } from "../../common/click";
+import { scrollTo } from "../../common/search";
 import { doFuncAtGivenTime, randomExecute, waitRandomTime } from "../../common/utils";
 import { MAX_CYCLES_COUNTS } from "../../global";
 import { functionLog, measureExecutionTime, startDecorator } from "../../lib/decorators";
@@ -35,6 +36,7 @@ export abstract class AbstractFreeNovel extends Base {
         //每十分钟执行一次
         doFuncAtGivenTime(time / 2, 30 * 60,(perTime: number)=>{
             this.readBook(perTime)
+            this.reward()
             this.openTreasure()
             return perTime
         })
@@ -47,6 +49,7 @@ export abstract class AbstractFreeNovel extends Base {
                 this.continueListen()
             }
             let actualTime = waitRandomTime(perTime)
+            this.reward2()
             this.openTreasure()
             return actualTime
         })
@@ -55,7 +58,8 @@ export abstract class AbstractFreeNovel extends Base {
     @measureExecutionTime
     weight(): void {
         this.goTo(this.tab, 2)
-        if(scrollClick("我的金币")){
+        scrollTo("我的金币", {coverBoundsScaling:1})
+        if(fixedClick("我的金币")){
             let tmp = textStartsWith("今日金币").findOnce()
             if(tmp != null) {
                 const match = tmp.text().replace(",", "").match(/[0-9]+/)
@@ -77,7 +81,6 @@ export abstract class AbstractFreeNovel extends Base {
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goTo(this.tab, 2)
-        this.watchAdsForCoin("日常福利")
         if (ocrClick('开宝箱得金币')) {
             this.watchAdsForCoin("日常福利")
         }
@@ -140,10 +143,32 @@ export abstract class AbstractFreeNovel extends Base {
                             bounds:{bottom: 1656}
                         })
                         this.watch(text("幸运大转盘"))
-                        findAndClick("好的", {fixed:true, waitFor:true, clickUntilGone:true})
+                        findAndClick("好的", {fixed:true, waitFor:true})
                     }
                 }
             }
+        }
+    }
+
+    @functionLog("领取奖励")
+    reward(): void {
+        this.goTo(this.tab, 2)
+        let cycleCounts = 0
+        this.watchAdsForCoin("日常福利")
+        while(++cycleCounts < MAX_CYCLES_COUNTS &&
+            scrollClick("领金币", "阅读赚金币.*")){
+            this.watchAdsForCoin("日常福利")
+        }
+    }
+
+    @functionLog("领取奖励")
+    reward2(): void {
+        this.goTo(this.tab, 2)
+        let cycleCounts = 0
+        this.watchAdsForCoin("日常福利")
+        while(++cycleCounts < MAX_CYCLES_COUNTS &&
+            scrollClick("领金币", "听书赚金币.*")){
+            this.watchAdsForCoin("日常福利")
         }
     }
 

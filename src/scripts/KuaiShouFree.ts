@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, dialogClick, readClick, scrollClick } from "../common/click";
+import { findAndClick, fixedClick, dialogClick, readClick, scrollClick, ocrClick } from "../common/click";
 import { closeByImageMatching, doFuncAtGivenTime, getScreenImage, moveDown, resizeX, resizeY } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_KUAISHOU_FREE, PACKAGE_READ_KUAISHOU_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
@@ -54,9 +54,6 @@ export class KuaiShouFree extends Base{
     watchAds(): void {
         this.goTo(this.tab, 2)
         let cycleCounts = 0
-        if(!text("看视频赚[0-9]+金币").exists()){
-            return
-        }
         while(++cycleCounts < MAX_CYCLES_COUNTS 
             && scrollClick("去赚钱", "看视频赚[0-9]+金币")){
             this.watch(text("日常任务"))

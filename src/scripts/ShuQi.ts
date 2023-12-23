@@ -70,7 +70,7 @@ export class ShuQi extends Base{
     readBook(totalTime: number): void {
         this.goTo(this.tab, 1)
         if(selectedClick("推荐", 170)){
-            if(readClick(id(this.packageName+":id/tpl_book_name"), random(0,7))){
+            if(readClick(id(this.packageName+":id/tpl_book_name"), random(0,3)*2)){
                 this.read(totalTime)
             }
         }

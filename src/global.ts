@@ -10,6 +10,8 @@
 import { waitRandomTime } from "./common/utils";
 import { ConfigInvalidException } from "./lib/exception";
 import { LogLevel, Record as LogRecord, setToken } from "./lib/logger";
+import { Article } from "./scripts/Article";
+import { ArticleLite } from "./scripts/ArticleLite";
 import { Baidu } from "./scripts/Baidu";
 import { BaiduBig } from "./scripts/BaiduBig";
 import { BaiduLite } from "./scripts/BaiduLite";
@@ -26,6 +28,7 @@ import { ShuQi } from "./scripts/ShuQi";
 import { SpeedFree } from "./scripts/SpeedFree";
 import { StarrySky } from "./scripts/StarrySky";
 import { TikTokLite } from "./scripts/TikTokLite";
+import { TikTokVolcano } from "./scripts/TikTokVolcano";
 import { Tomato } from "./scripts/Tomato";
 import { TomatoFree } from "./scripts/TomatoFree";
 import { TomatoLite } from "./scripts/TomatoLite";
@@ -64,6 +67,8 @@ export const BASE_ASSIMT_TIME = 10 * 60
 export const WEIGHT_ASSIMT_TIME = 5 * 60
 //最大时间
 export const MAX_ASSIMT_TIME = 24 * 60 * 60
+//最低执行金币阈值
+export const MIN_RUN_THRESHOLD = 10
 //中止app记录
 export const STORAGE_APP = "app"
 //中止日期（月/日）
@@ -122,7 +127,7 @@ export const NAME_VEDIO_TIKTOK_LITE = "抖音极速版"
 export const PACKAGE_VEDIO_TIKTOK_LITE = "com.ss.android.ugc.aweme.lite"
 
 export const NAME_VEDIO_TIKTOK_VOLCANO = "抖音火山版"
-export const PACKAGE_VEDIO_TIKTOK_VOLCANO = "com.ss.android.ugc.aweme.lite"
+export const PACKAGE_VEDIO_TIKTOK_VOLCANO = "com.ss.android.ugc.live"
 
 export const NAME_VEDIO_KUAISHOU = "快手"
 export const PACKAGE_VEDIO_KUAISHOU = "com.smile.gifmaker"
@@ -144,6 +149,12 @@ export const PACKAGE_VEDIO_BAIDU_LITE = "com.baidu.searchbox.lite"
 
 export const NAME_VEDIO_BAIDU_BIG = "百度大字版"
 export const PACKAGE_VEDIO_BAIDU_BIG = "com.baidu.searchbox.tomas"
+
+export const NAME_READ_ARTICLE = "今日头条"
+export const PACKAGE_READ_ARTICLE = "com.ss.android.article.news"
+
+export const NAME_READ_ARTICLE_LITE = "头条搜索极速版"
+export const PACKAGE_READ_ARTICLE_LITE = "com.ss.android.article.lite"
 
 //有柿 
 export const youShi = new YouShi()
@@ -178,6 +189,8 @@ export const kuaiShou = new KuaiShou()
 export const kuaiShouLite = new KuaiShouLite()
 //抖音极速版
 export const tikTokLite = new TikTokLite()
+//抖音火山版
+export const tikTokVolcano = new TikTokVolcano()
 
 //速读免费小说
 export const speedFree = new SpeedFree()
@@ -191,6 +204,10 @@ export const baiduLite = new BaiduLite()
 //百度大字版
 export const baiduBig = new BaiduBig()
 
+//今日头条
+export const article = new Article()
+//头条极速版
+export const articleLite = new ArticleLite()
 //望潮
 export const wanChao = new WanChao()
 
@@ -217,7 +234,14 @@ const map:Record<string, any> = {
     "14": deJian,
     "15": wanChao,
     "16": kuaiShou,
-    "17": kuaiShouLite
+    "17": kuaiShouLite,
+    "18": baidu,
+    "19": baiduLite,
+    "20": baiduBig,
+    "21": article,
+    "22": articleLite,
+    "23": tikTokLite,
+    "24": tikTokVolcano
 }
 LogRecord.info("加载配置");
 export const {

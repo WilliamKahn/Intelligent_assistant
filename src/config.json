@@ -126,5 +126,47 @@
         "type": "checkbox",
         "name": "KuaiShouLite",
         "default": false
+    },
+    {
+        "label": "18.百度",
+        "type": "checkbox",
+        "name": "Baidu",
+        "default": false
+    },
+    {
+        "label": "19.百度极速版",
+        "type": "checkbox",
+        "name": "BaiduLite",
+        "default": false
+    },
+    {
+        "label": "20.百度大字版",
+        "type": "checkbox",
+        "name": "BaiduBig",
+        "default": false
+    },
+    {
+        "label": "21.今日头条",
+        "type": "checkbox",
+        "name": "Article",
+        "default": false
+    },
+    {
+        "label": "22.头条搜索极速版",
+        "type": "checkbox",
+        "name": "ArticleLite",
+        "default": false
+    },
+    {
+        "label": "23.抖音极速版",
+        "type": "checkbox",
+        "name": "TikTokLite",
+        "default": false
+    },
+    {
+        "label": "24.抖音火山版",
+        "type": "checkbox",
+        "name": "TikTokVolcano",
+        "default": false
     }
 ]

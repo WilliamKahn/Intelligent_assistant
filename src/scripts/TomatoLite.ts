@@ -51,9 +51,9 @@ export class TomatoLite extends AbstractTomato {
     signIn(): void{
         this.goTo(this.tab, 2)
         this.sign()
-        if(scrollClick("立即签到")){
+        if(findAndClick("立即签到", {coverBoundsScaling:1})){
             this.sign()
-        }    
+        }
     }
 
     @functionLog("听书")

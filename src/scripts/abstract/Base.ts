@@ -36,6 +36,9 @@ export abstract class Base {
     //兑换汇率
     exchangeRate: number = 10000
 
+    //
+    
+
     //执行预估时间
     highEffEstimatedTime: number = BASE_ASSIMT_TIME
     medEffEstimatedTime: number = MAX_ASSIMT_TIME
@@ -127,13 +130,13 @@ export abstract class Base {
         if(text("简介").exists()) {
             normalClick(resizeX(1070), resizeY(2330))
         }
-        const img = getScreenImage({bottom:device.height * 1/5})
+        const img = getScreenImage({bottom:device.height * 1/6})
         const grayHistogram = getGrayscaleHistogram(img)
         img.recycle()
         const [index] = findLargestIndexes(grayHistogram, 1)
         Record.debug(`read index: ${index}`)
-        doFuncAtGivenTime(totalTime, 10, ()=>{
-            readTime += waitRandomTime(10)
+        doFuncAtGivenTime(totalTime, 8, (perTime: number)=>{
+            readTime += waitRandomTime(perTime)
             this.watch(index)
             //阅读页面弹窗
             fixedClick(merge([".*不再提示", "我知道了", "放弃下载"]))
@@ -152,12 +155,12 @@ export abstract class Base {
         let flag:boolean = false
         //回调次数
         if(typeof exitSign === "number") {
-            const img = getScreenImage({bottom:device.height * 1/5})
+            const img = getScreenImage({bottom:device.height * 1/6})
             const grayHistogram = getGrayscaleHistogram(img)
             img.recycle()
             const [index] = findLargestIndexes(grayHistogram, 1)
             Record.debug(`watch index: ${index}`)
-            if(index < exitSign + 10 && index > exitSign - 10){
+            if(index < exitSign + 20 && index > exitSign - 20){
                 flag = true
             }
         } else {
@@ -270,7 +273,8 @@ export abstract class Base {
             && (dialogClick(str))){
             this.watch(textMatches(merge([backSign, str])))
         }
-        dialogClick(merge(["(开心|立即)收下", "我知道了"]))
+        Record.debug("done")
+        dialogClick(merge(["(开心|立即)收下", "(我)?知道了"]))
     }
 
     /**
@@ -321,6 +325,8 @@ export abstract class Base {
     readBook(totalTime: number) { totalTime }
     swipeVideo(totalTime: number) { totalTime }
     listenBook() {}
+    watchLive() {}
+    shopping() {}
     reward() {}
     clickPop() {}
     record() {}

@@ -1,6 +1,6 @@
-import { dialogClick, findAndClick, fixedClick, scrollClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, scrollClick, selectedClick } from "../common/click";
 import { scrollTo, searchByOcrRecognize } from "../common/search";
-import { closeByImageMatching, convertSecondsToMinutes, moveDown } from "../common/utils";
+import { closeByImageMatching, convertSecondsToMinutes, moveDown, randomExecute, waitRandomTime } from "../common/utils";
 import { NAME_VEDIO_BAIDU, NAME_VEDIO_BAIDU_BIG, PACKAGE_VEDIO_BAIDU, PACKAGE_VEDIO_BAIDU_BIG } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
@@ -15,24 +15,18 @@ export class Baidu extends Base {
         this.tab = id("android:id/tabs")
         this.initialComponent = this.tab
         this.initialNum = 0
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60)
-        this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 5 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 30 * 60)
     }
 
     @measureExecutionTime
     highEff(): void {
         this.signIn()
-        this.openTreasure()
-        this.watchAds()
-    }
-
-    @measureExecutionTime
-    medEff(): void {
-        this.swipeVideo(2 * 60)
-        if(fixedClick("点击提现")){
-
-            this.payouts()
-        }
+        randomExecute([
+            ()=>{this.searchForCoin()},
+            ()=>{this.openTreasure()},
+            ()=>{this.watchAds()},
+            ()=>{this.swipeVideo(5 * 60)},
+        ])
     }
     
     @measureExecutionTime
@@ -65,6 +59,26 @@ export class Baidu extends Base {
         }
     }
 
+    @functionLog("搜索赚金币")
+    searchForCoin():void{
+        this.goto(0)
+        let tmp = textMatches("搜索赚金币.*").findOnce()
+        const regex = /\((\d+)\/(\d+)\)/;
+        const match = tmp?.text().match(regex)
+        if(match){
+            for(let i = parseInt(match[1]); i < parseInt(match[2]); i++){
+                if(findAndClick(className("android.widget.TextView"), {
+                    bounds:tmp?.parent()?.parent()?.parent()?.child(1)?.bounds(),
+                    waitTimes: 15
+                })){
+                    this.backUntilFind(text("金币收益"))
+                    waitRandomTime(2)
+                    this.watchAdsForCoin("金币收益")
+                }
+            }
+        }
+    }
+
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goto(0)
@@ -75,47 +89,12 @@ export class Baidu extends Base {
 
     @functionLog("刷视频")
     swipeVideo(totalTime: number): void {
-        this.goTo(this.tab, 1)
-        Record.log(`预计刷视频${convertSecondsToMinutes(totalTime)}分钟`)
-        moveDown(totalTime, 10)
-    }
-
-    @functionLog("提现")
-    payouts(): void{
-        this.goto(1)
-        if(fixedClick("微信提现")){
-            if(fixedClick("立即微信提现")){
-                log(textMatches(".+元").findOnce()?.text())
-                dialogClick("继续看视频赚钱提现")
+        this.goTo(this.tab, 0)
+        if(selectedClick("发现", 170)){
+            if(findAndClick(className("android.widget.ImageView"), {bounds:{top:device.height/5}})){
+                Record.log(`预计刷视频${convertSecondsToMinutes(totalTime)}分钟`)
+                moveDown(totalTime, 10)
             }
-        }
-    }
-
-    @functionLog("去提现")
-    toPayouts(): void{
-        this.goto(1)
-        if(scrollClick("去提现", "今日提现特权")){
-            if(fixedClick("立即微信提现")){
-                log(textMatches(".+元").findOnce()?.text())
-                dialogClick("继续看视频赚钱提现")
-            }
-        }
-    }
-
-    @functionLog("走路赚钱")
-    walkEarn(): void{
-        this.goto(1)
-        if(scrollClick("去领取", "走路赚钱")){
-            dialogClick("领[0-9]+铜钱")
-            closeByImageMatching()
-        }
-    }
-
-    @functionLog("看广告领铜钱")
-    watchAdsEarn(): void{
-        this.goto(1)
-        while(scrollClick("去领取", "看广告领铜钱奖励.*")){
-            this.watch(text("我的铜钱"))
         }
     }
 
@@ -123,7 +102,7 @@ export class Baidu extends Base {
         if(num === 0){
             if(this.tab.exists()){
                 this.goTo(this.tab, 4)
-                findAndClick("天天领现金",{ocrRecognize:true, bounds:{bottom:device.height * 1 /5}})
+                findAndClick("天天领现金",{ocrRecognize:true, bounds:{bottom:device.height/5, left:device.width/2}})
             }else {
                 this.backUntilFind(text("金币收益"))
             }

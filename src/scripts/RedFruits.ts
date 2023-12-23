@@ -118,7 +118,7 @@ export class RedFruits extends AbstractTomato {
     signIn(): void {
         this.goTo(text("福利"), -1)
         this.sign()
-        if(scrollClick("去签到")){
+        if(findAndClick("去签到", {coverBoundsScaling:1})){
             this.sign()
         }
     }

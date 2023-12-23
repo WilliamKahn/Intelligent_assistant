@@ -73,7 +73,7 @@ export class TomatoFree extends AbstractTomato {
         this.goTo(this.tab, 2)
         this.sign()
         scrollTo("金币献爱心", {waitFor:true})
-        if(scrollClick("去签到")) {
+        if(findAndClick("去签到",{coverBoundsScaling:1})) {
             this.sign()
         }
     }
@@ -81,13 +81,22 @@ export class TomatoFree extends AbstractTomato {
     @functionLog("听书")
     listenBook(): void {
         this.goTo(this.tab, 0)
-        if(selectedClick("听书", 170)){
-            if(findAndClick(id(this.packageName+":id/name_tv"), {
+        if(selectedClick("推荐", 170)){
+            findAndClick(className("android.widget.TextView"), {
                 leftRange:random(1,4).toString(),
-                coverBoundsScaling:1,
-            })){
-                fixedClick(merge(["全部播放", "续播"]))
+                coverBoundsScaling:1
+            })
+            while(!textMatches("全部播放|续播").exists()){
+                back()
+                waitRandomTime(5)
+                swipeUp(Move.Fast, 1000)
+                waitRandomTime(5)
+                findAndClick(className("android.widget.TextView"), {
+                    leftRange:random(1,4).toString(),
+                    coverBoundsScaling:1
+                })
             }
+            fixedClick("全部播放|续播")
         }
     }
 
@@ -104,11 +113,22 @@ export class TomatoFree extends AbstractTomato {
     @functionLog("阅读")
     readBook(totalTime: number): void {
         this.goTo(this.tab, 0)
-        if(selectedClick("知识", 170)){
-            if(findAndClick(id(this.packageName+":id/name_tv"), {
+        if(selectedClick("推荐", 170)){
+            findAndClick(className("android.widget.TextView"), {
                 leftRange:random(1,4).toString(),
-                coverBoundsScaling:1,
-            })){
+                coverBoundsScaling:1
+            })
+            while(!text("阅读电子书").exists()){
+                back()
+                waitRandomTime(3)
+                swipeUp(Move.Fast, 1000)
+                waitRandomTime(3)
+                findAndClick(className("android.widget.TextView"), {
+                    leftRange:random(1,4).toString(),
+                    coverBoundsScaling:1
+                })
+            }
+            if(fixedClick("阅读电子书")){
                 this.read(totalTime)
             }
         }

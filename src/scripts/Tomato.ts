@@ -75,7 +75,7 @@ export class Tomato extends AbstractTomato {
         this.goTo(this.tab, 2)
         this.sign()
         scrollTo("金币献爱心", {waitFor:true})
-        if (scrollClick("立即签到", "(明日)?签到")) {
+        if (findAndClick("立即签到", {leftRange:"(明日)?签到", coverBoundsScaling:1})) {
             this.sign()
         }
     }
@@ -126,9 +126,9 @@ export class Tomato extends AbstractTomato {
             })
             while(!text("阅读电子书").exists()){
                 back()
-                waitRandomTime(3)
+                waitRandomTime(5)
                 swipeUp(Move.Fast, 1000)
-                waitRandomTime(3)
+                waitRandomTime(5)
                 findAndClick(className("android.widget.TextView"), {
                     leftRange:random(1,4).toString(),
                     coverBoundsScaling:1

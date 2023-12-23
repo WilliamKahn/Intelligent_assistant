@@ -1,137 +1,117 @@
-import { dialogClick, findAndClick, normalClick, randomClick } from "../common/click";
-import { scrollTo } from "../common/search";
-import { doFuncAtGivenTime, moveDown, resizeX, resizeY, } from "../common/utils";
-import { NAME_VEDIO_TIKTOK_LITE, PACKAGE_VEDIO_TIKTOK_LITE } from "../global";
+import { dialogClick, findAndClick, fixedClick, ocrClick, randomClick } from "../common/click";
+import { Move } from "../common/enums";
+import { searchByOcrRecognize } from "../common/search";
+import { doFuncAtGivenTime, getNumFromComponent, moveDown, randomExecute, swipeDown, swipeUp, waitRandomTime } from "../common/utils";
+import { NAME_VEDIO_TIKTOK_VOLCANO, PACKAGE_VEDIO_TIKTOK_VOLCANO } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
-import { Record } from "../lib/logger";
-import { Base, BaseKey } from "./abstract/Base";
+import { AbstractTikTok } from "./abstract/AbstractTikTok";
+import { BaseKey } from "./abstract/Base";
 
-export class TikTokVolcano extends Base{
-
-    register: UiSelector
+export class TikTokVolcano extends AbstractTikTok{
 
     constructor(){
         super()
-        this.appName = NAME_VEDIO_TIKTOK_LITE
-        this.packageName = PACKAGE_VEDIO_TIKTOK_LITE
-        this.register = className("android.widget.ImageView").depth(19).drawingOrder(1)
-        this.tab = id(this.packageName+":id/root_view").boundsInside(0,device.height * 4 / 5, device.width, device.height)
+        this.appName = NAME_VEDIO_TIKTOK_VOLCANO
+        this.packageName = PACKAGE_VEDIO_TIKTOK_VOLCANO
+        this.initialComponent = text("首页")
+        this.exchangeRate = 30000
     }
 
     @measureExecutionTime
-    highEff(): void {
-        this.signIn()
-        this.openTreasure()
-    }
-    @measureExecutionTime
-    medEff(): void {
-        this.watchLive()
-        this.shopping()
-    }
-    @measureExecutionTime
-    lowEff(time: number): void {
-        doFuncAtGivenTime(time, 10 * 60, (perTime: number) => {
-            this.swipeVideo(perTime)
-            this.openTreasure()
-            this.watchAds()
-        })
-    }
-    @measureExecutionTime
     weight(): void {
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
+        this.goto()
+        while(searchByOcrRecognize("今日领取火苗.*")[0] === undefined){
+            this.move()
         }
-        scrollTo("金币收益")
-        normalClick(resizeX(random(104, 328)), resizeY(random(389, 493)))
-        let tmp = textMatches(/(\d+)/)
-        .boundsInside(0, 0, resizeX(328), resizeY(594)).findOnce()
-        if(tmp != null) {
-            this.store(BaseKey.Weight, parseInt(tmp.text()))
-        }
+        const [_, name]:any = searchByOcrRecognize("今日领取火苗.*")
+        const weight = getNumFromComponent(name)
+        this.store(BaseKey.Weight, weight)
     }
 
     @functionLog("签到")
     signIn(): void {
-        this.goto(-1)
-        this.watchAdsForCoin("日常福利")
+        this.goto()
+        this.watchAdsForCoin("我的赠送榜")
     }
 
     @functionLog("开宝箱")
     openTreasure(): void {
-        this.goto(-1)
-        if(findAndClick(text("开宝箱得金币"))){
-            this.watchAdsForCoin("日常任务")
+        this.goto()
+        if(findAndClick(".?开宝箱得火苗.?", 
+        {ocrRecognize:true, fixed:true, feedback:true})){
+            this.watchAdsForCoin("我的赠送榜")
         }
     }
 
-    @functionLog("看视频")
+    @functionLog("看广告")
     watchAds(): void {
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
-        }
-        if(findAndClick(text("去观看"))){
-            // this.watchUntil()
-        }
-    }
-
-    @functionLog("看直播")
-    watchLive(): void {
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
-        }
-        if(findAndClick(text("去看看"))){
-            for(let i = 0;i<10;i++){
-                let tmp = text("开宝箱").findOne(3 * 65 * 1000)
-                if(tmp != null) {
-                    randomClick(tmp.bounds())
-                    back()
-                }
-            }
-            this.backUntilFind(text("日常任务"))
+        this.goto()
+        if(this.scrollOcrClick(".?去领取.?", "限时任务赚火苗.*")){
+            this.watch(text("我的赠送榜"))
         }
     }
 
     @functionLog("逛街")
     shopping(): void{
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
-        }
-        if(findAndClick(text("去逛街"))){
-            moveDown(95, 2)
+        this.goto()
+        if(this.scrollOcrClick(".?去.?街.?", ".?街得火苗.*")){
+            moveDown(65, 4)
+            this.backUntilFind(text("我的赠送榜"))
         }
     }
 
-    @functionLog("晚安小岛")
-    goodNight(): void{
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
-        }
-        if(findAndClick(text("去小岛"))){
-            if(findAndClick(text("我睡觉了"))){
-                this.backUntilFind(text("日常任务"))
+    @functionLog("看直播")
+    watchLive(): void{
+        this.goto()
+        if(this.scrollOcrClick(".?去看看.?", "看直播领火苗.*")){
+            while(!text("明天再来").exists()){
+                let tmp = text("开宝箱").findOne(3 * 60 * 1000)
+                if(tmp != null){
+                    randomClick(tmp.bounds())
+                    dialogClick("收下火苗")
+                } else {
+                    break
+                }
             }
+            this.backUntilFind(text("我的赠送榜"))
         }
     }
 
     @functionLog("刷视频")
     swipeVideo(totalTime: number): void {
-        this.goTo(this.tab, 0)
+        this.goTo(text("首页"), -1)
         moveDown(totalTime, 10)
     }
 
+    move(): void{
+        let preY = 0
+        let tmp = text("我的赠送榜").findOnce()
+        if(tmp !== null){
+            preY = tmp.bounds().centerY()
+        }
+        if(this.moveFlag){
+            swipeDown(Move.Fast, 1000)
+        } else {
+            swipeUp(Move.Fast, 1000)
+        }
+        waitRandomTime(2)
+        tmp = text("我的赠送榜").findOnce()
+        if(tmp !== null){
+            if(preY === tmp.bounds().centerY()){
+                this.moveFlag = !this.moveFlag
+            }
+        }
+    }
+
     //自定义跳转
-    goto(num: number){
-        //任务页
-        if(num === -1){
-            if(this.tab.exists()){
-                log(this.tab.findOnce())
-                this.goTo(this.register, num)
-            } else {
-                Record.log("日常任务")
-                this.backUntilFind(text("日常任务"))
+    goto(){
+        if(text("首页").exists()){
+            this.goTo(text("首页"), -1)
+            if(fixedClick(desc("侧边栏"))){
+                fixedClick("火苗")
             }
         } else {
-            this.goTo(this.tab, num)
+            this.backUntilFind(text("我的赠送榜"))
         }
     }
 }

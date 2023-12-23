@@ -1,9 +1,10 @@
 import { dialogClick, findAndClick, fixedClick, scrollClick } from "../common/click";
 import { Move } from "../common/enums";
-import { scrollTo, searchByOcrRecognize } from "../common/search";
-import { closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, doFuncAtGivenTimeByEstimate, moveDown, randomExecute, resizeX, resizeY, swipeDown, waitRandomTime } from "../common/utils";
-import { MAX_CYCLES_COUNTS, NAME_VEDIO_KUAISHOU_LITE, PACKAGE_VEDIO_KUAISHOU_LITE } from "../global";
+import { scrollTo, search, searchByOcrRecognize } from "../common/search";
+import { closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, doFuncAtGivenTimeByEstimate, getNumFromComponent, moveDown, randomExecute, resizeX, resizeY, swipeDown, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, MIN_RUN_THRESHOLD, NAME_VEDIO_KUAISHOU_LITE, PACKAGE_VEDIO_KUAISHOU_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
+import { CurrentAppBanned } from "../lib/exception";
 import { Record } from "../lib/logger";
 import { Base, BaseKey } from "./abstract/Base";
 
@@ -103,6 +104,12 @@ export class KuaiShouLite extends Base{
         this.goTo(this.tab, 2)
         this.watchAdsForCoin("日常福利")
         if(fixedClick("开宝箱得金币")) {
+            const [bounds, _] = search("恭喜你获得")
+            const [__, name] = search("[0-9]+金币", {bounds: {top: bounds.bottom}})
+            const coin = getNumFromComponent(name)
+            if(coin < MIN_RUN_THRESHOLD) {
+                throw new CurrentAppBanned(this.appName+"账号异常")
+            }
             this.watchAdsForCoin("日常福利")
         }
     }

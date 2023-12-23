@@ -262,7 +262,7 @@ class LogStackFrame {
         let htmlArray: string[] = [];
         // TODO(BATU1579): 添加可以自定义的行内样式
         let startTag: string = `<span style='color: ${this.scheme.color};'>`;
-        let endTag: string = `</span></br>`
+        // let endTag: string = `</span></br>`
 
         for (let line of this.data.split('\n')) {
             // 转义特殊字符
@@ -278,7 +278,7 @@ class LogStackFrame {
                 }[c]!;
             });
             htmlArray.push(
-                [startTag, line, endTag].join('')
+                // [startTag, line, endTag].join('')
             );
         }
 

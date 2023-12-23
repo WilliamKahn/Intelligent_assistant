@@ -1,139 +1,134 @@
-import { dialogClick, findAndClick, normalClick, randomClick } from "../common/click";
-import { scrollTo } from "../common/search";
-import { doFuncAtGivenTime, moveDown, resizeX, resizeY, } from "../common/utils";
+import { dialogClick, findAndClick, fixedClick, normalClick, ocrClick, randomClick } from "../common/click";
+import { Move } from "../common/enums";
+import { scrollTo, search, searchByOcrRecognize } from "../common/search";
+import { closeByImageMatching, doFuncAtGivenTime, getNumFromComponent, moveDown, resizeX, resizeY, swipeDown, swipeUp, waitRandomTime, } from "../common/utils";
 import { NAME_VEDIO_TIKTOK_LITE, PACKAGE_VEDIO_TIKTOK_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
-import { Record } from "../lib/logger";
-import { Base, BaseKey } from "./abstract/Base";
+import { AbstractTikTok } from "./abstract/AbstractTikTok";
+import { BaseKey } from "./abstract/Base";
 
-export class TikTokLite extends Base{
-
-    register: UiSelector
+export class TikTokLite extends AbstractTikTok{
 
     constructor(){
         super()
         this.appName = NAME_VEDIO_TIKTOK_LITE
         this.packageName = PACKAGE_VEDIO_TIKTOK_LITE
-        this.register = className("android.widget.ImageView").depth(19).drawingOrder(1)
-        this.tab = id(this.packageName+":id/root_view").boundsInside(0,device.height * 4 / 5, device.width, device.height)
+        this.tab = id(this.packageName+":id/root_view")
+        this.initialComponent = this.tab
+        this.initialNum = 0
+    }
+
+    move(): void {
+        if(this.moveFlag){
+            swipeDown(Move.Fast, 1000)
+        } else {
+            swipeUp(Move.Fast, 1000)
+        }
+        waitRandomTime(2)
+        if(searchByOcrRecognize("日常任务")[0] !== undefined){
+            this.moveFlag = true
+        }
+        if(searchByOcrRecognize("已经到底了")[0] !== undefined){
+            this.moveFlag = false
+        }
     }
 
     @measureExecutionTime
-    highEff(): void {
-        this.signIn()
-        this.openTreasure()
-    }
-    @measureExecutionTime
-    medEff(): void {
-        this.watchLive()
-        this.shopping()
-    }
-    @measureExecutionTime
-    lowEff(time: number): void {
-        doFuncAtGivenTime(time, 10 * 60, (perTime: number) => {
-            this.swipeVideo(perTime)
-            this.openTreasure()
-            this.watchAds()
-        })
-    }
-    @measureExecutionTime
     weight(): void {
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
+        this.goto(-1)
+        while(searchByOcrRecognize("金币收益.*")[0] === undefined){
+            this.move()
         }
-        scrollTo("金币收益")
-        normalClick(resizeX(random(104, 328)), resizeY(random(389, 493)))
-        let tmp = textMatches(/(\d+)/)
-        .boundsInside(0, 0, resizeX(328), resizeY(594)).findOnce()
-        if(tmp != null) {
-            this.store(BaseKey.Weight, parseInt(tmp.text()))
+        const [_, name]:any = searchByOcrRecognize("金币收益.*")
+        let weight = getNumFromComponent(name)
+        if(weight === 0){
+            const [_, num]:any = searchByOcrRecognize("[0-9]+")
+            weight = getNumFromComponent(num)
         }
+        this.store(BaseKey.Weight, weight)
     }
 
     @functionLog("签到")
     signIn(): void {
-        //this.goto(-1)
-        if(dialogClick("立即签到.+")){
-            this.watchAdsForCoin("日常福利")
+        this.goto(-1)
+        if(dialogClick("立即签到.+|立即领取.+")){
+            this.watchAdsForCoin("首页")
         }
     }
 
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goto(-1)
-        if(findAndClick(text("开宝箱得金币"))){
-            this.watchAdsForCoin("日常任务")
+        if(ocrClick("开宝箱得金币")){
+            this.watchAdsForCoin("首页")
         }
     }
 
     @functionLog("看视频")
     watchAds(): void {
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
-        }
-        if(findAndClick(text("去观看"))){
-            // this.watchUntil()
+        this.goto(-1)
+        if(this.scrollOcrClick(".?去领取.?", "看广告赚金币.*")){
+            this.watch(text("首页"))
         }
     }
 
     @functionLog("看直播")
     watchLive(): void {
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
-        }
-        if(findAndClick(text("去看看"))){
-            for(let i = 0;i<10;i++){
-                let tmp = text("开宝箱").findOne(3 * 65 * 1000)
-                if(tmp != null) {
+        this.goto(-1)
+        if(this.scrollOcrClick(".?去看看.?", "看直播开宝箱.*")){
+            while(text("再等一下").exists()){
+                let tmp = text("开宝箱").findOne(3 * 60 * 1000)
+                if(tmp != null){
                     randomClick(tmp.bounds())
-                    back()
+                    closeByImageMatching()
+                } else {
+                    break
                 }
             }
-            this.backUntilFind(text("日常任务"))
+            this.backUntilFind(text("首页"))
+        }
+    }
+
+    @functionLog("浏览爆款")
+    shoppingHot():void{
+        this.goto(-1)
+        if(this.scrollOcrClick(".?去抢购.?", ".?浏览爆款得金币.*")){
+            moveDown(130, 2)
+            this.backUntilFind(text("首页"))
         }
     }
 
     @functionLog("逛街")
     shopping(): void{
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
-        }
-        if(findAndClick(text("去逛街"))){
-            moveDown(95, 2)
-        }
-    }
-
-    @functionLog("晚安小岛")
-    goodNight(): void{
-        if(!text("日常任务").exists()){
-            this.goTo(this.register, -1)
-        }
-        if(findAndClick(text("去小岛"))){
-            if(findAndClick(text("我睡觉了"))){
-                this.backUntilFind(text("日常任务"))
-            }
+        this.goto(-1)
+        if(this.scrollOcrClick(".?去.?街.?", ".?街赚钱.*")){
+            moveDown(65, 4)
+            this.backUntilFind(text("首页"))
         }
     }
 
     @functionLog("刷视频")
     swipeVideo(totalTime: number): void {
-        this.goTo(this.tab, 0)
+        this.goto(0)
         moveDown(totalTime, 10)
     }
 
     //自定义跳转
     goto(num: number){
+        const [bounds,_] = search(className("android.widget.HorizontalScrollView"))
+        const center = (bounds.top + bounds.bottom)/2
+        this.goTo(this.tab, 0)
         //任务页
         if(num === -1){
-            if(this.tab.exists()){
-                log(this.tab.findOnce())
-                this.goTo(this.register, num)
+            if(center < 500){
+                findAndClick(className("android.widget.FrameLayout"),{fixed:true, bounds:{top:center, bottom:device.height / 3, left:device.width * 2 / 3}})
             } else {
-                Record.log("日常任务")
-                this.backUntilFind(text("日常任务"))
+                this.backUntilFind(this.tab)
             }
-        } else {
-            this.goTo(this.tab, num)
+        } else if(num === 0){
+            if(center > 500){
+                back()
+            }
         }
     }
 }

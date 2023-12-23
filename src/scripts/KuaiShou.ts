@@ -2,7 +2,7 @@ import { dialogClick, findAndClick, fixedClick, scrollClick } from "../common/cl
 import { Move } from "../common/enums";
 import { scrollTo } from "../common/search";
 import { closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, doFuncAtGivenTimeByEstimate, moveDown, randomExecute, resizeX, resizeY, swipeDown, waitRandomTime } from "../common/utils";
-import { MAX_CYCLES_COUNTS, NAME_VEDIO_KUAISHOU, PACKAGE_VEDIO_KUAISHOU } from "../global";
+import { MAX_CYCLES_COUNTS, NAME_VEDIO_KUAISHOU, PACKAGE_VEDIO_KUAISHOU, WAIT_TIME_AFTER_CLICK } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { Base, BaseKey } from "./abstract/Base";
@@ -26,10 +26,14 @@ export class KuaiShou extends Base{
 
     @measureExecutionTime
     highEff(): void {
+        fixedClick("我知道了")
         this.signIn()
         randomExecute([
             ()=>{this.openTreasure()},
             ()=>{this.mealSupp()},
+            ()=>{this.like()},
+            ()=>{this.comment()},
+            ()=>{this.collect()},
             ()=>{this.like()},
             ()=>{this.comment()},
             ()=>{this.collect()},
@@ -90,7 +94,10 @@ export class KuaiShou extends Base{
     @functionLog("看广告")
     watchAds(): boolean {
         this.goto(-1)
-        if(findAndClick("领福利 赚更多", {coverBoundsScaling:1.2, leftRange:"看广告得.*金币"})){
+        if(findAndClick("领福利 赚更多", {
+            coverBoundsScaling:1.2, 
+            leftRange:"看广告得.*金币", 
+            clickUntilGone:true})){
             this.watch(text("日常任务"))
             return true
         }
@@ -100,7 +107,10 @@ export class KuaiShou extends Base{
     @functionLog("看直播")
     watchlive(): void {
         this.goto(-1)
-        if(findAndClick("去观看 限时领", {coverBoundsScaling:1.2, leftRange:"看直播得.*金币"})){
+        if(findAndClick("去观看 限时领", {
+            coverBoundsScaling:1.2, 
+            leftRange:"看直播得.*金币", 
+            clickUntilGone:true})){
             for(let i = 0;i < 6;i++){
                 swipeDown(Move.Fast, 1000)
                 waitRandomTime(2)
@@ -126,7 +136,7 @@ export class KuaiShou extends Base{
             if(fixedClick("领取饭补")){
                 this.watchAdsForCoin("看直播")
             }
-            while(cycleCounts < MAX_CYCLES_COUNTS && fixedClick(".*待补签")){
+            while(++cycleCounts < MAX_CYCLES_COUNTS && fixedClick(".*待补签")){
                 this.watch(text("已补签"))
             }
         }
@@ -134,36 +144,41 @@ export class KuaiShou extends Base{
 
     @functionLog("点赞")
     like(): void{
-        for(let i = 0;i<2; i++){
-            this.goto(-1)
-            if(scrollClick("去点赞", "点赞1个作品")){
-                this.preNum = 1
-                while(!fixedClick(id(this.packageName+":id/like_icon"))){
-                    swipeDown(Move.Fast, 400)
-                    waitRandomTime(2)
-                }
+        this.goto(-1)
+        if(scrollClick("去点赞", "点赞1个作品")){
+            this.preNum = 1
+            swipeDown(Move.Fast, 400)
+            waitRandomTime(2)
+            let cycleCounts = 0
+            while(++cycleCounts < MAX_CYCLES_COUNTS 
+                && !fixedClick(id(this.packageName+":id/like_icon"))){
+                swipeDown(Move.Fast, 400)
+                waitRandomTime(2)
             }
         }
     }
 
     @functionLog("评论")
     comment(): void{
-        for(let i = 0;i<2; i++){
-            this.goto(-1)
-            if(scrollClick("去评论", "评论1个作品")){
-                this.preNum = 1
-                while(!fixedClick(id(this.packageName+":id/comment_icon"))){
-                    swipeDown(Move.Fast, 400)
-                    waitRandomTime(2)
-                }
-                if(fixedClick(id(this.packageName+":id/editor_holder_text"))){
-                    let tmp = id(this.packageName+":id/editor").findOnce()
-                    if(tmp != null){
-                        tmp.setText("打卡")
-                        waitRandomTime(3)
-                        if(fixedClick(id(this.packageName+":id/finish_button"))){
-                            back()
-                        }
+        this.goto(-1)
+        if(scrollClick("去评论", "评论1个作品")){
+            this.preNum = 1
+            swipeDown(Move.Fast, 400)
+            waitRandomTime(2)
+            let cycleCounts = 0
+            while(++cycleCounts < MAX_CYCLES_COUNTS
+                && !fixedClick(id(this.packageName+":id/comment_icon"))){
+                swipeDown(Move.Fast, 400)
+                waitRandomTime(2)
+            }
+            if(++cycleCounts < MAX_CYCLES_COUNTS 
+                && fixedClick(id(this.packageName+":id/editor_holder_text"))){
+                let tmp = id(this.packageName+":id/editor").findOnce()
+                if(tmp != null){
+                    tmp.setText("打卡")
+                    waitRandomTime(3)
+                    if(fixedClick(id(this.packageName+":id/finish_button"))){
+                        back()
                     }
                 }
             }
@@ -172,14 +187,16 @@ export class KuaiShou extends Base{
 
     @functionLog("收藏")
     collect(): void{
-        for(let i = 0;i<2; i++){
-            this.goto(-1)
-            if(scrollClick("去收藏", "收藏1个作品")){
-                this.preNum = 1
-                while(!fixedClick(id(this.packageName+":id/collect_icon"))){
-                    swipeDown(Move.Fast, 400)
-                    waitRandomTime(2)
-                }
+        this.goto(-1)
+        if(scrollClick("去收藏", "收藏1个作品")){
+            this.preNum = 1
+            swipeDown(Move.Fast, 400)
+            waitRandomTime(2)
+            let cycleCounts = 0
+            while(++cycleCounts < MAX_CYCLES_COUNTS 
+                && !fixedClick(id(this.packageName+":id/collect_icon"))){
+                swipeDown(Move.Fast, 400)
+                waitRandomTime(2)
             }
         }
     }
@@ -194,6 +211,7 @@ export class KuaiShou extends Base{
 
     //自定义跳转
     goto(num: number){
+        //收起来 pendant_red_packet
         //任务页
         if(num === -1){
             if(this.tab.exists()){

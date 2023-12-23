@@ -4,6 +4,7 @@ import { Record } from "../lib/logger";
 import { findAndClick, normalClick } from './click';
 import { Move } from "./enums";
 import { Bounds } from './interfaces';
+import { search } from "./search";
 
 
 //转化坐标
@@ -46,7 +47,7 @@ export function getScreenImage(bounds?: Bounds){
         console.hide()
         sleep(100)
     }
-    let img = captureScreen()
+    const img = captureScreen()
     if(SHOW_CONSOLE) console.show()
     waitRandomTime(1)
     return images.clip(img, x1, y1, x2-x1, y2-y1)
@@ -135,14 +136,14 @@ export function close(){
     if(!closeByImageMatching(true)){
         switch(times){
             case 0:
-                if(!findAndClick(classNameMatches("android\.widget\.(ImageView|Button)"),
+                if(!findAndClick(classNameMatches("android\.widget\.(ImageView|Button|FrameLayout)"),
                 {fixed:true, bounds:{left:device.width * 3 / 5, bottom:device.height * 1 / 5}})){
                     back()
                     waitRandomTime(4)
                 }
                 break
             case 1:
-                if(!findAndClick(classNameMatches("android\.widget\.(ImageView|Button)"), 
+                if(!findAndClick(className("android\.widget\.(Button|ImageView)").idContains("close"),
                 {fixed:true, bounds:{right:device.width * 2 / 5, bottom:device.height * 1 / 5}})){
                     back()
                     waitRandomTime(4)
@@ -492,4 +493,14 @@ export function recognizeTextByLeftToRight(img: Image){
     )
     return list.map(obj => obj.text).join("")
 }
+
+export function getNumFromComponent(str:string){
+    const match = str.match("[0-9]+")
+    if(match){
+        const time = parseInt(match[0])
+        return time
+    }
+    return 0
+}
+
 

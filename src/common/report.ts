@@ -1,5 +1,5 @@
-import { APP_TOKEN, ROBOT_ID, WX_PUSHER_URL, _TOKEN } from "../global";
-import { LOG_STACK, LogLevel, Record } from "../lib/logger";
+import { APP_TOKEN, WX_PUSHER_URL, _TOKEN } from "../global";
+import { LOG_STACK, Record } from "../lib/logger";
 import { BaseKey } from "../scripts/abstract/Base";
 import { getScreenImage } from "./utils";
 
@@ -20,7 +20,7 @@ export function sendIncomeMessageToWxPuher(str: string){
 }
 
 export function toShowString(list: any[]){
-    let stack: string[] = [`id: ${ROBOT_ID}\n`]
+    let stack: string[] = [`型号: ${device.product}\n`]
     let sumWeight = 0
     let sumMoney = 0
     for (let app of list) {

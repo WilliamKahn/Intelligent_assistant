@@ -3,7 +3,7 @@ import { CurrentAppBanned, ExceedMaxNumberOfAttempts } from "../lib/exception"
 import { Record } from "../lib/logger"
 import { Dialog } from "./enums"
 import { Bounds, FindAndClickOptions, NormalClickOptions, RandomClickOptions } from "./interfaces"
-import { scrollTo } from "./search"
+import { scrollTo, search } from "./search"
 import { boundsScaling, close, closeByImageMatching, findLargestIndexes, getGrayscaleHistogram, getScreenImage, judgeFuncIsWorkByImg, merge, mergeHistogram, waitRandomTime } from "./utils"
 
 //通用方法
@@ -25,8 +25,8 @@ export function dialogClick(text:string){
         bounds: {
             bottom: device.height * 4 / 5, 
             top: device.height * 1 / 3,
-            left: device.width * 1 / 5,
-            right: device.width * 4 / 5
+            left: device.width * 1 / 6,
+            right: device.width * 5 / 6
         }
     })
 }
@@ -39,7 +39,7 @@ export function readClick(selector: UiSelector, index: number){
 }
 //滑动、遮挡校验、左侧定位（必定存在）、重复点击 （任务列表）
 export function scrollClick(text:string, range?:string){
-    return findAndClick(text, {leftRange:range, coverBoundsScaling:1, check:true})
+    return findAndClick(text, {leftRange:range, coverBoundsScaling:1, clickUntilGone:true})
 }
 //固定、一定存在、点击改变
 export function selectedClick(text: string, threshold: number){
@@ -50,9 +50,9 @@ export function clickDialogOption(options?:Dialog){
         options = random(Dialog.Positive, Dialog.Negative)
     }
     if(options === Dialog.Positive){//
-        return fixedClick(merge(["继续观看", "抓住奖励机会", "留下看看", "关闭", "领取奖励"]))
+        return fixedClick(merge(["继续观看", "抓住奖励机会", "留下看看", "(残忍)?关闭", "领取奖励"]))
     } else if(options === Dialog.Negative) {
-        return fixedClick(merge(["取消", "关闭", "(以后|下次)再说", "(直接|坚持|仍要)?退出(阅读)?", "暂不(加入|添加)", "(残忍)离开", "放弃奖励", "(我)?知道了"]))
+        return fixedClick(merge(["取消", "(残忍)?关闭", "(以后|下次)再说", "(直接|坚持|仍要)?退出(阅读)?", "暂不(加入|添加)", "(残忍)离开", "放弃奖励", "(我)?知道了"]))
     }
 }
 /**
@@ -89,6 +89,9 @@ export function findAndClick(component: string|UiSelector, options?:FindAndClick
         randomClick(bounds, options)
         if (options?.clickUntilGone) {
             options.waitFor = false
+            if(options.leftRange && search(options.leftRange)[0]  === undefined){
+                return true
+            }
             findAndClick(component, options, times)
         }
         return true

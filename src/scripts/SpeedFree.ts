@@ -29,6 +29,7 @@ export class SpeedFree extends Base {
     @measureExecutionTime
     lowEff(time: number): void {
         doFuncAtGivenTime(time, 10 * 60, (perTime:number) => {
+            this.listenBook()
             this.readBook(perTime)
             this.openTreasure()
             this.reward()

@@ -1,9 +1,9 @@
 import { sendErrorMessage } from "../common/report";
 import { clearBackground, convertSecondsToMinutes, waitRandomTime } from "../common/utils";
-import { MAX_RETRY_COUNTS} from "../global";
+import { MAX_RETRY_COUNTS, STORAGE, STORAGE_APP} from "../global";
 import { BaseKey } from "../scripts/abstract/Base";
 import { ExceedMaxNumberOfAttempts, isCurrentAppBanned } from "./exception";
-import { Record } from "./logger";
+import { LOG_STACK, Record } from "./logger";
 
 /**
  * @description 方法日志
@@ -95,16 +95,19 @@ export function measureExecutionTime(_: any, key: string, descriptor: PropertyDe
       const executionTime = (endTime.getTime() - startTime.getTime())/1000;
       Record.debug(`${key}执行了${convertSecondsToMinutes(executionTime)}分钟`)
       const instance = this as any;
-      if(key === "highEff"){
-        Record.debug(`highEff时间调整为${convertSecondsToMinutes(executionTime)}分钟`)
-        instance.highEffEstimatedTime = executionTime
-        instance.store(BaseKey.HighEffEstimatedTime, executionTime)
-      } else if(key === "medEff") {
-        Record.debug(`medEff时间调整为${convertSecondsToMinutes(executionTime)}分钟`)
-        instance.medEffEstimatedTime = executionTime
-        instance.store(BaseKey.MedEffEstimatedTime, executionTime)
-      } 
-      
+      if(instance.constructor.name === STORAGE.get(STORAGE_APP)){
+        Record.debug("不调整时间")
+      }else{
+        if(key === "highEff"){
+          Record.debug(`highEff时间调整为${convertSecondsToMinutes(executionTime)}分钟`)
+          instance.highEffEstimatedTime = executionTime
+          instance.store(BaseKey.HighEffEstimatedTime, executionTime)
+        } else if(key === "medEff") {
+          Record.debug(`medEff时间调整为${convertSecondsToMinutes(executionTime)}分钟`)
+          instance.medEffEstimatedTime = executionTime
+          instance.store(BaseKey.MedEffEstimatedTime, executionTime)
+        }
+      }
       return executionTime;
     }
     return descriptor;
@@ -136,6 +139,7 @@ export function startDecorator(_: any, __: string, descriptor: PropertyDescripto
       const executionTime = (endTime.getTime() - startTime.getTime())/1000;
       Record.info("即将执行下一个app")
       Record.debug(`剩余${convertSecondsToMinutes(args[0] - executionTime)}分钟`)
+      LOG_STACK.clear()
       //返回剩余时间
       return args[0] - executionTime
     }
