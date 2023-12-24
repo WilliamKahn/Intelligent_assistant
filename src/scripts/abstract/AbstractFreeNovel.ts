@@ -1,6 +1,6 @@
-import { dialogClick, findAndClick, fixedClick, goneClick, normalClick, ocrClick, readClick, scrollClick, selectedClick } from "../../common/click";
+import { dialogClick, findAndClick, fixedClick, goneClick, normalClick, ocrClick, readClick, scrollClick, scrollPopClick, selectedClick } from "../../common/click";
 import { scrollTo } from "../../common/search";
-import { doFuncAtGivenTime, randomExecute, waitRandomTime } from "../../common/utils";
+import { doFuncAtGivenTime, getNumFromComponent, randomExecute, waitRandomTime } from "../../common/utils";
 import { MAX_CYCLES_COUNTS } from "../../global";
 import { functionLog, measureExecutionTime, startDecorator } from "../../lib/decorators";
 import { Record } from "../../lib/logger";
@@ -49,7 +49,7 @@ export abstract class AbstractFreeNovel extends Base {
                 this.continueListen()
             }
             let actualTime = waitRandomTime(perTime)
-            this.reward2()
+            this.reward()
             this.openTreasure()
             return actualTime
         })
@@ -132,20 +132,20 @@ export abstract class AbstractFreeNovel extends Base {
         if(scrollClick("去抽奖", "幸运大转盘.*")){
             let tmp = textStartsWith("今日剩余抽奖次数").findOnce()
             if(tmp != null){
-                const count = tmp.text().match("[0-9]+")
-                if(count){
-                    Record.debug(`${count}`)
-                    for(let i = 0;i<parseInt(count[0]);i++) {
-                        findAndClick("抽奖", {
-                            fixed:true,
-                            ocrRecognize:true,
-                            waitTimes:10,
-                            bounds:{bottom: 1656}
-                        })
+                const num = getNumFromComponent(tmp.text())
+                Record.debug(`${num}`)
+                for(let i = 0; i < num;i++) {
+                    if(findAndClick("抽奖|看视频", {
+                        fixed:true,
+                        ocrRecognize:true,
+                        waitTimes:10,
+                        bounds:{bottom: device.height *2/3, top: device.height/3}
+                    })){
                         this.watch(text("幸运大转盘"))
                         findAndClick("好的", {fixed:true, waitFor:true})
                     }
                 }
+                
             }
         }
     }
@@ -153,22 +153,14 @@ export abstract class AbstractFreeNovel extends Base {
     @functionLog("领取奖励")
     reward(): void {
         this.goTo(this.tab, 2)
-        let cycleCounts = 0
         this.watchAdsForCoin("日常福利")
-        while(++cycleCounts < MAX_CYCLES_COUNTS &&
-            scrollClick("领金币", "阅读赚金币.*")){
-            this.watchAdsForCoin("日常福利")
-        }
-    }
-
-    @functionLog("领取奖励")
-    reward2(): void {
-        this.goTo(this.tab, 2)
         let cycleCounts = 0
-        this.watchAdsForCoin("日常福利")
-        while(++cycleCounts < MAX_CYCLES_COUNTS &&
-            scrollClick("领金币", "听书赚金币.*")){
-            this.watchAdsForCoin("日常福利")
+        const list = ["阅读赚金币.*", "听书赚金币.*"]
+        for(const range of list){
+            while(++cycleCounts < MAX_CYCLES_COUNTS &&
+                scrollPopClick("领金币", range)){
+                this.watchAdsForCoin("日常福利")
+            }
         }
     }
 

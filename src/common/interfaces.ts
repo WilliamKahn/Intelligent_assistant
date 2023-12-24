@@ -22,6 +22,7 @@ export type RandomClickOptions = NormalClickOptions & {
 export type ScrollToOptions = SearchOptions & {
     //遮挡范围系数
     coverBoundsScaling?:number
+    leftToRight?:boolean
 }
 
 export type SearchOptions = SearchByLeftRangeOptions & {

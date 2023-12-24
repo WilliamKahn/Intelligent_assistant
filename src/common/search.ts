@@ -73,8 +73,8 @@ export function scrollTo(component: string|UiSelector, options?: ScrollToOptions
                 const img = getScreenImage(boundsScaling(bounds, options.coverBoundsScaling))
                 const bigImg = images.scale(img, 3, 3)
                 const grayImg = images.cvtColor(bigImg, "BGR2GRAY")
-                //const str = ocr.recognizeText(grayImg)
-                const str = recognizeTextByLeftToRight(grayImg)
+                const str = options.leftToRight?recognizeTextByLeftToRight(grayImg):ocr.recognizeText(grayImg)
+                // const str = recognizeTextByLeftToRight(grayImg)
                 // grayImg.saveTo("/sdcard/result.jpg")
                 // app.viewFile("/sdcard/result.jpg")
                 img.recycle()
@@ -184,6 +184,7 @@ export function searchByOcrRecognize(str: string, options?:SearchByOcrRecognizeO
     adaptiveImg.recycle()
     let list:OcrResultDetail[] = []
     for(let item of res.results){
+        // log(item.text)
         if(RegExp("^"+str+"$").test(item.text)){
             list.push(item)
         }
@@ -227,7 +228,6 @@ export function searchByUiSelect(component:UiSelector, options?:SearchByUiSelect
                 }
             }
         }
-        waitRandomTime(2)
     }
     let list:any = component.find()
     if(list.nonEmpty()){

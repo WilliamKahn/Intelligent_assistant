@@ -54,9 +54,11 @@ export class KuaiShouFree extends Base{
     watchAds(): void {
         this.goTo(this.tab, 2)
         let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && scrollClick("去赚钱", "看视频赚[0-9]+金币")){
-            this.watch(text("日常任务"))
+        if(textMatches("看视频赚[0-9]+金币").exists()){
+            while(++cycleCounts < MAX_CYCLES_COUNTS 
+                && scrollClick("去赚钱", "看视频赚[0-9]+金币")){
+                this.watch(text("日常任务"))
+            }
         }
     }
 

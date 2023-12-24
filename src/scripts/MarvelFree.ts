@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, readClick, scrollClick, selectedClick } from "../common/click";
+import { findAndClick, fixedClick, readClick, scrollClick, scrollPopClick, selectedClick } from "../common/click";
 import { scrollTo } from "../common/search";
 import { closeByImageMatching, doFuncAtGivenTime, resizeX, resizeY } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_MARVEL_FREE, PACKAGE_READ_MARVEL_FREE } from "../global";
@@ -89,7 +89,7 @@ export class MarvelFree extends Base{
         this.goTo(this.tab, 2)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && findAndClick(text("领金币").depth(24))) {
+            && scrollPopClick("领金币", "阅读领金币")) {
                 this.watchAdsForCoin("日常福利")
         }
     }

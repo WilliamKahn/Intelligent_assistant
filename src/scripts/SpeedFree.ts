@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, dialogClick, readClick, scrollClick } from "../common/click";
+import { findAndClick, fixedClick, dialogClick, readClick, scrollClick, scrollPopClick } from "../common/click";
 import { scrollTo } from "../common/search";
 import { doFuncAtGivenTime, merge, resizeX, resizeY, } from "../common/utils";
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_SPEED_FREE, PACKAGE_READ_SPEED_FREE } from "../global";
@@ -119,7 +119,7 @@ export class SpeedFree extends Base {
         let list = ["阅读赚海量金币", "听书赚海量金币"]
         for(let range of list){
             while(++cycleCounts < MAX_CYCLES_COUNTS
-                && scrollClick("领取", range)) {
+                && scrollPopClick("领取", range)) {
                 this.watchAdsForCoin("日常福利")
             }
         }

@@ -1,9 +1,14 @@
-import { findAndClick, fixedClick } from "../../common/click";
-import { merge } from "../../common/utils";
+import { findAndClick, fixedClick, scrollClick, scrollPopClick } from "../../common/click";
+import { Move } from "../../common/enums";
+import { search } from "../../common/search";
+import { closeByImageMatching, merge, swipeDown, swipeUp, waitRandomTime } from "../../common/utils";
+import { MAX_CYCLES_COUNTS } from "../../global";
 import { CurrentAppBanned } from "../../lib/exception";
 import { Base } from "./Base";
 
 export abstract class AbstractTomato extends Base {
+
+    moveFlag:boolean = true
 
     constructor() {
         super()
@@ -25,6 +30,38 @@ export abstract class AbstractTomato extends Base {
     open(): void{
         if (fixedClick("开宝箱得金币")) {
             this.watchAdsForCoin("日常福利")
+        }
+    }
+
+    scrollNoneClick(text:string, range:string, clickUntilGone:boolean): boolean{
+        let cycleCounts = 0
+        while(++cycleCounts < MAX_CYCLES_COUNTS
+             && search(range)[0] === undefined){
+            this.move()
+        }
+        if(cycleCounts >= MAX_CYCLES_COUNTS){
+            return false
+        }
+        if(clickUntilGone){
+            return scrollClick(text, range)
+        } else {
+            return scrollPopClick(text, range)
+        }
+    }
+
+    move(): void {
+        const [boundsBefore,_] = search("金币献爱心", {waitFor:true})
+        if(this.moveFlag){
+            swipeDown(Move.Fast, 1000)
+        } else {
+            swipeUp(Move.Fast, 1000)
+        }
+        waitRandomTime(2)
+        const [boundsAfter,__] = search("金币献爱心", {waitFor:true})
+        if(boundsBefore.top === boundsAfter.top){
+            if(!closeByImageMatching()){
+                this.moveFlag = !this.moveFlag
+            }
         }
     }
 }

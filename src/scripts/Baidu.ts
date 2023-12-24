@@ -1,6 +1,6 @@
-import { dialogClick, findAndClick, fixedClick, scrollClick, selectedClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, ocrClick, scrollClick, selectedClick } from "../common/click";
 import { scrollTo, searchByOcrRecognize } from "../common/search";
-import { closeByImageMatching, convertSecondsToMinutes, moveDown, randomExecute, waitRandomTime } from "../common/utils";
+import { closeByImageMatching, convertSecondsToMinutes, merge, moveDown, randomExecute, waitRandomTime } from "../common/utils";
 import { NAME_VEDIO_BAIDU, NAME_VEDIO_BAIDU_BIG, PACKAGE_VEDIO_BAIDU, PACKAGE_VEDIO_BAIDU_BIG } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
@@ -21,12 +21,14 @@ export class Baidu extends Base {
     @measureExecutionTime
     highEff(): void {
         this.signIn()
+        this.openTreasure()
         randomExecute([
             ()=>{this.searchForCoin()},
-            ()=>{this.openTreasure()},
             ()=>{this.watchAds()},
-            ()=>{this.swipeVideo(5 * 60)},
+            ()=>{this.makesureFortune()},
+            ()=>{this.swipeVideo(4 * 60)},
         ])
+        this.openTreasure()
     }
     
     @measureExecutionTime
@@ -82,20 +84,37 @@ export class Baidu extends Base {
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goto(0)
+        this.watchAdsForCoin("金币收益")
         if(fixedClick("开宝箱得金币")){
             this.watchAdsForCoin("金币收益")
         }
     }
 
-    @functionLog("刷视频")
-    swipeVideo(totalTime: number): void {
-        this.goTo(this.tab, 0)
-        if(selectedClick("发现", 170)){
-            if(findAndClick(className("android.widget.ImageView"), {bounds:{top:device.height/5}})){
-                Record.log(`预计刷视频${convertSecondsToMinutes(totalTime)}分钟`)
-                moveDown(totalTime, 10)
+    @functionLog("测运势")
+    makesureFortune(): void{
+        this.goto(0)
+        if(scrollClick("测一测", "测测今日运势")){
+            if(ocrClick("测一测")){
+                closeByImageMatching()
+                this.backUntilFind(text("金币收益"))
+                dialogClick(merge(["(开心|立即)收下", "(我)?知道了"]))
             }
         }
+    }
+
+    @functionLog("刷视频")
+    swipeVideo(totalTime: number): void {
+        this.goto(0)
+        if(scrollClick("去完成", "阅读赚金币")){
+            this.preNum = 0
+            if(selectedClick("发现", 170)){
+                if(findAndClick(className("android.widget.ImageView"), {bounds:{top:device.height/5}})){
+                    Record.log(`预计刷视频${convertSecondsToMinutes(totalTime)}分钟`)
+                    moveDown(totalTime, 30)
+                }
+            }
+        }
+        
     }
 
     goto(num: number): void{

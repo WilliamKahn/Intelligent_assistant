@@ -25,8 +25,8 @@ export function dialogClick(text:string){
         bounds: {
             bottom: device.height * 4 / 5, 
             top: device.height * 1 / 3,
-            left: device.width * 1 / 6,
-            right: device.width * 5 / 6
+            left: device.width * 1 / 5,
+            right: device.width * 4 / 5
         }
     })
 }
@@ -40,6 +40,9 @@ export function readClick(selector: UiSelector, index: number){
 //滑动、遮挡校验、左侧定位（必定存在）、重复点击 （任务列表）
 export function scrollClick(text:string, range?:string){
     return findAndClick(text, {leftRange:range, coverBoundsScaling:1, clickUntilGone:true})
+}
+export function scrollPopClick(text:string, range?:string){
+    return findAndClick(text, {leftRange:range, coverBoundsScaling:1})
 }
 //固定、一定存在、点击改变
 export function selectedClick(text: string, threshold: number){
@@ -85,6 +88,9 @@ export function findAndClick(component: string|UiSelector, options?:FindAndClick
         }
         if(name && name !== "" && !/^[0-9]+$/.test(name)){
             Record.log(name)
+        }
+        if(options?.waitFor){
+            waitRandomTime(2)
         }
         randomClick(bounds, options)
         if (options?.clickUntilGone) {

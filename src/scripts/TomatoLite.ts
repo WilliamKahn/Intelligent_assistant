@@ -1,7 +1,7 @@
-import { findAndClick, fixedClick, dialogClick, scrollClick, selectedClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, scrollClick, scrollPopClick, selectedClick } from "../common/click";
 import { scrollTo } from "../common/search";
-import { moveDown, randomExecute, resizeX, resizeY, } from "../common/utils";
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_TOMATO_LITE, PACKAGE_READ_TOMATO_LITE } from "../global";
+import { randomExecute, resizeX, resizeY } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_READ_TOMATO_LITE, PACKAGE_READ_TOMATO_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { AbstractTomato } from "./abstract/AbstractTomato";
@@ -51,7 +51,7 @@ export class TomatoLite extends AbstractTomato {
     signIn(): void{
         this.goTo(this.tab, 2)
         this.sign()
-        if(findAndClick("立即签到", {coverBoundsScaling:1})){
+        if(scrollPopClick("立即签到", "签到")){
             this.sign()
         }
     }
@@ -74,7 +74,7 @@ export class TomatoLite extends AbstractTomato {
         let cycleCounts = 0
         for(let range of list){
             while(++cycleCounts < MAX_CYCLES_COUNTS 
-                && scrollClick("立即领取", range)) {
+                && scrollPopClick("立即领取", range)) {
                     this.watchAdsForCoin("日常福利")
             }
         }

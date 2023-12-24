@@ -151,7 +151,7 @@ export abstract class Base {
      * @description 基于视觉观看广告，
      * @returns 
      */
-    watch(exitSign: UiSelector|number, times:number = 0){
+    watch(exitSign: UiSelector|number, times:number = 0, waitTimes:number = 0){
         let flag:boolean = false
         //回调次数
         if(typeof exitSign === "number") {
@@ -180,27 +180,24 @@ export abstract class Base {
         }
         const [_, name] = search(".*[0-9]+[ ]?[s秒]?.*", {ocrRecognize:true, bounds:{bottom: device.height * 1/5}})
         const waitTime = matchAndJudge(name)
+        waitTimes += waitTime
         Record.debug(`watchTimes = ${times}, waitTime = ${waitTime}`)
         if(text("该视频提到的内容是").findOne(waitTime * 1000)){
             back()
             waitRandomTime(1)
-            this.watch(exitSign, ++times)
+            this.watch(exitSign, ++times, waitTimes)
             return
         }
         waitRandomTime(10)
-        if(findAndClick(".*跳过.*", {fixed:true, bounds:{left:device.width * 2 / 3, bottom:device.height * 1/5}})){
-            if(!clickDialogOption(Dialog.Positive)){
-                waitRandomTime(1)
-                this.watch(exitSign, ++times)
-                return
-            }
+        if(!findAndClick(".*跳过.*", 
+        {fixed:true, bounds:{left:device.width * 2 / 3, bottom:device.height * 1/5}})){
+            close()
         }
-        close()
         //坚持退出 检测
-        if(times >= 3 || !clickDialogOption(Dialog.Positive)){
+        if(waitTimes > 60 || times >= 3 || !clickDialogOption(Dialog.Positive)){
             clickDialogOption(Dialog.Negative)
         }
-        this.watch(exitSign, ++times)
+        this.watch(exitSign, ++times, waitTimes)
     }
 
     /**

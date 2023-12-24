@@ -45,7 +45,7 @@ export abstract class AbstractTikTok extends Base{
 
     scrollOcrClick(str:string, left:string): boolean{
         let cycleCounts = 0
-        while(cycleCounts < MAX_CYCLES_COUNTS
+        while(++cycleCounts < MAX_CYCLES_COUNTS
             && searchByOcrRecognize(left)[0] === undefined){
             this.move()
         }

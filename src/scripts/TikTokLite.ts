@@ -59,7 +59,7 @@ export class TikTokLite extends AbstractTikTok{
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goto(-1)
-        if(ocrClick("开宝箱得金币")){
+        if(findAndClick(".?开宝箱得金币", {ocrRecognize:true, bounds:{top:device.height*4/5,left:device.width/3}})){
             this.watchAdsForCoin("首页")
         }
     }
@@ -76,7 +76,7 @@ export class TikTokLite extends AbstractTikTok{
     watchLive(): void {
         this.goto(-1)
         if(this.scrollOcrClick(".?去看看.?", "看直播开宝箱.*")){
-            while(text("再等一下").exists()){
+            while(textEndsWith("后可开").exists()){
                 let tmp = text("开宝箱").findOne(3 * 60 * 1000)
                 if(tmp != null){
                     randomClick(tmp.bounds())

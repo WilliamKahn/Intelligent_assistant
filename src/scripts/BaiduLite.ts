@@ -1,8 +1,9 @@
-import { dialogClick, findAndClick, fixedClick, scrollClick, selectedClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, normalClick, scrollClick, selectedClick } from "../common/click";
 import { search } from "../common/search";
-import { closeByImageMatching, doFuncAtGivenTime, moveDown, randomExecute, waitRandomTime } from "../common/utils";
+import { closeByImageMatching, doFuncAtGivenTime, moveDown, randomExecute, randomMoveDown, waitRandomTime } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_VEDIO_BAIDU_LITE, PACKAGE_VEDIO_BAIDU_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
+import { Record } from "../lib/logger";
 import { Base, BaseKey } from "./abstract/Base";
 
 export class BaiduLite extends Base {
@@ -131,7 +132,17 @@ export class BaiduLite extends Base {
     @functionLog("刷视频")
     swipeVideo(totalTime: number): void {
         this.goto(0)
-        moveDown(totalTime, 4)
+        if(selectedClick("推荐", 170)){
+            while(totalTime > 0){
+                const slideTime = random(0, totalTime/2)
+                const waitTime = random(0, totalTime/2)
+                moveDown(slideTime, 4)
+                normalClick(device.width/2, device.height/2)
+                totalTime -= waitRandomTime(waitTime)
+                totalTime -= slideTime
+                this.backUntilFind(text("推荐"))
+            }
+        }
     }
 
     @functionLog("开宝箱")

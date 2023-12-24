@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, readClick, scrollClick, selectedClick } from "../common/click";
+import { findAndClick, fixedClick, readClick, scrollClick, scrollPopClick, selectedClick } from "../common/click";
 import { scrollTo } from "../common/search";
 import { convertSecondsToMinutes, doFuncAtGivenTime, merge, resizeX, resizeY, waitRandomTime } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_RED_FRUITS, PACKAGE_READ_RED_FRUITS } from "../global";
@@ -108,7 +108,7 @@ export class RedFruits extends AbstractTomato {
         let cycleCounts = 0
         for(let range of this.list){
             while(++cycleCounts < MAX_CYCLES_COUNTS 
-                && scrollClick("立即领取", range)) {
+                && scrollPopClick("立即领取", range)) {
                 this.watchAdsForCoin("日常福利")
             }
         }
@@ -118,7 +118,7 @@ export class RedFruits extends AbstractTomato {
     signIn(): void {
         this.goTo(text("福利"), -1)
         this.sign()
-        if(findAndClick("去签到", {coverBoundsScaling:1})){
+        if(scrollPopClick("去签到", "签到领金币|明日签到")){
             this.sign()
         }
     }
@@ -128,7 +128,7 @@ export class RedFruits extends AbstractTomato {
         this.goTo(text("福利"), -1)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS && 
-            scrollClick("去观看", "看视频赚海量金币")){
+            scrollClick("立即领取", "看视频赚海量金币")){
             this.watch(text("日常福利"))
         }
     }

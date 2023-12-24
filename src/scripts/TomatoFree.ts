@@ -72,8 +72,7 @@ export class TomatoFree extends AbstractTomato {
     signIn(): void{
         this.goTo(this.tab, 2)
         this.sign()
-        scrollTo("金币献爱心", {waitFor:true})
-        if(findAndClick("去签到",{coverBoundsScaling:1})) {
+        if(this.scrollNoneClick("去签到", "签到领金币|明日签到", false)) {
             this.sign()
         }
     }
@@ -103,7 +102,7 @@ export class TomatoFree extends AbstractTomato {
     @functionLog("领取餐补")
     mealSupp(): void{
         this.goTo(this.tab, 2)
-        if(scrollClick("去领取", "吃饭补贴")){
+        if(this.scrollNoneClick("去领取", "吃饭补贴", true)){
             if(fixedClick("领取.*补贴[0-9]+金币")) {
                 this.watchAdsForCoin("日常福利")
             }
@@ -141,7 +140,7 @@ export class TomatoFree extends AbstractTomato {
         let list = ["阅读赚金币", "听书赚金币", "看短剧赚金币"]
         for(let range of list){
             while(++cycleCounts < MAX_CYCLES_COUNTS && 
-                scrollClick("立即领取", range)
+                this.scrollNoneClick("立即领取", range, false)
             ) {
                 this.watchAdsForCoin("日常福利")
             }
@@ -153,7 +152,7 @@ export class TomatoFree extends AbstractTomato {
         this.goTo(this.tab, 2)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && scrollClick("立即领取", "看视频赚金币")){
+            && this.scrollNoneClick("立即领取", "看视频赚金币", true)){
             this.watch(text("日常福利"))
         }
     }

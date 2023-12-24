@@ -97,7 +97,9 @@ export class KuaiShou extends Base{
         if(findAndClick("领福利 赚更多", {
             coverBoundsScaling:1.2, 
             leftRange:"看广告得.*金币", 
-            clickUntilGone:true})){
+            clickUntilGone:true,
+            leftToRight: true
+        })){
             this.watch(text("日常任务"))
             return true
         }

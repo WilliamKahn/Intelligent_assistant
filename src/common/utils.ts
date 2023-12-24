@@ -1,7 +1,7 @@
 import { Image, Point } from "images";
 import { DEVICE_HEIGHT, DEVICE_WIDTH, SHOW_CONSOLE } from "../global";
 import { Record } from "../lib/logger";
-import { findAndClick, normalClick } from './click';
+import { findAndClick, fixedClick, normalClick } from './click';
 import { Move } from "./enums";
 import { Bounds } from './interfaces';
 import { search } from "./search";
@@ -86,8 +86,15 @@ export function clearBackground(){
 export function moveDown(totalTime:number, interval:number): void{
     let watchTime = 0
     while(totalTime > watchTime){
-        swipeDown(Move.Fast, 400)
+        swipeDown(Move.Fast, 500)
         watchTime += waitRandomTime(interval)
+    }
+}
+export function randomMoveDown(totalTime:number, intervalFrom:number, intervalTo:number): void{
+    let watchTime = 0
+    while(totalTime > watchTime){
+        swipeDown(Move.Fast, 500)
+        watchTime += waitRandomTime(random(intervalFrom, intervalTo))
     }
 }
 
@@ -134,22 +141,26 @@ export function convertSecondsToMinutes(seconds: number) {
 export function close(){
     const times = random(0,1)
     if(!closeByImageMatching(true)){
-        switch(times){
-            case 0:
-                if(!findAndClick(classNameMatches("android\.widget\.(ImageView|Button|FrameLayout)"),
-                {fixed:true, bounds:{left:device.width * 3 / 5, bottom:device.height * 1 / 5}})){
-                    back()
-                    waitRandomTime(4)
-                }
-                break
-            case 1:
-                if(!findAndClick(className("android\.widget\.(Button|ImageView)").idContains("close"),
-                {fixed:true, bounds:{right:device.width * 2 / 5, bottom:device.height * 1 / 5}})){
-                    back()
-                    waitRandomTime(4)
-                }
-                break
+        if(!fixedClick(idContains("close"))){
+            back()
+            waitRandomTime(4)
         }
+        // switch(times){
+        //     case 0:
+        //         if(!findAndClick(classNameMatches("android\.widget\.(ImageView|Button|FrameLayout)"),
+        //         {fixed:true, bounds:{left:device.width * 3 / 5, bottom:device.height * 1 / 5}})){
+        //             back()
+        //             waitRandomTime(4)
+        //         }
+        //         break
+        //     case 1:
+        //         if(!findAndClick(className("android\.widget\.(Button|ImageView)").idContains("close"),
+        //         {fixed:true, bounds:{right:device.width * 2 / 5, bottom:device.height * 1 / 5}})){
+        //             back()
+        //             waitRandomTime(4)
+        //         }
+        //         break
+        // }
     }
 }
 
