@@ -1,5 +1,5 @@
 import { dialogClick, findAndClick, fixedClick, scrollClick, scrollPopClick, selectedClick } from "../common/click";
-import { scrollTo } from "../common/search";
+import { scrollTo, search } from "../common/search";
 import { randomExecute, resizeX, resizeY } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_TOMATO_LITE, PACKAGE_READ_TOMATO_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
@@ -18,14 +18,19 @@ export class TomatoLite extends AbstractTomato {
         .boundsInside(0, device.height-300, device.width, device.height)
         .boundsContains(0, device.height - 100,device.width, device.height - 50)
         this.initialNum = 0
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 35 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 10 * 60)
+        this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 45 * 60)
     }
 
     @measureExecutionTime
     highEff(): void {
         this.signIn()
+        this.openTreasure()
+    }
+
+    @measureExecutionTime
+    medEff(): void {
         randomExecute([
-            ()=>{this.openTreasure()},
             ()=>{this.mealSupp()},
             ()=>{this.winGoldCoin()},
             ()=>{
@@ -60,8 +65,14 @@ export class TomatoLite extends AbstractTomato {
     listenBook(): void {
         this.goTo(this.tab, 0)
         if(selectedClick("音乐", 170)){
-            if(fixedClick("排行榜")){
-                scrollClick(random(1,8).toString())
+            const [bound, _] = search(className("android.widget.ImageView"), {
+                bounds: {top: device.height / 3},
+                index: random(0, 4)
+            })
+            if(findAndClick(className("android.widget.TextView").boundsInside(0, bound.top, device.width, bound.bottom))){
+                if(fixedClick("看视频领时长")){
+                    this.watch(text("看视频领时长"))
+                }  
             }
         }
         

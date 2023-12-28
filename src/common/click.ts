@@ -48,13 +48,35 @@ export function scrollPopClick(text:string, range?:string){
 export function selectedClick(text: string, threshold: number){
     return findAndClick(text, {fixed:true, waitFor:true, selectedThreshold: threshold, check:true})
 }
-export function clickDialogOption(options?:Dialog){
+export function clickDialogOption(options?:Dialog, range?:boolean){
     if(options === undefined){
         options = random(Dialog.Positive, Dialog.Negative)
     }
-    if(options === Dialog.Positive){//
+    if(options === Dialog.Positive){
+        if(range){
+            return findAndClick(merge(["继续观看", "抓住奖励机会", "留下看看", "(残忍)?关闭", "领取奖励"]), {
+                fixed:true,
+                bounds: {
+                    bottom: device.height * 2 / 3, 
+                    top: device.height * 1 / 3,
+                    left: device.width * 1 / 5,
+                    right: device.width * 4 / 5
+                }
+            })
+        }
         return fixedClick(merge(["继续观看", "抓住奖励机会", "留下看看", "(残忍)?关闭", "领取奖励"]))
     } else if(options === Dialog.Negative) {
+        if(range){
+            return findAndClick(merge(["取消", "(残忍)?关闭", "(以后|下次)再说", "(直接|坚持|仍要)?退出(阅读)?", "暂不(加入|添加)", "(残忍)离开", "放弃奖励", "(我)?知道了"]), {
+                fixed:true,
+                bounds: {
+                    bottom: device.height * 2 / 3, 
+                    top: device.height * 1 / 3,
+                    left: device.width * 1 / 5,
+                    right: device.width * 4 / 5
+                }
+            })
+        }
         return fixedClick(merge(["取消", "(残忍)?关闭", "(以后|下次)再说", "(直接|坚持|仍要)?退出(阅读)?", "暂不(加入|添加)", "(残忍)离开", "放弃奖励", "(我)?知道了"]))
     }
 }

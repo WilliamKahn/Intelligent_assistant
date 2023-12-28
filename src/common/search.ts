@@ -35,7 +35,7 @@ export function scrollTo(component: string|UiSelector, options?: ScrollToOptions
             } else {
                 tmpTop = top - 1
             }
-        } 
+        }
         //上一次位置，如果未移动尝试返回，记录次数
         if(prePy) {
             if(pointY == prePy) {

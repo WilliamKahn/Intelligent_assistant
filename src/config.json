@@ -119,54 +119,54 @@
         "label": "16.快手",
         "type": "checkbox",
         "name": "KuaiShou",
-        "default": false
+        "default": true
     },
     {
         "label": "17.快手极速版",
         "type": "checkbox",
         "name": "KuaiShouLite",
-        "default": false
+        "default": true
     },
     {
         "label": "18.百度",
         "type": "checkbox",
         "name": "Baidu",
-        "default": false
+        "default": true
     },
     {
         "label": "19.百度极速版",
         "type": "checkbox",
         "name": "BaiduLite",
-        "default": false
+        "default": true
     },
     {
         "label": "20.百度大字版",
         "type": "checkbox",
         "name": "BaiduBig",
-        "default": false
+        "default": true
     },
     {
         "label": "21.今日头条",
         "type": "checkbox",
         "name": "Article",
-        "default": false
+        "default": true
     },
     {
         "label": "22.头条搜索极速版",
         "type": "checkbox",
         "name": "ArticleLite",
-        "default": false
+        "default": true
     },
     {
         "label": "23.抖音极速版",
         "type": "checkbox",
         "name": "TikTokLite",
-        "default": false
+        "default": true
     },
     {
         "label": "24.抖音火山版",
         "type": "checkbox",
         "name": "TikTokVolcano",
-        "default": false
+        "default": true
     }
 ]

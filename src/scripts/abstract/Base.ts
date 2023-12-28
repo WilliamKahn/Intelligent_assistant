@@ -37,7 +37,6 @@ export abstract class Base {
     exchangeRate: number = 10000
 
     //
-    
 
     //执行预估时间
     highEffEstimatedTime: number = BASE_ASSIMT_TIME
@@ -75,13 +74,20 @@ export abstract class Base {
                 time -= processTime
             }
             if(time > this.lowEffEstimatedTime) {
-                const processTime:any = this.lowEff(time)
+                const processTime:any = this.lowEff(time - 5 * 60)
                 time -= processTime
             }
             if (flag) {
                 Record.info("统计当前app金币")
                 this.weight()
             }
+        }
+    }
+
+    @startDecorator
+    start2(): void{
+        if (this.lauchApp()){
+            
         }
     }
 
@@ -130,20 +136,19 @@ export abstract class Base {
         if(text("简介").exists()) {
             normalClick(resizeX(1070), resizeY(2330))
         }
-        const img = getScreenImage({bottom:device.height * 1/6})
+        const img = getScreenImage({bottom:device.height / 6})
         const grayHistogram = getGrayscaleHistogram(img)
         img.recycle()
         const [index] = findLargestIndexes(grayHistogram, 1)
         Record.debug(`read index: ${index}`)
         doFuncAtGivenTime(totalTime, 8, (perTime: number)=>{
-            readTime += waitRandomTime(perTime)
-            this.watch(index)
-            //阅读页面弹窗
-            fixedClick(merge([".*不再提示", "我知道了", "放弃下载"]))
             normalClick(
                 resizeX(random(1070, 1080)),
                 resizeY(random(1900, 2000))
             )
+            readTime += waitRandomTime(perTime)
+            fixedClick(merge([".*不再提示", "我知道了", "放弃下载"]))
+            this.watch(index)
         })
     }
 
@@ -155,7 +160,7 @@ export abstract class Base {
         let flag:boolean = false
         //回调次数
         if(typeof exitSign === "number") {
-            const img = getScreenImage({bottom:device.height * 1/6})
+            const img = getScreenImage({bottom:device.height / 6})
             const grayHistogram = getGrayscaleHistogram(img)
             img.recycle()
             const [index] = findLargestIndexes(grayHistogram, 1)
@@ -178,7 +183,7 @@ export abstract class Base {
         if (currentPackage() !== this.packageName) {
             this.lauchApp()
         }
-        const [_, name] = search(".*[0-9]+[ ]?[s秒]?.*", {ocrRecognize:true, bounds:{bottom: device.height * 1/5}})
+        const [_, name] = search(".*[0-9]+[ ]?[s秒]?.*", {ocrRecognize:true, bounds:{bottom: device.height / 5}})
         const waitTime = matchAndJudge(name)
         waitTimes += waitTime
         Record.debug(`watchTimes = ${times}, waitTime = ${waitTime}`)
@@ -190,11 +195,11 @@ export abstract class Base {
         }
         waitRandomTime(10)
         if(!findAndClick(".*跳过.*", 
-        {fixed:true, bounds:{left:device.width * 2 / 3, bottom:device.height * 1/5}})){
+        {fixed:true, bounds:{left:device.width * 2 / 3, bottom:device.height / 5}})){
             close()
         }
         //坚持退出 检测
-        if(waitTimes > 60 || times >= 3 || !clickDialogOption(Dialog.Positive)){
+        if(waitTimes > 60 * 2 || times >= 4 || !clickDialogOption(Dialog.Positive, true)){
             clickDialogOption(Dialog.Negative)
         }
         this.watch(exitSign, ++times, waitTimes)

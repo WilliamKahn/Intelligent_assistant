@@ -1,5 +1,5 @@
 import { findAndClick, fixedClick, readClick, scrollClick, scrollPopClick, selectedClick } from "../common/click";
-import { scrollTo } from "../common/search";
+import { scrollTo, search, searchByOcrRecognize } from "../common/search";
 import { convertSecondsToMinutes, doFuncAtGivenTime, merge, resizeX, resizeY, waitRandomTime } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_RED_FRUITS, PACKAGE_READ_RED_FRUITS } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
@@ -60,11 +60,13 @@ export class RedFruits extends AbstractTomato {
     weight(): void {
 
         this.goTo(text("福利"), -1)
-        scrollTo("金币收益")
-        let tmp = textMatches(/(\d+)/).boundsInside(0, 0, resizeX(540), resizeY(442)).findOnce()
-        if(tmp != null) {
-            const weight = parseInt(tmp.text())
-            this.store(BaseKey.Weight, weight)
+        if(scrollClick("金币收益")){
+            let tmp = textMatches("[0-9]+").findOnce()
+            if(tmp != null) {
+                const weight = parseInt(tmp.text())
+                Record.debug(`${weight}`)
+                this.store(BaseKey.Weight, weight)
+            }
         }
     }
 

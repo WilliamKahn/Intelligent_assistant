@@ -13,13 +13,18 @@ export class SpeedFree extends Base {
         this.packageName = PACKAGE_READ_SPEED_FREE
         this.initialComponent = desc("bookstore_button")
         this.exchangeRate = 33000
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 120 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60)
+        this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 100 * 60)
         this.lowEffEstimatedTime = 0
     }
 
     @measureExecutionTime
     highEff(): void {
         this.signIn()
+    }
+
+    @measureExecutionTime
+    medEff(): void {
         this.listenBook()
         this.openTreasure()
         this.watchAds()
@@ -97,6 +102,7 @@ export class SpeedFree extends Base {
             if(findAndClick(id("com.zhangyue.iReader.bookStore:id/id_audition_btn"), {
                 index: random(0, 7)
             })){
+                fixedClick("确定")
                 if(dialogClick(merge(["看视频", "看广告加时长"]))){
                     this.watch(desc("bookstore_button"))
                 }

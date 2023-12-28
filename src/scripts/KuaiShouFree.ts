@@ -1,4 +1,5 @@
 import { findAndClick, fixedClick, dialogClick, readClick, scrollClick, ocrClick } from "../common/click";
+import { search, searchByLeftRange, searchByOcrRecognize } from "../common/search";
 import { closeByImageMatching, doFuncAtGivenTime, getScreenImage, moveDown, resizeX, resizeY } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_KUAISHOU_FREE, PACKAGE_READ_KUAISHOU_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
@@ -39,7 +40,9 @@ export class KuaiShouFree extends Base{
     @measureExecutionTime
     weight(): void {
         const weight = this.record() - this.coin
-        this.store(BaseKey.Weight, weight)
+        if(weight > 0){
+            this.store(BaseKey.Weight, weight)
+        }
     }
     
     @functionLog("签到")
@@ -91,13 +94,9 @@ export class KuaiShouFree extends Base{
 
     record(): number{
         this.goTo(this.tab, 2)
-        const img = getScreenImage({
-            left:resizeX(78),top:resizeY(339), right:resizeX(360), bottom: resizeY(438)})
-        const str = ocr.recognizeText(img)
-        img.recycle()
-        const match = str.match("[0-9]+")
-        if(match){
-            return parseInt(match[0])
+        const [_, name]:any = searchByOcrRecognize("[0-9]+",{bounds:{bottom: device.height/5}})
+        if(name != undefined){
+            return parseInt(name)
         }
         return 0
     }

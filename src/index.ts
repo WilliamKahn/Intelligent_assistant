@@ -6,11 +6,12 @@
  * @FilePath: \\src\\index.ts
  * @Description: 脚本入口
  */
-import { findAndClick, ocrClick, readClick, selectedClick } from "./common/click";
+import { findAndClick, fixedClick, ocrClick, randomClick, readClick, selectedClick } from "./common/click";
 import { Move } from "./common/enums";
 import { sendIncomeMessageToWxPuher, toShowString } from "./common/report";
-import { clearBackground, closeByImageMatching, convertSecondsToMinutes, moveDown, swipeDown } from "./common/utils";
-import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, STORAGE, STORAGE_APP, STORAGE_DATE, baidu, baiduBig, baiduLite, filteredList, fixedMap, highEffmap, kuaiShou, kuaiShouFree, lowEffMap, medEffMap, redFruits, starrySky, tikTokLite, tikTokVolcano, tomato, tomatoFree, tomatoLite } from "./global";
+import { search } from "./common/search";
+import { clearBackground, close, closeByImageMatching, convertSecondsToMinutes, moveDown, swipeDown } from "./common/utils";
+import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, STORAGE, STORAGE_APP, STORAGE_DATE, article, articleLite, baidu, baiduBig, baiduLite, deJian, eggplantFree, filteredList, fixedMap, highEffmap, kuaiShou, kuaiShouFree, kuaiShouLite, lowEffMap, marvelFree, medEffMap, pandaBrain, redFruits, shuQi, speedFree, starrySky, tikTokLite, tikTokVolcano, tomato, tomatoFree, tomatoLite, wanChao } from "./global";
 import { ConfigInvalidException } from "./lib/exception";
 import { init } from "./lib/init";
 import { Record as LogRecord } from "./lib/logger";
@@ -24,8 +25,8 @@ main()
 function test() {
     // for(let app of filteredList){
     //     log(`${app.appName}: ${app.fetch(BaseKey.Weight)}----${app.fetch(BaseKey.Executed)}`)
-    // }
-    ocrClick("已经到底了")
+    // }random(1, 4).toString()
+    deJian.watch(text("日常任务"))
 }
 
 function main() {
@@ -208,5 +209,8 @@ function appTimeAllocation(timePerMethod: number, sortedList: any[]){
 
 
 function main2(){
-    
+    let runList = filteredList
+    for (let app of runList) {
+        
+    }
 }

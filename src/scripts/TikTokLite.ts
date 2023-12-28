@@ -76,7 +76,7 @@ export class TikTokLite extends AbstractTikTok{
     watchLive(): void {
         this.goto(-1)
         if(this.scrollOcrClick(".?去看看.?", "看直播开宝箱.*")){
-            while(textEndsWith("后可开").exists()){
+            while(textMatches(".*后可开|开宝箱").exists()){
                 let tmp = text("开宝箱").findOne(3 * 60 * 1000)
                 if(tmp != null){
                     randomClick(tmp.bounds())
@@ -115,7 +115,7 @@ export class TikTokLite extends AbstractTikTok{
 
     //自定义跳转
     goto(num: number){
-        const [bounds,_] = search(className("android.widget.HorizontalScrollView"))
+        const [bounds,_] = search(className("android.widget.HorizontalScrollView"), {waitFor:true})
         const center = (bounds.top + bounds.bottom)/2
         this.goTo(this.tab, 0)
         //任务页

@@ -50,7 +50,13 @@ export function getScreenImage(bounds?: Bounds){
     const img = captureScreen()
     if(SHOW_CONSOLE) console.show()
     waitRandomTime(1)
-    return images.clip(img, x1, y1, x2-x1, y2-y1)
+    const result = images.clip(img, x1, y1, x2-x1, y2-y1)
+    try {
+        return result    
+    } finally {
+        // @ts-ignore
+        img.recycle()
+    }
 }
 
 
@@ -142,25 +148,23 @@ export function close(){
     const times = random(0,1)
     if(!closeByImageMatching(true)){
         if(!fixedClick(idContains("close"))){
-            back()
-            waitRandomTime(4)
+            switch(times){
+                case 0:
+                    if(!findAndClick(classNameMatches("android\.widget\.(ImageView|Button|FrameLayout)"),
+                    {fixed:true, bounds:{left:device.width * 3 / 5, bottom:device.height * 1 / 5}})){
+                        back()
+                        waitRandomTime(4)
+                    }
+                    break
+                case 1:
+                    if(!findAndClick(className("android\.widget\.(Button|ImageView)"),
+                    {fixed:true, bounds:{right:device.width * 2 / 5, bottom:device.height * 1 / 5}})){
+                        back()
+                        waitRandomTime(4)
+                    }
+                    break
+            }
         }
-        // switch(times){
-        //     case 0:
-        //         if(!findAndClick(classNameMatches("android\.widget\.(ImageView|Button|FrameLayout)"),
-        //         {fixed:true, bounds:{left:device.width * 3 / 5, bottom:device.height * 1 / 5}})){
-        //             back()
-        //             waitRandomTime(4)
-        //         }
-        //         break
-        //     case 1:
-        //         if(!findAndClick(className("android\.widget\.(Button|ImageView)").idContains("close"),
-        //         {fixed:true, bounds:{right:device.width * 2 / 5, bottom:device.height * 1 / 5}})){
-        //             back()
-        //             waitRandomTime(4)
-        //         }
-        //         break
-        // }
     }
 }
 
@@ -213,6 +217,7 @@ export function closeByImageMatching(filter?: boolean): boolean {
             grayImg.recycle()
             grayTmp.recycle()
             grayInvTmp.recycle()
+            grayWhiteTmp.recycle()
             adaptiveImg.recycle()
         }
         if(list != null){
@@ -244,7 +249,7 @@ export function findPreferredCloseButton(list:Point[], filter?:boolean){
             if(filter){
                 const component = boundsInside(firstCoordinate.x - 100, firstCoordinate.y - 100, firstCoordinate.x + 100, firstCoordinate.y + 100).findOnce()
                 //筛选控件
-                if(firstCoordinate.y > device.height * 1 / 5 
+                if(firstCoordinate.y > device.height / 5
                 && !(component != null && component.text() === "")){
                     sortedCoordinates.splice(i)
                     i--
@@ -292,12 +297,16 @@ export function calculatePriority(point: Point) {
  * @param func 执行流程
  */
 export function doFuncAtGivenTime(totalTime: number, maxTime: number, func:(perTime: number) => void): void {
+    // let extraTime = 0
     while(totalTime >= 0) {
-        const startTime = new Date();
+        const startTime = new Date()
         let timeParameter = Math.min(maxTime, totalTime)
+        // func(timeParameter - extraTime > 0 ? timeParameter - extraTime : 0)
         func(timeParameter)
-        const endTime = new Date();
-        totalTime -= (endTime.getTime() - startTime.getTime())/1000
+        const endTime = new Date()
+        const executeTime = (endTime.getTime() - startTime.getTime())/1000
+        totalTime -= executeTime
+        // extraTime = executeTime - timeParameter
     }
 }
 
@@ -512,6 +521,10 @@ export function getNumFromComponent(str:string){
         return time
     }
     return 0
+}
+
+export function getDeadline(){
+    
 }
 
 

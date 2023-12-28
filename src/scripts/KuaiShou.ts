@@ -9,18 +9,15 @@ import { Base, BaseKey } from "./abstract/Base";
 
 export class KuaiShou extends Base{
 
-    register: UiSelector
-
     constructor(){
         super()
         this.appName = NAME_VEDIO_KUAISHOU
         this.packageName = PACKAGE_VEDIO_KUAISHOU
         this.tab = id(this.packageName+":id/tab_layout")
-        this.register = id(this.packageName + ":id/pendant_mask_bg")
         this.initialComponent = this.tab
         this.initialNum = 1
         this.depth = 1
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 30 * 60)
+        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60)
         this.lowEffEstimatedTime = 0
     }
 

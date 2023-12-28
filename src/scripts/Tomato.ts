@@ -1,6 +1,6 @@
 import { findAndClick, fixedClick, dialogClick, scrollClick, selectedClick, scrollPopClick } from "../common/click";
 import { Move } from "../common/enums";
-import { scrollTo } from "../common/search";
+import { scrollTo, search } from "../common/search";
 import { closeByImageMatching, doFuncAtGivenTime, merge, randomExecute, resizeX, resizeY, swipeDown, swipeUp, waitRandomTime, } from "../common/utils";
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_TOMATO, PACKAGE_READ_TOMATO } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
@@ -96,45 +96,34 @@ export class Tomato extends AbstractTomato {
     @functionLog("听书")
     listenBook(): void {
         this.goTo(this.tab, 0)
-        if(selectedClick("推荐", 170)){
-            findAndClick(className("android.widget.TextView"), {
-                leftRange:random(1,4).toString(),
-                index:1})
-            while(!text("阅读电子书").exists()){
-                back()
-                waitRandomTime(3)
-                gesture(1000, [resizeX(random(580, 620)), resizeY(random(950, 1050))], 
-                [resizeX(random(780, 820)), resizeY(random(1750, 1850))])
-                waitRandomTime(3)
-                findAndClick(className("android.widget.TextView"), {
-                    leftRange:random(1,4).toString(),
-                    index:1})
-            }
-            fixedClick(merge(["开始播放", "续播"]))   
+        this.openBook("开始播放|续播")
+        if(fixedClick("看视频领时长")){
+            this.watch(text("看视频领时长"))
         }
     }
 
     @functionLog("阅读")
     readBook(totalTime: number): void {
         this.goTo(this.tab, 0)
+        this.openBook("阅读电子书")
+        this.read(totalTime)
+    }
+
+    openBook(str: string): void{
         if(selectedClick("推荐", 170)){
-            
-            findAndClick(className("android.widget.TextView"), {
-                leftRange:random(1,4).toString(),
-                coverBoundsScaling:1
-            })
-            while(!text("阅读电子书").exists()){
-                back()
-                waitRandomTime(5)
-                swipeUp(Move.Fast, 1000)
-                waitRandomTime(5)
-                findAndClick(className("android.widget.TextView"), {
-                    leftRange:random(1,4).toString(),
-                    coverBoundsScaling:1
-                })
-            }
-            if(fixedClick("阅读电子书")){
-                this.read(totalTime)
+            for(let i = 1;i<5;i++){
+                const [bound, _] = search(i.toString())
+                if(findAndClick(className("android.widget.TextView"), {
+                    bounds: {top: bound.top, left:bound.right},
+                    coverBoundsScaling: 1
+                })){
+                    if(fixedClick(str)){
+                        break
+                    } else{
+                        back()
+                        waitRandomTime(4)
+                    }
+                }
             }
         }
     }

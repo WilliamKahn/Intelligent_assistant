@@ -1,6 +1,6 @@
-import { dialogClick, findAndClick, fixedClick, normalClick, scrollClick, selectedClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, normalClick, randomClick, scrollClick, selectedClick } from "../common/click";
 import { search } from "../common/search";
-import { closeByImageMatching, doFuncAtGivenTime, moveDown, randomExecute, randomMoveDown, waitRandomTime } from "../common/utils";
+import { closeByImageMatching, doFuncAtGivenTime, moveDown, randomExecute, randomMoveDown, resizeX, resizeY, waitRandomTime } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_VEDIO_BAIDU_LITE, PACKAGE_VEDIO_BAIDU_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
@@ -114,7 +114,13 @@ export class BaiduLite extends Base {
                 leftRange: random(1,4).toString(),
                 clickUntilGone:true
             })){
-                fixedClick("开始听书|续播")
+                if(fixedClick("开始听书|续播")){
+                    if(fixedClick("立即看视频领[0-9]分钟")){
+                        this.watch(text("看视频领免费时长"))
+                        const tmp = this.backUntilFind(id("com.baidu.searchbox.reader:id/novel_voice_lav_play"))
+                        randomClick(tmp.bounds())
+                    }
+                }
             }
         }
     }
@@ -132,14 +138,19 @@ export class BaiduLite extends Base {
     @functionLog("刷视频")
     swipeVideo(totalTime: number): void {
         this.goto(0)
+        let tmp = this.tab.findOnce()?.child(0)
+        if(tmp != null){
+            randomClick(tmp.bounds())
+        }
         if(selectedClick("推荐", 170)){
             while(totalTime > 0){
-                const slideTime = random(0, totalTime/2)
-                const waitTime = random(0, totalTime/2)
+                const slideTime = random(10, 30)
+                const waitTime = random(10, 30)
                 moveDown(slideTime, 4)
                 normalClick(device.width/2, device.height/2)
-                totalTime -= waitRandomTime(waitTime)
+                randomMoveDown(waitTime, 5, 20)
                 totalTime -= slideTime
+                totalTime -= waitTime
                 this.backUntilFind(text("推荐"))
             }
         }

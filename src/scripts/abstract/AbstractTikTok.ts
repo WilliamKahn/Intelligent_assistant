@@ -27,10 +27,12 @@ export abstract class AbstractTikTok extends Base{
             ()=>{this.shopping()},
         ])
     }
+    
     @measureExecutionTime
     medEff(): void {
         this.watchLive()
     }
+
     @measureExecutionTime
     lowEff(time: number): void {
         doFuncAtGivenTime(time, 20 * 60, (perTime: number) => {

@@ -1,6 +1,6 @@
 import { findAndClick, fixedClick, dialogClick, readClick, scrollClick, selectedClick } from "../common/click";
 import { Move } from "../common/enums";
-import { scrollTo } from "../common/search";
+import { scrollTo, search } from "../common/search";
 import { convertSecondsToMinutes, doFuncAtGivenTime, merge, randomExecute, resizeX, resizeY, swipeDown, swipeUp, waitRandomTime } from "../common/utils";
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_TOMATO_FREE, PACKAGE_READ_TOMATO_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
@@ -16,10 +16,10 @@ export class TomatoFree extends AbstractTomato {
         super()
         this.appName = NAME_READ_TOMATO_FREE
         this.packageName = PACKAGE_READ_TOMATO_FREE
-        // this.randomTab = className("android.view.ViewGroup")
-        // .boundsInside(0, device.height-300, device.width, device.height)
-        // .boundsContains(100, device.height - 100,device.width-100, device.height - 50)
-        this.tab = id(this.packageName+":id/radio_group")
+        this.randomTab = className("android.view.ViewGroup")
+        .boundsInside(0, device.height-300, device.width, device.height)
+        .boundsContains(100, device.height - 100,device.width-100, device.height - 50)
+        // this.tab = id(this.packageName+":id/radio_group")
         this.initialComponent = this.tab
         this.initialNum = 0
         this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 35 * 60)
@@ -58,7 +58,7 @@ export class TomatoFree extends AbstractTomato {
 
     @measureExecutionTime
     weight(): void {
-        this.goTo(this.tab, 2)
+        this.goto()
         scrollTo("金币收益")
         let tmp = textMatches(/(\d+)/)
         .boundsInside(0, 0, resizeX(581), resizeY(567)).findOnce()
@@ -70,7 +70,7 @@ export class TomatoFree extends AbstractTomato {
 
     @functionLog("签到")
     signIn(): void{
-        this.goTo(this.tab, 2)
+        this.goto()
         this.sign()
         if(this.scrollNoneClick("去签到", "签到领金币|明日签到", false)) {
             this.sign()
@@ -80,28 +80,27 @@ export class TomatoFree extends AbstractTomato {
     @functionLog("听书")
     listenBook(): void {
         this.goTo(this.tab, 0)
-        if(selectedClick("推荐", 170)){
-            findAndClick(className("android.widget.TextView"), {
-                leftRange:random(1,4).toString(),
-                coverBoundsScaling:1
-            })
-            while(!textMatches("全部播放|续播").exists()){
-                back()
-                waitRandomTime(5)
-                swipeUp(Move.Fast, 1000)
-                waitRandomTime(5)
-                findAndClick(className("android.widget.TextView"), {
-                    leftRange:random(1,4).toString(),
-                    coverBoundsScaling:1
-                })
+        if(selectedClick("听书", 170)){
+            for(let i = 1;i<5;i++){
+                const [bound, _] = search(i.toString())
+                if(findAndClick(className("android.widget.TextView"), {
+                    bounds: {top: bound.top, left:bound.right},
+                    coverBoundsScaling: 1
+                })){
+                    if(fixedClick("全部播放|续播")){
+                        break
+                    } else{
+                        back()
+                        waitRandomTime(4)
+                    }
+                }
             }
-            fixedClick("全部播放|续播")
         }
     }
 
     @functionLog("领取餐补")
     mealSupp(): void{
-        this.goTo(this.tab, 2)
+        this.goto()
         if(this.scrollNoneClick("去领取", "吃饭补贴", true)){
             if(fixedClick("领取.*补贴[0-9]+金币")) {
                 this.watchAdsForCoin("日常福利")
@@ -113,29 +112,27 @@ export class TomatoFree extends AbstractTomato {
     readBook(totalTime: number): void {
         this.goTo(this.tab, 0)
         if(selectedClick("推荐", 170)){
-            findAndClick(className("android.widget.TextView"), {
-                leftRange:random(1,4).toString(),
-                coverBoundsScaling:1
-            })
-            while(!text("阅读电子书").exists()){
-                back()
-                waitRandomTime(3)
-                swipeUp(Move.Fast, 1000)
-                waitRandomTime(3)
-                findAndClick(className("android.widget.TextView"), {
-                    leftRange:random(1,4).toString(),
-                    coverBoundsScaling:1
-                })
+            for(let i = 1;i<5;i++){
+                const [bound, _] = search(i.toString())
+                if(findAndClick(className("android.widget.TextView"), {
+                    bounds: {top: bound.top, left:bound.right},
+                    coverBoundsScaling: 1
+                })){
+                    if(text("阅读电子书").exists()){
+                        back()
+                        waitRandomTime(4)
+                    } else{
+                        break
+                    }
+                }
             }
-            if(fixedClick("阅读电子书")){
-                this.read(totalTime)
-            }
+            this.read(totalTime)
         }
     }
 
     @functionLog("领取奖励")
     reward(): void {
-        this.goTo(this.tab, 2)
+        this.goto()
         let cycleCounts = 0
         let list = ["阅读赚金币", "听书赚金币", "看短剧赚金币"]
         for(let range of list){
@@ -149,7 +146,7 @@ export class TomatoFree extends AbstractTomato {
 
     @functionLog("看视频")
     watchAds(): void {
-        this.goTo(this.tab, 2)
+        this.goto()
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
             && this.scrollNoneClick("立即领取", "看视频赚金币", true)){
@@ -176,8 +173,16 @@ export class TomatoFree extends AbstractTomato {
 
     @functionLog("开宝箱")
     openTreasure(): void {
-        this.goTo(this.tab, 2)
+        this.goto()
         this.open()
     }
 
+    goto(): void{
+        let tmp = this.backUntilFind(this.tab)
+        if(tmp.childCount() === 6){
+            this.goTo(this.tab, 3)
+        } else {
+            this.goTo(this.tab, 2)
+        }
+    }
 }
