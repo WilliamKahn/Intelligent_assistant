@@ -138,11 +138,11 @@ export abstract class AbstractFreeNovel extends Base {
                     if(findAndClick("抽奖|看视频", {
                         fixed:true,
                         ocrRecognize:true,
-                        waitTimes:10,
+                        waitTimes: 10,
                         bounds:{bottom: device.height *2/3, top: device.height/3}
                     })){
                         this.watch(text("幸运大转盘"))
-                        findAndClick("好的", {fixed:true, waitFor:true})
+                        findAndClick("好的", {fixed:true, waitFor:true, clickUntilGone:true})
                     }
                 }
                 

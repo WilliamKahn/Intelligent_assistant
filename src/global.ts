@@ -83,6 +83,7 @@ export const STORAGE = storages.create(STORAGE_WEIGHT_CONTAINER);
 export const DEVICE_WIDTH = 1080
 export const DEVICE_HEIGHT = 2340
 
+export const PACKAGE_HAMIBOT = "com.hamibot.hamibot"
 //脚本包名
 export const NAME_READ_TOMATO = "番茄畅听"
 export const PACKAGE_READ_TOMATO = "com.xs.fm";

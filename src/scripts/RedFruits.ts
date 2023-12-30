@@ -73,11 +73,11 @@ export class RedFruits extends AbstractTomato {
     @functionLog("刷短剧")
     swipeVideo(totalTime: number): void {
         this.goTo(text("首页"), -1)
-        if(findAndClick(id(this.packageName+":id/ll_tab_content_layout"),{
-            selectedThreshold: 170,
-            index: 1
-        })){
-            if(readClick(id(this.packageName+":id/title_tv"), random(0,7))){
+        if(selectedClick("推荐", 170)){
+            if(findAndClick(className("android.widget.ImageView"), {
+                fixed:true,
+                index: random(0, 17)
+            })){
                 Record.log(`计划时间: ${convertSecondsToMinutes(totalTime)}分钟`)
                 let watchTime=0;
                 while(totalTime > watchTime){
@@ -94,9 +94,15 @@ export class RedFruits extends AbstractTomato {
     @functionLog("阅读")
     readBook(totalTime: number): void {
         this.goTo(text("首页"), -1)
+        const [bounds, _] = search("推荐")
+        const centerY = (bounds.top + bounds.bottom)/2
+        gesture(1000, [resizeX(random(780, 820)), centerY],
+                 [resizeX(random(280, 320)), centerY + random(-30, 30)])
+        waitRandomTime(2)
         if(selectedClick("经典", 170)){
-            if(findAndClick(id(this.packageName+":id/name_tv"),{
-                leftRange:random(1,8).toString(),
+            const [bound, _] = search(random(1, 4).toString())
+            if(findAndClick(className("android.widget.TextView"), {
+                bounds: {top: bound.top, left:bound.right},
                 coverBoundsScaling: 1
             })){
                 this.read(totalTime)

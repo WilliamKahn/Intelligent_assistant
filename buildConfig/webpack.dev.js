@@ -13,7 +13,11 @@ module.exports = merge(defaultConfig, {
                 compress: true,
                 keep_classnames: true,
                 keep_fnames: true,
+                format: {
+                    comments: false,
+                },
             },
+            extractComments: false,
         })]
     },
 

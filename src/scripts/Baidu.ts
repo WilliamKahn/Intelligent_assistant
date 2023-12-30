@@ -121,7 +121,10 @@ export class Baidu extends Base {
         if(num === 0){
             if(this.tab.exists()){
                 this.goTo(this.tab, 4)
-                findAndClick("天天领现金",{ocrRecognize:true, bounds:{bottom:device.height/5, left:device.width/2}})
+                findAndClick("天天领现金",{
+                    ocrRecognize:true, 
+                    clickUntilGone:true,
+                    bounds:{bottom:device.height/5, left:device.width/2}})
             }else {
                 this.backUntilFind(text("金币收益"))
             }

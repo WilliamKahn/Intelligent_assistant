@@ -19,7 +19,6 @@ export class TomatoFree extends AbstractTomato {
         this.randomTab = className("android.view.ViewGroup")
         .boundsInside(0, device.height-300, device.width, device.height)
         .boundsContains(100, device.height - 100,device.width-100, device.height - 50)
-        // this.tab = id(this.packageName+":id/radio_group")
         this.initialComponent = this.tab
         this.initialNum = 0
         this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 35 * 60)
@@ -158,7 +157,10 @@ export class TomatoFree extends AbstractTomato {
     swipeVideo(totalTime: number) {
         this.goTo(this.tab, 0)
         if(selectedClick("看剧", 170)){
-            if(readClick(id(this.packageName+":id/title_tv"), random(0,8))){
+            if(findAndClick(className("android.widget.ImageView"), {
+                fixed:true,
+                index: random(2, 13)
+            })){
                 Record.log(`计划时间: ${convertSecondsToMinutes(totalTime)}分钟`)
                 let watchTime=0;
                 while(totalTime > watchTime){

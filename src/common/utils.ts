@@ -1,5 +1,5 @@
 import { Image, Point } from "images";
-import { DEVICE_HEIGHT, DEVICE_WIDTH, SHOW_CONSOLE } from "../global";
+import { DEVICE_HEIGHT, DEVICE_WIDTH, PACKAGE_HAMIBOT, SHOW_CONSOLE } from "../global";
 import { Record } from "../lib/logger";
 import { findAndClick, fixedClick, normalClick } from './click';
 import { Move } from "./enums";
@@ -79,7 +79,11 @@ export function clearBackground(){
         waitRandomTime(4)
         if(recents()){
             waitRandomTime(4)
-            findAndClick(idContains("clear"), {fixed:true})
+            if(!findAndClick(idContains("clear"), {fixed:true})){
+                findAndClick(descContains("清除"), {fixed:true})
+            }
+            launchPackage(PACKAGE_HAMIBOT)
+            waitRandomTime(4)
         }
     }
 }
