@@ -16,14 +16,27 @@ export class TomatoFree extends AbstractTomato {
         super()
         this.appName = NAME_READ_TOMATO_FREE
         this.packageName = PACKAGE_READ_TOMATO_FREE
-        this.randomTab = className("android.view.ViewGroup")
-        .boundsInside(0, device.height-300, device.width, device.height)
-        .boundsContains(100, device.height - 100,device.width-100, device.height - 50)
-        this.initialComponent = this.tab
         this.initialNum = 0
         this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 35 * 60)
         this.lowEffEstimatedTime = 0
         this.lowEffAssmitCount = 2
+    }
+
+    reSearchTab(): void {
+        const component = search("我的", {waitFor:true,fixed:true})
+        if(component !== undefined){
+            const tmp:any = className("android.view.ViewGroup")
+            .clickable(false)
+            .boundsInside(0, device.height*2/3, device.width, device.height)
+            .boundsContains(100, component.bounds.top,device.width-100, component.bounds.top).findOnce()            
+            if(tmp !== null){
+                this.tab = id(tmp.id())
+                this.initialComponent = this.tab
+                Record.debug(`${this.tab}`)
+            } else {
+                throw "id定位失败"
+            }
+        }
     }
 
     @measureExecutionTime

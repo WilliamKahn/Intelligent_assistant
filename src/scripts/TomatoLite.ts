@@ -15,8 +15,7 @@ export class TomatoLite extends AbstractTomato {
         this.appName = NAME_READ_TOMATO_LITE
         this.packageName = PACKAGE_READ_TOMATO_LITE
         this.randomTab = className("android.widget.RadioGroup")
-        .boundsInside(0, device.height-300, device.width, device.height)
-        .boundsContains(0, device.height - 100,device.width, device.height - 50)
+        .boundsInside(0, device.height*2/3, device.width, device.height)
         this.initialNum = 0
         this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 10 * 60)
         this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 45 * 60)

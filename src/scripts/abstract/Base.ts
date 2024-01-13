@@ -171,7 +171,7 @@ export abstract class Base {
         if(this.randomTab.toString() !== text("").toString()){
             search(this.randomTab, {waitFor:true})
             let tmp:any = this.randomTab.findOnce()
-            if(tmp != null){
+            if(tmp !== null){
                 this.tab = id(tmp.id())
                 this.initialComponent = this.tab
                 Record.debug(`${this.tab}`)
@@ -334,7 +334,8 @@ export abstract class Base {
      */
     backUntilFind(component: UiSelector, times: number = 0): any{
         if(times >= MAX_BACK_COUNTS) {
-            throw new ExceedMaxNumberOfAttempts("backUntilFind")
+            Record.debug("backUntilFind error")
+            throw new ExceedMaxNumberOfAttempts("超过最大尝试次数")
         }
         let tmp = component.findOnce()
         if (tmp == null) {

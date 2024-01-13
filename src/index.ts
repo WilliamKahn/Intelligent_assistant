@@ -1,4 +1,3 @@
-import { STORAGE, STORAGE_APP } from "./global"
 
 /*
  * @Author: BATU1579
@@ -11,6 +10,6 @@ import { STORAGE, STORAGE_APP } from "./global"
 test()
 
 function test() {
-    STORAGE.put(STORAGE_APP, "ShuQi")
+    
 }
 
