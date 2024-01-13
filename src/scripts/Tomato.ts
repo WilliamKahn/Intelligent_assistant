@@ -1,7 +1,6 @@
-import { findAndClick, fixedClick, dialogClick, scrollClick, selectedClick, scrollPopClick } from "../common/click";
-import { Move } from "../common/enums";
+import { findAndClick, fixedClick, scrollClick, selectedClick } from "../common/click";
 import { scrollTo, search } from "../common/search";
-import { closeByImageMatching, doFuncAtGivenTime, merge, randomExecute, resizeX, resizeY, swipeDown, swipeUp, waitRandomTime, } from "../common/utils";
+import { doFuncAtGivenTime, randomExecute, resizeX, resizeY, waitRandomTime } from "../common/utils";
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_TOMATO, PACKAGE_READ_TOMATO } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { AbstractTomato } from "./abstract/AbstractTomato";
@@ -74,7 +73,7 @@ export class Tomato extends AbstractTomato {
     signIn(): void {
         this.goTo(this.tab, 2)
         this.sign()
-        if (this.scrollNoneClick("立即签到", "(明日)?签到", false)) {
+        if (this.scrollClick("立即签到", "(明日)?签到", false)) {
             this.sign()
         }
     }
@@ -86,7 +85,7 @@ export class Tomato extends AbstractTomato {
         let list = ["听书赚金币", "阅读赚金币", "听书额外存金币"]
         for(let range of list) {
             while(++cycleCounts < MAX_CYCLES_COUNTS &&
-                this.scrollNoneClick("(?:立即|翻倍)领取", range, false))
+                this.scrollClick("(?:立即|翻倍)领取", range, false))
             {
                 this.watchAdsForCoin("日常福利")
             }
@@ -112,10 +111,9 @@ export class Tomato extends AbstractTomato {
     openBook(str: string): void{
         if(selectedClick("推荐", 170)){
             for(let i = 1;i<5;i++){
-                const [bound, _] = search(i.toString())
+                const component = search(i.toString())
                 if(findAndClick(className("android.widget.TextView"), {
-                    bounds: {top: bound.top, left:bound.right},
-                    coverBoundsScaling: 1
+                    bounds: {top: component?.bounds.top, left:component?.bounds.right},
                 })){
                     if(fixedClick(str)){
                         break
@@ -131,7 +129,7 @@ export class Tomato extends AbstractTomato {
     @functionLog("看广告")
     watchAds(): boolean {
         this.goTo(this.tab, 2)
-        if(this.scrollNoneClick("立即观看", "看视频赚金币", true)){
+        if(this.scrollClick("立即观看", "看视频赚金币", true)){
             this.watch(text("日常福利"))
             let tmp = text("立即观看").findOne(10 * 1000)
             if(tmp != null){
@@ -151,11 +149,11 @@ export class Tomato extends AbstractTomato {
     @functionLog("抽奖赢金币")
     winGoldCoin(): void {
         this.goTo(this.tab, 2)
-        if(this.scrollNoneClick("去抽奖", "天天抽奖赢金币", true)){
+        if(this.scrollClick("去抽奖", "天天抽奖赢金币", true)){
             if(findAndClick("抽奖", {fixed:true, waitTimes:10})){
                 let cycleCounts = 0
                 while(++cycleCounts < MAX_CYCLES_COUNTS 
-                    && scrollPopClick("待领取")){
+                    && scrollClick("待领取", undefined, {clickUntilGone:false})){
                     this.watchAdsForCoin("已领取")
                 }
             }

@@ -1,4 +1,4 @@
-import { findAndClick, dialogClick, readClick, scrollClick, selectedClick } from "../common/click";
+import { dialogClick, readClick, scrollClick, selectedClick } from "../common/click";
 import { closeByImageMatching, doFuncAtGivenTime, } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_SHUQI, PACKAGE_READ_SHUQI } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";

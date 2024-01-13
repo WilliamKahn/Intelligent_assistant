@@ -1,0 +1,698 @@
+[
+    {
+        "name": "_TOKEN",
+        "type": "text",
+        "label": "UID",
+        "help": "微信推送收益(按顺序执行完一个流程后发送收益), 无需则不用填写"
+    },
+    {
+        "label": "执行顺序",
+        "name": "ORDER",
+        "placeholder": "4 6 8 7 (空格间隔)",
+        "help": "不填写则按照默认顺序(1 2 3 4)执行, 后续未填写按照顺序执行"
+    },
+    {
+        "label": "初始化",
+        "help": "选中从头开始执行, 未选从上次结束的应用开始执行",
+        "name": "RESET",
+        "type": "checkbox",
+        "default": false
+    },
+    {
+        "label": "1.速读免费小说",
+        "type": "checkbox",
+        "name": "SpeedFreeFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "watchAds|看广告":"看广告",
+            "listenBook|听书":"听书",
+            "readBook|阅读":"阅读(分钟)",
+            "reward|领取奖励":"领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "listenBook|听书",
+            "readBook|阅读",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "SpeedFree",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n听书\n循环(30){\n看广告\n}\n领取奖励\n循环(6){\n阅读(30)\n听书()\n开宝箱\n领取奖励\n}"
+    },
+    {
+        "label": "2.得间小说",
+        "type": "checkbox",
+        "name": "DeJianFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "joinActivity|参加活动":"参加活动",
+            "watchAds|看广告":"看广告",
+            "mealSupp|吃饭补贴":"吃饭补贴",
+            "readBook|阅读":"阅读(分钟)",
+            "reward|领取奖励":"领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "joinActivity|参加活动",
+            "watchAds|看广告",
+            "mealSupp|吃饭补贴",
+            "readBook|阅读",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "DeJian",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n吃饭补贴\n参加活动\n循环(10){\n看广告\n阅读(3)\n}\n领取奖励\n循环(5){\n阅读(30)\n开宝箱\n领取奖励\n}"
+    },
+    {
+        "label": "3.星空免费小说",
+        "type": "checkbox",
+        "name": "StarrySkyFunc",
+        "options": {
+            "signIn|签到": "签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "watchAds|看广告": "看广告",
+            "shopping|逛街": "逛街",
+            "luckySpin|幸运大转盘": "幸运大转盘",
+            "readBook|阅读": "阅读(分钟)",
+            "listenBook|听书": "听书",
+            "reward|领取奖励": "领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "shopping|逛街",
+            "luckySpin|幸运大转盘",
+            "readBook|阅读",
+            "listenBook|听书",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "StarrySky",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n看广告\n逛街\n幸运大转盘\n循环(5){\n阅读(10)\n领取奖励\n开宝箱}\n循环(5){\n听书\n等待(600)\n领取奖励\n开宝箱\n}"
+    },
+    {
+        "label": "4.茄子免费小说",
+        "type": "checkbox",
+        "name": "EggplantFreeFunc",
+        "options": {
+            "signIn|签到": "签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "watchAds|看广告": "看广告",
+            "shopping|逛街": "逛街",
+            "luckySpin|幸运大转盘": "幸运大转盘",
+            "readBook|阅读": "阅读(分钟)",
+            "listenBook|听书": "听书",
+            "reward|领取奖励": "领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "shopping|逛街",
+            "luckySpin|幸运大转盘",
+            "readBook|阅读",
+            "listenBook|听书",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "EggplantFree",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n看广告\n逛街\n幸运大转盘\n循环(5){\n阅读(10)\n领取奖励\n开宝箱}\n循环(5){\n听书\n等待(600)\n领取奖励\n开宝箱\n}"
+    },
+    {
+        "label": "5.熊猫脑洞小说",
+        "type": "checkbox",
+        "name": "PandaBrainFunc",
+        "options": {
+            "signIn|签到": "签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "watchAds|看广告": "看广告",
+            "shopping|逛街": "逛街",
+            "luckySpin|幸运大转盘": "幸运大转盘",
+            "readBook|阅读": "阅读(分钟)",
+            "listenBook|听书": "听书",
+            "reward|领取奖励": "领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "shopping|逛街",
+            "luckySpin|幸运大转盘",
+            "readBook|阅读",
+            "listenBook|听书",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "PandaBrain",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n看广告\n逛街\n幸运大转盘\n循环(5){\n阅读(10)\n领取奖励\n开宝箱}\n循环(5){\n听书\n等待(600)\n领取奖励\n开宝箱\n}"
+    },
+    {
+        "label": "6.七猫免费小说",
+        "type": "checkbox",
+        "name": "SevenCatsFreeFunc",
+        "options": {
+            "signIn|签到": "签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "watchAds|看广告": "看广告",
+            "shopping|逛街": "逛街",
+            "luckySpin|幸运大转盘": "幸运大转盘",
+            "readBook|阅读": "阅读(分钟)",
+            "listenBook|听书": "听书",
+            "reward|领取奖励": "领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "shopping|逛街",
+            "luckySpin|幸运大转盘",
+            "readBook|阅读",
+            "listenBook|听书",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "SevenCatsFree",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n看广告\n逛街\n幸运大转盘\n循环(5){\n阅读(10)\n领取奖励\n开宝箱}\n循环(5){\n听书\n等待(600)\n领取奖励\n开宝箱\n}"
+    },
+    {
+        "label": "7.书旗小说",
+        "type": "checkbox",
+        "name": "ShuQiFunc",
+        "options": {
+            "signIn|签到": "签到",
+            "watchAds|看广告": "看广告",
+            "readBook|阅读": "阅读",
+            "reward|领取奖励": "领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "watchAds|看广告",
+            "readBook|阅读",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "ShuQi",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n看广告\n循环(2){\n阅读(30)\n领取奖励\n}"
+    },
+    {
+        "label": "8.奇迹免费小说",
+        "type": "checkbox",
+        "name": "MarvelFreeFunc",
+        "options": {
+            "signIn|签到": "签到",
+            "openTreasure|开宝箱": "开宝箱",
+            "watchAds|看广告": "看广告",
+            "readBook|阅读":"阅读(分钟)",
+            "reward|领取奖励":"领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "readBook|阅读",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "MarvelFree",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n循环(6){\n看广告\n}\n循环(2){\n阅读(30)\n领取奖励\n}"
+    },
+    {
+        "label": "9.快手免费小说",
+        "type": "checkbox",
+        "name": "KuaiShouFreeFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "watchAds|看广告":"看广告",
+            "readBook|阅读":"阅读(分钟)",
+            "reward|领取奖励":"领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "readBook|阅读",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "KuaiShouFree",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n循环(10){\n看广告\n}\n循环(2){\n阅读(30)\n开宝箱\n领取奖励\n}"
+    },
+    {
+        "label": "10.红果免费短剧",
+        "type": "checkbox",
+        "name": "RedFruitsFunc",
+        "options": {
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "watchAds|看广告":"看广告",
+            "mealSupp|吃饭补贴":"吃饭补贴",
+            "swipeVideo|看短剧":"看短剧(分钟)",
+            "readBook|阅读":"阅读(分钟)",
+            "readReward|阅读奖励领取":"阅读奖励领取",
+            "swipeReward|看短剧奖励领取":"看短剧奖励领取"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "mealSupp|吃饭补贴",
+            "swipeVideo|看短剧",
+            "readBook|阅读",
+            "readReward|阅读奖励领取",
+            "swipeReward|看短剧奖励领取"
+        ]
+    },
+    {
+        "name": "RedFruits",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n循环(10){\n看广告\n等待(30)\n}\n循环(2){\n看短剧(30)\n看短剧奖励领取\n}\n循环(2){\n阅读(30)\n阅读奖励领取\n}"
+    },
+    {
+        "label": "11.番茄畅听",
+        "type": "checkbox",
+        "name": "TomatoFunc",
+        "options": {
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "winGoldCoin|抽奖赢金币": "抽奖赢金币",
+            "listenBook|听书":"听书",
+            "watchAds|看广告":"看广告",
+            "readBook|阅读":"阅读(分钟)",
+            "reward|领取奖励":"领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "winGoldCoin|抽奖赢金币",
+            "listenBook|听书",
+            "watchAds|看广告",
+            "readBook|阅读",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "Tomato",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n抽奖赢金币\n听书\n循环(20){\n看广告\n阅读(3)\n}\n领取奖励\n循环(3){\n阅读(30)\n领取奖励\n}"
+    },
+    {
+        "label": "12.番茄免费小说",
+        "type": "checkbox",
+        "name": "TomatoFreeFunc",
+        "options": {
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "mealSupp|吃饭补贴":"吃饭补贴",
+            "watchAds|看广告":"看广告",
+            "readBook|阅读":"阅读(分钟)",
+            "listenBook|听书":"听书",
+            "swipeVideo|看短剧":"看短剧(分钟)",
+            "reward|领取奖励":"领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "mealSupp|吃饭补贴",
+            "watchAds|看广告",
+            "readBook|阅读",
+            "listenBook|听书",
+            "swipeVideo|看短剧",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "TomatoFree",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n吃饭补贴\n听书\n循环(10){\n看广告\n等待(10)\n}\n循环(2){\n阅读(30)\n开宝箱\n}\n循环(2){\n看短剧(30)\n开宝箱\n}"
+    },
+    {
+        "label": "13.番茄畅听音乐版",
+        "type": "checkbox",
+        "name": "TomatoLiteFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "mealSupp|吃饭补贴":"吃饭补贴",
+            "winGoldCoin|抽奖赢金币":"抽奖赢金币",
+            "listenBook|听音乐":"听音乐",
+            "watchAds|看广告":"看广告",
+            "reward|领取奖励":"领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "mealSupp|吃饭补贴",
+            "winGoldCoin|抽奖赢金币",
+            "listenBook|听音乐",
+            "watchAds|看广告",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "TomatoLite",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n吃饭补贴\n抽奖赢金币\n听音乐\n循环(10){\n看广告\n等待(30)\n}\n领取奖励"
+    },
+    {
+        "label": "14.快手",
+        "type": "checkbox",
+        "name": "KuaiShouFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "mealSupp|吃饭补贴":"吃饭补贴",
+            "like|点赞":"点赞",
+            "comment|评论":"评论",
+            "collect|收藏":"收藏",
+            "watchAds|看广告":"看广告",
+            "swipeVideo|刷视频":"刷视频(分钟)",
+            "reward|领取奖励":"领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "mealSupp|吃饭补贴",
+            "like|点赞",
+            "comment|评论",
+            "collect|收藏",
+            "watchAds|看广告",
+            "swipeVideo|刷视频",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "KuaiShou",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n吃饭补贴\n循环(2){\n点赞\n评论\n收藏\n}\n循环(10){\n看广告\n}\n循环(2){\n刷视频(30)\n领取奖励\n}"
+    },
+    {
+        "label": "15.快手极速版",
+        "type": "checkbox",
+        "name": "KuaiShouLiteFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "watchAds|看广告":"看广告",
+            "swipeVideo|刷视频":"刷视频(分钟)"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "swipeVideo|刷视频"
+        ]
+    },
+    {
+        "name": "KuaiShouLite",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "刷视频(30)\n签到\n开宝箱\n循环(10){\n看广告\n}"
+    },
+    {
+        "label": "16.百度",
+        "type": "checkbox",
+        "name": "BaiduFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "searchForCoin|搜索得金币":"搜索得金币",
+            "makesureFortune|测运势":"测运势",
+            "goFarm|芭芭农场":"芭芭农场",
+            "watchAds|看广告":"看广告",
+            "swipeVideo|刷视频":"刷视频(分钟)",
+            "dailyReward|领取日常奖励":"领取日常奖励",
+            "swipeReward|刷视频奖励领取":"刷视频奖励领取"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "searchForCoin|搜索得金币",
+            "makesureFortune|测运势",
+            "goFarm|芭芭农场",
+            "watchAds|看广告",
+            "swipeVideo|刷视频",
+            "dailyReward|领取日常奖励",
+            "swipeReward|刷视频奖励领取"
+        ]
+    },
+    {
+        "name": "Baidu",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n搜索得金币\n测运势\n芭芭农场\n循环(10){\n看广告\n}\n开宝箱\n刷视频(4)\n刷视频奖励领取\n领取日常奖励\n循环(10){\n刷视频(20)\n开宝箱\n刷视频奖励领取\n}"
+    },
+    {
+        "label": "17.百度极速版",
+        "type": "checkbox",
+        "name": "BaiduLiteFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "searchForCoin|搜索得金币":"搜索得金币",
+            "mealSupp|吃饭补贴":"吃饭补贴",
+            "watchAds|看广告":"看广告",
+            "swipeVideo|刷视频":"刷视频(分钟)",
+            "swipeReward|刷视频奖励领取":"刷视频奖励领取"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "searchForCoin|搜索得金币",
+            "mealSupp|吃饭补贴",
+            "watchAds|看广告",
+            "swipeVideo|刷视频",
+            "swipeReward|刷视频奖励领取"
+        ]
+    },
+    {
+        "name": "BaiduLite",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n搜索得金币\n吃饭补贴\n循环(10){\n看广告\n}\n循环(3){\n刷视频(20)\n开宝箱\n刷视频奖励领取\n}"
+    },
+    {
+        "label": "18.百度大字版",
+        "type": "checkbox",
+        "name": "BaiduBigFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "listenBook|听书":"听书",
+            "searchForCoin|搜索得金币":"搜索得金币",
+            "watchAds|看广告":"看广告",
+            "swipeVideo|刷视频":"刷视频(分钟)",
+            "dailyReward|领取日常奖励":"领取日常奖励",
+            "listenReward|听书奖励领取":"听书奖励领取",
+            "swipeReward|刷视频奖励领取":"刷视频奖励领取"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "listenBook|听书",
+            "searchForCoin|搜索得金币",
+            "watchAds|看广告",
+            "swipeVideo|刷视频",
+            "dailyReward|领取日常奖励",
+            "listenReward|听书奖励领取",
+            "swipeReward|刷视频奖励领取"
+        ]
+    },
+    {
+        "name": "BaiduBig",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n听书\n搜索得金币\n循环(10){\n看广告\n}\n开宝箱\n领取日常奖励\n循环(3){\n刷视频(20)\n开宝箱\n刷视频奖励领取\n}"
+    },
+    {
+        "label": "19.有柿",
+        "type": "checkbox",
+        "name": "YouShiFunc",
+        "options": {
+            "signIn|签到": "签到",
+            "walkEarn|走路赚钱": "走路赚钱",
+            "mealSupp|吃饭补贴": "吃饭补贴",
+            "sleepEarn|睡觉赚钱": "睡觉赚钱",
+            "openTreasure|开宝箱": "开宝箱",
+            "doubleEarn|奖励翻倍": "奖励翻倍",
+            "watchAds|看广告": "看广告",
+            "swipeVideo|刷视频": "刷视频(分钟)",
+            "reward|领取奖励": "领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "walkEarn|走路赚钱",
+            "mealSupp|吃饭补贴",
+            "sleepEarn|睡觉赚钱",
+            "openTreasure|开宝箱",
+            "doubleEarn|奖励翻倍",
+            "watchAds|看广告",
+            "swipeVideo|刷视频",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "YouShi",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n走路赚钱\n吃饭补贴\n睡觉赚钱\n奖励翻倍\n循环(10){\n看广告\n开宝箱\n刷视频(10)\n领取奖励\n}"
+    },
+    {
+        "label": "20.今日头条",
+        "type": "checkbox",
+        "name": "ArticleFunc",
+        "options": {
+            "signIn|签到": "签到",
+            "walkEarn|走路赚钱": "走路赚钱",
+            "mealSupp|吃饭补贴": "吃饭补贴",
+            "sleepEarn|睡觉赚钱": "睡觉赚钱",
+            "openTreasure|开宝箱": "开宝箱",
+            "doubleEarn|奖励翻倍": "奖励翻倍",
+            "watchAds|看广告": "看广告",
+            "swipeVideo|刷视频": "刷视频(分钟)",
+            "reward|领取奖励": "领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "walkEarn|走路赚钱",
+            "mealSupp|吃饭补贴",
+            "sleepEarn|睡觉赚钱",
+            "openTreasure|开宝箱",
+            "doubleEarn|奖励翻倍",
+            "watchAds|看广告",
+            "swipeVideo|刷视频",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "Article",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n走路赚钱\n吃饭补贴\n睡觉赚钱\n奖励翻倍\n循环(10){\n看广告\n开宝箱\n刷视频(10)\n领取奖励\n}"
+    },
+    {
+        "label": "21.头条搜索极速版",
+        "type": "checkbox",
+        "name": "ArticleLiteFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "doubleEarn|奖励翻倍":"奖励翻倍",
+            "watchAds|看广告":"看广告",
+            "toSearch|搜一搜赚钱":"搜一搜赚钱",
+            "randomSearch|随机搜赚钱":"随机搜赚钱",
+            "swipeVideo|刷视频":"刷视频(分钟)",
+            "dailyReward|领取日常奖励":"领取日常奖励",
+            "reward|领取奖励":"领取奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "doubleEarn|奖励翻倍",
+            "watchAds|看广告",
+            "toSearch|搜一搜赚钱",
+            "randomSearch|随机搜赚钱",
+            "swipeVideo|刷视频",
+            "dailyReward|领取日常奖励",
+            "reward|领取奖励"
+        ]
+    },
+    {
+        "name": "ArticleLite",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n搜一搜赚钱\n随机搜赚钱\n领取日常奖励\n奖励翻倍\n循环(10){\n看广告\n开宝箱\n刷视频(10)\n}\n领取奖励"
+    },
+    {
+        "label": "22.抖音极速版",
+        "type": "checkbox",
+        "name": "TikTokLiteFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "watchAds|看广告":"看广告",
+            "shopping|逛街":"逛街",
+            "watchLive|看直播":"看直播",
+            "swipeVideo|刷视频":"刷视频(分钟)"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "shopping|逛街",
+            "watchLive|看直播",
+            "swipeVideo|刷视频"
+        ]
+    },
+    {
+        "name": "TikTokLite",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n看广告\n逛街\n看直播\n循环(3){\n刷视频(20)\n开宝箱\n看广告\n逛街\n}"
+    },
+    {
+        "label": "23.抖音火山版",
+        "type": "checkbox",
+        "name": "TikTokVolcanoFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "watchAds|看广告":"看广告",
+            "shopping|逛街":"逛街",
+            "watchLive|看直播":"看直播",
+            "swipeVideo|刷视频":"刷视频(分钟)"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "shopping|逛街",
+            "watchLive|看直播",
+            "swipeVideo|刷视频"
+        ]
+    },
+    {
+        "name": "TikTokVolcano",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n看广告\n逛街\n看直播\n循环(3){\n刷视频(20)\n开宝箱\n看广告\n逛街\n}"
+    }
+]

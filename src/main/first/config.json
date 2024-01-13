@@ -19,40 +19,33 @@
         "default": false
     },
     {
-        "label": "是否显示控制台",
-        "help": "日志信息在hamibot中可查看, 关闭后可提高效率",
-        "name": "_SHOW_CONSOLE",
+        "label": "1.速读免费小说",
         "type": "checkbox",
+        "name": "SpeedFree",
         "default": true
     },
     {
-        "label": "1.有柿",
+        "label": "2.得间小说",
         "type": "checkbox",
-        "name": "YouShi",
-        "default": true
-    },
-    {
-        "label": "2.书旗小说",
-        "type": "checkbox",
-        "name": "ShuQi",
+        "name": "DeJian",
         "default": true
     },
     {
         "label": "3.星空免费小说",
         "type": "checkbox",
-        "name": "StarrySky",
+        "name": "ShuQi",
         "default": true
     },
     {
-        "label": "4.奇迹免费小说",
-        "type": "checkbox",
-        "name": "MarvelFree",
-        "default": true
-    },
-    {
-        "label": "5.茄子免费小说",
+        "label": "4.茄子免费小说",
         "type": "checkbox",
         "name": "EggplantFree",
+        "default": true
+    },
+    {
+        "label": "5.熊猫脑洞小说",
+        "type": "checkbox",
+        "name": "PandaBrain",
         "default": true
     },
     {
@@ -62,111 +55,111 @@
         "default": true
     },
     {
-        "label": "7.熊猫脑洞小说",
+        "label": "7.书旗小说",
         "type": "checkbox",
-        "name": "PandaBrain",
+        "name": "ShuQi",
         "default": true
     },
     {
-        "label": "8.番茄畅听",
+        "label": "8.奇迹免费小说",
         "type": "checkbox",
-        "name": "Tomato",
+        "name": "MarvelFree",
         "default": true
     },
     {
-        "label": "9.番茄免费小说",
-        "type": "checkbox",
-        "name": "TomatoFree",
-        "default": true
-    },
-    {
-        "label": "10.番茄畅听音乐版",
-        "type": "checkbox",
-        "name": "TomatoLite",
-        "default": true
-    },
-    {
-        "label": "11.红果免费短剧",
-        "type": "checkbox",
-        "name": "RedFruits",
-        "default": true
-    },
-    {
-        "label": "12.快手免费小说",
+        "label": "9.快手免费小说",
         "type": "checkbox",
         "name": "KuaiShouFree",
         "default": true
     },
     {
-        "label": "13.速读免费小说",
+        "label": "10.红果免费短剧",
         "type": "checkbox",
-        "name": "SpeedFree",
+        "name": "RedFruits",
         "default": true
     },
     {
-        "label": "14.得间小说",
+        "label": "11.番茄畅听",
         "type": "checkbox",
-        "name": "DeJian",
+        "name": "Tomato",
         "default": true
     },
     {
-        "label": "15.望潮",
+        "label": "12.番茄免费小说",
         "type": "checkbox",
-        "name": "WanChao",
+        "name": "TomatoFree",
         "default": true
     },
     {
-        "label": "16.快手",
+        "label": "13.番茄畅听音乐版",
+        "type": "checkbox",
+        "name": "TomatoLite",
+        "default": true
+    },
+    {
+        "label": "14.快手",
         "type": "checkbox",
         "name": "KuaiShou",
         "default": true
     },
     {
-        "label": "17.快手极速版",
+        "label": "15.快手极速版",
         "type": "checkbox",
         "name": "KuaiShouLite",
         "default": true
     },
     {
-        "label": "18.百度",
+        "label": "16.百度",
         "type": "checkbox",
         "name": "Baidu",
         "default": true
     },
     {
-        "label": "19.百度极速版",
+        "label": "17.百度极速版",
         "type": "checkbox",
         "name": "BaiduLite",
         "default": true
     },
     {
-        "label": "20.百度大字版",
+        "label": "18.百度大字版",
         "type": "checkbox",
         "name": "BaiduBig",
         "default": true
     },
     {
-        "label": "21.今日头条",
+        "label": "19.有柿",
+        "type": "checkbox",
+        "name": "YouShi",
+        "default": true
+    },
+    {
+        "label": "20.今日头条",
         "type": "checkbox",
         "name": "Article",
         "default": true
     },
     {
-        "label": "22.头条搜索极速版",
+        "label": "21.头条搜索极速版",
         "type": "checkbox",
         "name": "ArticleLite",
         "default": true
     },
     {
-        "label": "23.抖音极速版",
+        "label": "22.抖音极速版",
         "type": "checkbox",
         "name": "TikTokLite",
         "default": true
     },
     {
-        "label": "24.抖音火山版",
+        "label": "23.抖音火山版",
         "type": "checkbox",
         "name": "TikTokVolcano",
+        "default": true
+    },
+    {
+        "label": "24.望潮",
+        "type": "checkbox",
+        "name": "WanChao",
         "default": true
     }
 ]

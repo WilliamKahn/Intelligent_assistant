@@ -1,10 +1,9 @@
 import { Image, Point } from "images";
-import { DEVICE_HEIGHT, DEVICE_WIDTH, PACKAGE_HAMIBOT, SHOW_CONSOLE } from "../global";
+import { DEVICE_HEIGHT, DEVICE_WIDTH, PACKAGE_HAMIBOT } from "../global";
 import { Record } from "../lib/logger";
 import { findAndClick, fixedClick, normalClick } from './click';
 import { Move } from "./enums";
-import { Bounds } from './interfaces';
-import { search } from "./search";
+import { Bounds, ComponentBounds } from './interfaces';
 
 
 //转化坐标
@@ -31,11 +30,23 @@ export function boundsScaling(bounds: Bounds, scaling: number){
     const height = bottom - top
     const newHeight = height * scaling
     const newWidth = width * scaling
-    left = left + (width-newWidth)/2
+    left = left + (width-newWidth)/2 
     top = top + (height - newHeight)/2
     right = right - (width-newWidth)/2
     bottom = bottom - (height - newHeight)/2
-    return {left:left, top:top, right:right, bottom:bottom}
+    const result = {left:left, top:top, right:right, bottom:bottom}
+    boundsCorrection(result)
+    return result
+}
+/**
+ * @description 边界矫正
+ * @param bounds 
+ */
+export function boundsCorrection(bounds: ComponentBounds){
+    bounds.left = bounds.left < 0 ? 0 : bounds.left
+    bounds.top = bounds.top < 0 ? 0 : bounds.top
+    bounds.right = bounds.right > device.width ? device.width : bounds.right
+    bounds.bottom = bounds.bottom > device.height ? device.height : bounds.bottom
 }
 
 export function getScreenImage(bounds?: Bounds){
@@ -43,12 +54,10 @@ export function getScreenImage(bounds?: Bounds){
     const y1 = bounds?.top || 0
     const x2 = bounds?.right || device.width
     const y2 = bounds?.bottom || device.height
-    if(SHOW_CONSOLE){
-        console.hide()
-        sleep(100)
-    }
+    console.hide()
+    sleep(100)
     const img = captureScreen()
-    if(SHOW_CONSOLE) console.show()
+    console.show()
     waitRandomTime(1)
     const result = images.clip(img, x1, y1, x2-x1, y2-y1)
     try {
@@ -125,6 +134,20 @@ export function swipeUp(set: Move, interval:number){
         gesture(interval, [resizeX(random(580, 620)), resizeY(random(950, 1050))], 
                 [resizeX(random(780, 820)), resizeY(random(1750, 1850))])
     }
+}
+export function swipeLeft(y: number, interval:number){
+    console.hide()
+    sleep(100)
+    gesture(interval, [resizeX(random(280, 320)), y], 
+        [resizeX(random(780, 820)), y+random(-30, 30)])
+    console.show()
+}
+export function swipeRight(y: number, interval:number){
+    console.hide()
+    sleep(100)
+    gesture(interval, [resizeX(random(780, 820)), y], 
+        [resizeX(random(280, 320)), y+random(-30, 30)])
+    console.show()
 }
 
 /**
@@ -373,14 +396,6 @@ export function judgeFuncIsWorkByImg(func: ()=>void, bounds:Bounds){
     }
 }
 
-export function compareStr(str1: string, str2: string){
-    const num = levenshteinDistance(str1 , str2)
-    if(num > 0.6){
-        return true
-    }
-    return false
-}
-
 export function randomExecute(methods:(()=> void)[]){
     // 随机打乱数组顺序
     for (let i = methods.length - 1; i > 0; i--) {
@@ -527,8 +542,37 @@ export function getNumFromComponent(str:string){
     return 0
 }
 
-export function getDeadline(){
-    
+export function executeDynamicLoop(loopCount: number, loopBody: () => void): void {
+    for (let i = 0; i < loopCount; i++) {
+      loopBody();
+    }
 }
 
+export function getGrayscale(img:Image, rate:number = 4){
+    let sum = 0
+    let gray = 0
+    for (var y = 0; y < img.getHeight(); y+=rate) {
+        for (var x = 0; x < img.getWidth(); x+=rate) {
+            // 获取当前像素的颜色值
+            var color = img.pixel(x, y);
+            if(isGray(colors.red(color), colors.green(color), colors.blue(color))){
+                gray++
+            }
+            sum++
+        }
+    }
+    img.recycle()
+    Record.debug(`灰度值${(gray/sum).toFixed(2)}`)
+    return gray/sum
+}
 
+function isGray(r: number, g: number, b: number): boolean {
+    
+    const brightnessThreshold = 150; // 亮度阈值，根据实际情况调整
+    const contrastThreshold = 150;   // 对比度阈值，根据实际情况调整
+
+    const brightness = (r + g + b) / 3;
+    const contrast = Math.max(r, g, b) - Math.min(r, g, b);
+
+    return brightness <= brightnessThreshold && contrast <= contrastThreshold;
+}

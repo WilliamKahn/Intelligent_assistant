@@ -1,10 +1,8 @@
-import { findAndClick, dialogClick, normalClick, scrollClick, selectedClick } from "../common/click";
-import { closeByImageMatching, doFuncAtGivenTime, randomExecute, waitRandomTime } from "../common/utils";
-import { MAX_CYCLES_COUNTS, NAME_READ_SEVEN_CATS_FREE, PACKAGE_READ_SEVEN_CATS_FREE } from "../global";
+import { dialogClick } from "../common/click";
+import { NAME_READ_SEVEN_CATS_FREE, PACKAGE_READ_SEVEN_CATS_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
-import { Record } from "../lib/logger";
 import { AbstractFreeNovel } from "./abstract/AbstractFreeNovel";
-import { Base, BaseKey } from "./abstract/Base";
+import { BaseKey } from "./abstract/Base";
 
 export class SevenCatsFree extends AbstractFreeNovel{
 

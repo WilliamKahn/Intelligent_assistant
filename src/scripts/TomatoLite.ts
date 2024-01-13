@@ -1,4 +1,4 @@
-import { dialogClick, findAndClick, fixedClick, scrollClick, scrollPopClick, selectedClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, scrollClick, selectedClick } from "../common/click";
 import { scrollTo, search } from "../common/search";
 import { randomExecute, resizeX, resizeY } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_TOMATO_LITE, PACKAGE_READ_TOMATO_LITE } from "../global";
@@ -35,7 +35,11 @@ export class TomatoLite extends AbstractTomato {
             ()=>{this.winGoldCoin()},
             ()=>{
                 this.listenBook()
-                this.watchAds()
+                let cycleCounts = 0
+                while(++cycleCounts < MAX_CYCLES_COUNTS 
+                    && text("立即观看").findOne(3 * 60 * 1000)) {
+                    this.watchAds()
+                }
             },
         ])
         this.reward()
@@ -56,7 +60,7 @@ export class TomatoLite extends AbstractTomato {
     signIn(): void{
         this.goTo(this.tab, 2)
         this.sign()
-        if(scrollPopClick("立即签到", "签到")){
+        if(scrollClick("立即签到", "签到", {clickUntilGone:false})){
             this.sign()
         }
     }
@@ -65,11 +69,12 @@ export class TomatoLite extends AbstractTomato {
     listenBook(): void {
         this.goTo(this.tab, 0)
         if(selectedClick("音乐", 170)){
-            const [bound, _] = search(className("android.widget.ImageView"), {
+            const component = search(className("android.widget.ImageView"), {
                 bounds: {top: device.height / 3},
                 index: random(0, 4)
             })
-            if(findAndClick(className("android.widget.TextView").boundsInside(0, bound.top, device.width, bound.bottom))){
+            if(findAndClick(className("android.widget.TextView")
+            .boundsInside(0, component?.bounds.top||0, device.width, component?.bounds.bottom||device.height))){
                 if(fixedClick("看视频领时长")){
                     this.watch(text("看视频领时长"))
                 }  
@@ -85,7 +90,7 @@ export class TomatoLite extends AbstractTomato {
         let cycleCounts = 0
         for(let range of list){
             while(++cycleCounts < MAX_CYCLES_COUNTS 
-                && scrollPopClick("立即领取", range)) {
+                && scrollClick("立即领取", range, {clickUntilGone:false})) {
                     this.watchAdsForCoin("日常福利")
             }
         }
@@ -104,16 +109,10 @@ export class TomatoLite extends AbstractTomato {
     @functionLog("看广告")
     watchAds(): void {
         this.goTo(this.tab, 2)
-        let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && scrollClick("立即观看", "看视频赚金币")) {
-            Record.log(`正在观看第${cycleCounts}个广告`)
+        if(scrollClick("立即观看", "看视频赚金币")){
             this.watch(text("日常福利"))
-            if(cycleCounts % 3 === 0) {
-                this.openTreasure()
-            }
-            text("立即观看").findOne(3 * 60 * 1000)
         }
+        
     }
 
     @functionLog("开宝箱")

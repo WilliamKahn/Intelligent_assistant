@@ -1,7 +1,7 @@
-import { dialogClick, findAndClick, fixedClick, normalClick, ocrClick, randomClick } from "../common/click";
+import { dialogClick, findAndClick, randomClick } from "../common/click";
 import { Move } from "../common/enums";
-import { scrollTo, search, searchByOcrRecognize } from "../common/search";
-import { closeByImageMatching, doFuncAtGivenTime, getNumFromComponent, moveDown, resizeX, resizeY, swipeDown, swipeUp, waitRandomTime, } from "../common/utils";
+import { search, searchByOcrRecognize } from "../common/search";
+import { closeByImageMatching, getNumFromComponent, moveDown, swipeDown, swipeUp, waitRandomTime } from "../common/utils";
 import { NAME_VEDIO_TIKTOK_LITE, PACKAGE_VEDIO_TIKTOK_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { AbstractTikTok } from "./abstract/AbstractTikTok";
@@ -25,10 +25,10 @@ export class TikTokLite extends AbstractTikTok{
             swipeUp(Move.Fast, 1000)
         }
         waitRandomTime(2)
-        if(searchByOcrRecognize("日常任务")[0] !== undefined){
+        if(searchByOcrRecognize("日常任务") !== undefined){
             this.moveFlag = true
         }
-        if(searchByOcrRecognize("已经到底了")[0] !== undefined){
+        if(searchByOcrRecognize("已经到底了") !== undefined){
             this.moveFlag = false
         }
     }
@@ -36,7 +36,7 @@ export class TikTokLite extends AbstractTikTok{
     @measureExecutionTime
     weight(): void {
         this.goto(-1)
-        while(searchByOcrRecognize("金币收益.*")[0] === undefined){
+        while(searchByOcrRecognize("金币收益.*") === undefined){
             this.move()
         }
         const [_, name]:any = searchByOcrRecognize("金币收益.*")
@@ -115,19 +115,21 @@ export class TikTokLite extends AbstractTikTok{
 
     //自定义跳转
     goto(num: number){
-        const [bounds,_] = search(className("android.widget.HorizontalScrollView"), {waitFor:true})
-        const center = (bounds.top + bounds.bottom)/2
-        this.goTo(this.tab, 0)
-        //任务页
-        if(num === -1){
-            if(center < 500){
-                findAndClick(className("android.widget.FrameLayout"),{fixed:true, bounds:{top:center, bottom:device.height / 3, left:device.width * 2 / 3}})
-            } else {
-                this.backUntilFind(this.tab)
-            }
-        } else if(num === 0){
-            if(center > 500){
-                back()
+        const component = search(className("android.widget.HorizontalScrollView"), {waitFor:true})
+        if(component !== undefined){
+            const center = (component.bounds.top + component.bounds.bottom)/2
+            this.goTo(this.tab, 0)
+            //任务页
+            if(num === -1){
+                if(center < 500){
+                    findAndClick(className("android.widget.FrameLayout"),{fixed:true, bounds:{top:center, bottom:device.height / 3, left:device.width * 2 / 3}})
+                } else {
+                    this.backUntilFind(this.tab)
+                }
+            } else if(num === 0){
+                if(center > 500){
+                    back()
+                }
             }
         }
     }

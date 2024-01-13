@@ -1,7 +1,7 @@
-import { findAndClick, fixedClick, dialogClick, readClick, scrollClick, scrollPopClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, readClick, scrollClick } from "../common/click";
 import { scrollTo } from "../common/search";
 import { doFuncAtGivenTime, merge, resizeX, resizeY, } from "../common/utils";
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_SPEED_FREE, PACKAGE_READ_SPEED_FREE } from "../global";
+import { MAX_CYCLES_COUNTS, NAME_READ_SPEED_FREE, PACKAGE_READ_SPEED_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Base, BaseKey } from "./abstract/Base";
 
@@ -16,6 +16,10 @@ export class SpeedFree extends Base {
         this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60)
         this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 100 * 60)
         this.lowEffEstimatedTime = 0
+        // this.dialogBounds = {
+        //     bottom: device.height * 4 / 5, 
+        //     top: device.height * 1 / 3,
+        // }
     }
 
     @measureExecutionTime
@@ -27,7 +31,11 @@ export class SpeedFree extends Base {
     medEff(): void {
         this.listenBook()
         this.openTreasure()
-        this.watchAds()
+        let cycleCounts = 0
+        while(++cycleCounts < MAX_CYCLES_COUNTS 
+            && text("去观看").exists()){
+            this.watchAds()
+        }
         this.reward()
     }
 
@@ -73,9 +81,7 @@ export class SpeedFree extends Base {
     @functionLog("看广告")
     watchAds(): void {
         this.goTo(desc("discovery_button"), -1)
-        let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && scrollClick("去观看", "看视频赚金币")){
+        if(scrollClick("去观看", "看视频赚金币")){
             this.watch(text("日常福利"))
             this.watchAdsForCoin("日常福利")
         }
@@ -125,7 +131,7 @@ export class SpeedFree extends Base {
         let list = ["阅读赚海量金币", "听书赚海量金币"]
         for(let range of list){
             while(++cycleCounts < MAX_CYCLES_COUNTS
-                && scrollPopClick("领取", range)) {
+                && scrollClick("领取", range, {clickUntilGone:false})) {
                 this.watchAdsForCoin("日常福利")
             }
         }

@@ -1,7 +1,7 @@
-import { dialogClick, findAndClick, fixedClick, scrollClick } from "../common/click";
+import { dialogClick, fixedClick, scrollClick } from "../common/click";
 import { scrollTo, search } from "../common/search";
-import { closeByImageMatching, moveDown, randomExecute, waitRandomTime } from "../common/utils";
-import { MAX_CYCLES_COUNTS, NAME_READ_ARTICLE_LITE, PACKAGE_READ_ARTICLE_LITE, tikTokLite } from "../global";
+import { closeByImageMatching, moveDown, randomExecute } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_READ_ARTICLE_LITE, PACKAGE_READ_ARTICLE_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { AbstractArticle } from "./abstract/AbstractArticle";
@@ -22,18 +22,19 @@ export class ArticleLite extends AbstractArticle{
             ()=>{this.doubleEarn()},
             ()=>{this.watchAds()},
             ()=>{this.toSearch()},
+            ()=>{this.doubleEarn()},
             ()=>{this.randomSearch()},
         ])
-        this.reward2()
+        this.dailyReward()
     }
 
     @measureExecutionTime
     weight(): void {
         this.goTo(this.tab, 2)
         scrollTo("现金收益")
-        const [_,name] = search("[0-9]+金币")
-        if(name !== undefined){
-            const weight = parseInt(name)
+        const component = search("[0-9]+金币")
+        if(component !== undefined){
+            const weight = parseInt(component.text)
             Record.debug(`${weight}`)
             this.store(BaseKey.Weight, weight)
         }
@@ -44,15 +45,15 @@ export class ArticleLite extends AbstractArticle{
     }
 
     getCoinStr(): string {
-        const [bounds, _] = search("恭喜获得宝箱奖励")
-        const [__, name] = search("\\+[0-9]+金币", {bounds: {top: bounds.bottom}})
-        return name
+        const component = search("恭喜获得宝箱奖励")
+        const component2 = search("\\+[0-9]+金币", {bounds: {top: component?.bounds.bottom}})
+        return component2?.text || ""
     }
 
     @functionLog("签到")
     signIn(): void {
         this.goTo(this.tab, 2)
-        if(dialogClick("额外再领")){
+        if(dialogClick("额外再领|翻倍领取")){
             this.watch(text("日常任务"))
             closeByImageMatching()
         }
@@ -90,17 +91,17 @@ export class ArticleLite extends AbstractArticle{
         this.goTo(this.tab, 2)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && findAndClick("点击领取",{coverBoundsScaling:1})){
+            && scrollClick("点击领取", undefined, {clickUntilGone:false})){
             this.watchAdsForCoin("日常任务")
         }
     }
 
     @functionLog("领取挑战奖励")
-    reward2(): void {
+    dailyReward(): void {
         this.goTo(this.tab, 2)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && findAndClick("领取",{coverBoundsScaling:1})){
+            && scrollClick("领取", undefined, {clickUntilGone:false})){
             this.watchAdsForCoin("日常任务")
         }
     }

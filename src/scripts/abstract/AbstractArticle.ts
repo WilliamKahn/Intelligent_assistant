@@ -1,5 +1,5 @@
 import { dialogClick, findAndClick, fixedClick, normalClick, ocrClick, scrollClick } from "../../common/click";
-import { scrollTo, search } from "../../common/search";
+import { scrollTo } from "../../common/search";
 import { convertSecondsToMinutes, doFuncAtGivenTime, getNumFromComponent, moveDown, randomExecute, resizeX, resizeY } from "../../common/utils";
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, MIN_RUN_THRESHOLD } from "../../global";
 import { functionLog, measureExecutionTime } from "../../lib/decorators";
@@ -117,7 +117,7 @@ export abstract class AbstractArticle extends Base {
     reward(): void {
         this.goToTask()
         let cycleCounts = 0
-        scrollTo("现金收益.*", {coverBoundsScaling:1})
+        scrollTo("现金收益.*")
         while(++cycleCounts < MAX_CYCLES_COUNTS  && ocrClick("点击领取|点击抽奖")){
             this.watchAdsForCoin("日常任务")
             if(dialogClick("开始抽奖")){

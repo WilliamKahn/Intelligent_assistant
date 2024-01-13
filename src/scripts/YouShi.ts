@@ -15,9 +15,9 @@ export class YouShi extends AbstractArticle{
         this.goTo(this.tab, 3)
     }
     getCoinStr(): string {
-        const [bounds, _] = search("恭喜获得宝箱奖励")
-        const [__, name] = search("\\+[0-9]+金币", {bounds: {top: bounds.bottom}})
-        return name
+        const component = search("恭喜获得宝箱奖励")
+        const component2 = search("\\+[0-9]+金币", {bounds: {top: component?.bounds.bottom}})
+        return component2?.text || ""
     }
 
     @functionLog("签到")

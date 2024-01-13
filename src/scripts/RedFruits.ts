@@ -1,5 +1,5 @@
-import { findAndClick, fixedClick, readClick, scrollClick, scrollPopClick, selectedClick } from "../common/click";
-import { scrollTo, search, searchByOcrRecognize } from "../common/search";
+import { findAndClick, fixedClick, scrollClick, selectedClick } from "../common/click";
+import { search } from "../common/search";
 import { convertSecondsToMinutes, doFuncAtGivenTime, merge, resizeX, resizeY, waitRandomTime } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_RED_FRUITS, PACKAGE_READ_RED_FRUITS } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
@@ -26,7 +26,11 @@ export class RedFruits extends AbstractTomato {
     highEff(): void {
         this.signIn()
         this.openTreasure()
-        this.watchAds()
+        let cycleCounts = 0
+        while(++cycleCounts < MAX_CYCLES_COUNTS && 
+            text("立即领取").findOne(60 * 1000)){
+            this.watchAds()
+        }
         this.mealSupp()
     }
 
@@ -75,6 +79,7 @@ export class RedFruits extends AbstractTomato {
         this.goTo(text("首页"), -1)
         if(selectedClick("推荐", 170)){
             if(findAndClick(className("android.widget.ImageView"), {
+                waitFor:true,
                 fixed:true,
                 index: random(0, 17)
             })){
@@ -94,16 +99,10 @@ export class RedFruits extends AbstractTomato {
     @functionLog("阅读")
     readBook(totalTime: number): void {
         this.goTo(text("首页"), -1)
-        const [bounds, _] = search("推荐")
-        const centerY = (bounds.top + bounds.bottom)/2
-        gesture(1000, [resizeX(random(780, 820)), centerY],
-                 [resizeX(random(280, 320)), centerY + random(-30, 30)])
-        waitRandomTime(2)
         if(selectedClick("经典", 170)){
-            const [bound, _] = search(random(1, 4).toString())
+            const component = search(random(1, 4).toString())
             if(findAndClick(className("android.widget.TextView"), {
-                bounds: {top: bound.top, left:bound.right},
-                coverBoundsScaling: 1
+                bounds: {top: component?.bounds.top, left:component?.bounds.right},
             })){
                 this.read(totalTime)
             }
@@ -116,9 +115,28 @@ export class RedFruits extends AbstractTomato {
         let cycleCounts = 0
         for(let range of this.list){
             while(++cycleCounts < MAX_CYCLES_COUNTS 
-                && scrollPopClick("立即领取", range)) {
+                && scrollClick("立即领取", range, {clickUntilGone:false})) {
                 this.watchAdsForCoin("日常福利")
             }
+        }
+    }
+
+    @functionLog("阅读赚金币")
+    readReward(): void{
+        this.goTo(text("福利"), -1)
+        let cycleCounts = 0
+        while(++cycleCounts < MAX_CYCLES_COUNTS 
+            && scrollClick("立即领取", "阅读赚金币", {clickUntilGone:false})) {
+            this.watchAdsForCoin("日常福利")
+        }
+    }
+
+    swipeReward(): void{
+        this.goTo(text("福利"), -1)
+        let cycleCounts = 0
+        while(++cycleCounts < MAX_CYCLES_COUNTS 
+            && scrollClick("立即领取", "看短剧赚金币", {clickUntilGone:false})) {
+            this.watchAdsForCoin("日常福利")
         }
     }
 
@@ -126,7 +144,7 @@ export class RedFruits extends AbstractTomato {
     signIn(): void {
         this.goTo(text("福利"), -1)
         this.sign()
-        if(scrollPopClick("去签到", "签到领金币|明日签到")){
+        if(scrollClick("去签到", "签到领金币|明日签到", {clickUntilGone:false})){
             this.sign()
         }
     }
@@ -134,9 +152,7 @@ export class RedFruits extends AbstractTomato {
     @functionLog("看广告")
     watchAds(): void {
         this.goTo(text("福利"), -1)
-        let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS && 
-            scrollClick("立即领取", "看视频赚海量金币")){
+        if(scrollClick("立即领取", "看视频赚海量金币")){
             this.watch(text("日常福利"))
         }
     }

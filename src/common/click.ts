@@ -1,10 +1,26 @@
-import { EVENT, MAX_CLICK_COUNTS, SHOW_CONSOLE, WAIT_TIME_AFTER_CLICK } from "../global"
+import { Thread } from "threads"
+import { MAX_CLICK_COUNTS, WAIT_TIME_AFTER_CLICK } from "../global"
 import { CurrentAppBanned, ExceedMaxNumberOfAttempts } from "../lib/exception"
 import { Record } from "../lib/logger"
-import { Dialog } from "./enums"
-import { Bounds, FindAndClickOptions, NormalClickOptions, RandomClickOptions } from "./interfaces"
-import { scrollTo, search } from "./search"
-import { boundsScaling, close, closeByImageMatching, findLargestIndexes, getGrayscaleHistogram, getScreenImage, judgeFuncIsWorkByImg, merge, mergeHistogram, waitRandomTime } from "./utils"
+import { Bounds, Component, FindAndClickOptions, NormalClickOptions, RandomClickOptions, ScrollAndClickOptions } from "./interfaces"
+import { coverCheck, scrollTo, search } from "./search"
+import { boundsCorrection, boundsScaling, closeByImageMatching, findLargestIndexes, getGrayscale, getGrayscaleHistogram, getScreenImage, judgeFuncIsWorkByImg, merge, mergeHistogram, waitRandomTime } from "./utils"
+
+export function continueWatch(){
+    return findAndClick(merge(["继续观看", "再看[0-9]+秒(可)?(领取)?奖励", "抓住奖励机会", "留下看看", "(残忍)?关闭"]), {
+        fixed:true,
+        bounds: {
+            bottom: device.height * 2 / 3, 
+            top: device.height * 1 / 3,
+        }
+    })
+}
+export function watchAgain(){
+    return findAndClick(merge(["领取奖励", "再看一个领取[0-9]+金币", "看视频再得[0-9]+金币"]))
+}
+export function closeDialogifExist(){
+    return fixedClick(merge(["取消", "(残忍)?关闭", "(以后|下次)再说", "(直接|坚持|仍要)?退出(阅读|直播间)?", "暂不(加入|添加)", "(残忍)离开", "放弃奖励", "(我)?知道了"]))
+}
 
 //通用方法
 export function fixedClick(component:string|UiSelector){
@@ -17,75 +33,86 @@ export function goneClick(text: string){
     return findAndClick(text, {fixed:true, clickUntilGone:true})
 }
 //固定、ocr识别、重复点击、区域限定
-export function dialogClick(text:string){
+export function dialogClick(text:string, bounds?:Bounds){
+    const boundss = bounds || {
+        bottom: device.height * 4 / 5, 
+        top: device.height * 1 / 3,
+        left: device.width * 1 / 5,
+        right: device.width * 4 / 5
+    }
     return findAndClick(text, {
         fixed:true, 
         ocrRecognize: true, 
-        clickUntilGone:true, 
-        bounds: {
-            bottom: device.height * 4 / 5, 
-            top: device.height * 1 / 3,
-            left: device.width * 1 / 5,
-            right: device.width * 4 / 5
-        }
+        clickUntilGone:true,
+        bounds: boundss
     })
 }
 export function readClick(selector: UiSelector, index: number){
     return findAndClick(selector, {
+        waitFor:true,
         index: index,
         clickUntilGone: true,
-        coverBoundsScaling: 1
     })
 }
-//滑动、遮挡校验、左侧定位（必定存在）、重复点击 （任务列表）
-export function scrollClick(text:string, range?:string){
-    return findAndClick(text, {leftRange:range, coverBoundsScaling:1, clickUntilGone:true})
-}
-export function scrollPopClick(text:string, range?:string){
-    return findAndClick(text, {leftRange:range, coverBoundsScaling:1})
+export function scrollClick(selector:string|UiSelector, range?:string|UiSelector, options:FindAndClickOptions={clickUntilGone:true}){
+    if(range){
+        return scrollAndClick(selector, range, {
+            findAndClickOptions: options,
+            searchOptions: {waitFor:true},
+            method:(selector:UiSelector, range:Component)=>{
+                let top = range.bounds.top - 30
+                let bottom = range.bounds.bottom + 80
+                let left = range.bounds.right
+                if(bottom <= top){
+                    bottom = top + 200
+                }
+                selector.boundsInside(left, top, device.width, bottom)
+            }
+        })
+    }
+    return findAndClick(selector, options)
 }
 //固定、一定存在、点击改变
 export function selectedClick(text: string, threshold: number){
-    return findAndClick(text, {fixed:true, waitFor:true, selectedThreshold: threshold, check:true})
+    return findAndClick(text, {waitFor:true, selectedThreshold: threshold, check:true})
 }
-export function clickDialogOption(options?:Dialog, range?:boolean){
-    if(options === undefined){
-        options = random(Dialog.Positive, Dialog.Negative)
-    }
-    if(options === Dialog.Positive){
-        if(range){
-            return findAndClick(merge(["继续观看", "抓住奖励机会", "留下看看", "(残忍)?关闭", "领取奖励"]), {
-                fixed:true,
-                bounds: {
-                    bottom: device.height * 2 / 3, 
-                    top: device.height * 1 / 3,
-                }
-            })
+
+export function scrollAndClick(selector:string|UiSelector, range:string|UiSelector, options:ScrollAndClickOptions){
+    let first = true
+    options.findAndClickOptions.method = (selector:UiSelector) =>{
+        if(first){
+            first = false
+        } else {
+            options.searchOptions.waitFor = false
         }
-        return fixedClick(merge(["继续观看", "抓住奖励机会", "留下看看", "(残忍)?关闭", "领取奖励"]))
-    } else if(options === Dialog.Negative) {
-        return fixedClick(merge(["取消", "(残忍)?关闭", "(以后|下次)再说", "(直接|坚持|仍要)?退出(阅读)?", "暂不(加入|添加)", "(残忍)离开", "放弃奖励", "(我)?知道了"]))
+        const component = search(range, options.searchOptions)
+        if(component !== undefined){
+            options.method(selector, component)
+        }
     }
+    return findAndClick(selector, options.findAndClickOptions)
 }
 /**
  * @description 滑动到指定位置并点击
  * @param options 
  * @returns true or false
  */
-export function findAndClick(component: string|UiSelector, options?:FindAndClickOptions, times: number = 0){
+export function findAndClick(selector: string|UiSelector, options?:FindAndClickOptions, times: number = 0){
     if (++times > MAX_CLICK_COUNTS) {
         Record.debug("findAndClick error")
         throw new ExceedMaxNumberOfAttempts("超过最大限制次数")
     } else if(times > MAX_CLICK_COUNTS - 2){
         closeByImageMatching()
-        clickDialogOption(Dialog.Negative)
+        closeDialogifExist()
     } else if(times > MAX_CLICK_COUNTS - 4){
         closeByImageMatching()
     }
-    const [bounds, name] = scrollTo(component, options)
-    if(bounds) {
+    const component = scrollTo(selector, options)
+    if(component) {
+        //边界矫正
+        boundsCorrection(component.bounds)
         if (options?.selectedThreshold){
-            const img = getScreenImage(bounds)
+            const img = getScreenImage(component.bounds)
             const list = getGrayscaleHistogram(img)
             img.recycle()
             const mergeList = mergeHistogram(list)
@@ -95,22 +122,33 @@ export function findAndClick(component: string|UiSelector, options?:FindAndClick
                 return true
             }
         }
-        if(name && name !== "" && !/^[0-9]+$/.test(name)){
-            Record.log(name)
-        }
         if(options?.waitFor){
             waitRandomTime(2)
         }
-        randomClick(bounds, options)
+        if(options?.fixed && !options.disableCheckBeforeClick){
+            if(coverCheck(component, options)){
+                closeByImageMatching()
+                closeDialogifExist()
+            } else if(!options.disableGrayCheck) {
+                const img = getScreenImage(component.bounds)
+                const ratio = options.grayscaleRatio || 1
+                if(getGrayscale(img, 1) >= ratio){
+                    closeByImageMatching()
+                    closeDialogifExist()
+                }
+                img.recycle()
+            }
+        }
+        if(component.text && component.text !== "" && !/^[0-9]+$/.test(component.text)){
+            Record.log(component.text)
+        }
+        randomClick(component.bounds, options)
         if (options?.clickUntilGone) {
             options.waitFor = false
-            if(options.leftRange && search(options.leftRange)[0]  === undefined){
-                return true
-            }
-            findAndClick(component, options, times)
+            findAndClick(selector, options, times)
         }
         return true
-    }    
+    }
     return false
 }
 
@@ -152,7 +190,7 @@ export function normalClick(x: number, y: number, options?: NormalClickOptions){
         const thread = threads.start(function(){
             // 在新线程中开启一个Toast监听
             events.observeToast();
-            events.once("toast", function(toast){
+            events.once("toast", function(toast:any){
                 if(toast){
                     result.setAndNotify(toast.getText())    
                 } else {
@@ -162,22 +200,19 @@ export function normalClick(x: number, y: number, options?: NormalClickOptions){
         })
         thread.waitFor()
     }
-    if(SHOW_CONSOLE){
-        console.hide()
-        sleep(100)
-        click(x, y)
-        console.show()
-    } else {
-        click(x, y)
-    }
+    console.hide()
+    sleep(100)
+    click(x, y)
+    console.show()
     if(options?.feedback){
         const thread = threads.start(function(){
             waitRandomTime(time)
             events.emit("toast")
+            events.removeAllListeners("toast")
         })
         thread.waitFor()
         const str = result.blockedGet()
-        threads.shutDownAll()
+        // threads.shutDownAll()
         Record.debug(str)
         if(str.match("失败|异常|领取过奖励")){
             throw new CurrentAppBanned(str)

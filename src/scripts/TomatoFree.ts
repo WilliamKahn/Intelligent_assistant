@@ -1,8 +1,8 @@
-import { findAndClick, fixedClick, dialogClick, readClick, scrollClick, selectedClick } from "../common/click";
+import { findAndClick, fixedClick, selectedClick } from "../common/click";
 import { Move } from "../common/enums";
 import { scrollTo, search } from "../common/search";
-import { convertSecondsToMinutes, doFuncAtGivenTime, merge, randomExecute, resizeX, resizeY, swipeDown, swipeUp, waitRandomTime } from "../common/utils";
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_TOMATO_FREE, PACKAGE_READ_TOMATO_FREE } from "../global";
+import { convertSecondsToMinutes, doFuncAtGivenTime, merge, randomExecute, resizeX, resizeY, swipeDown, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_READ_TOMATO_FREE, PACKAGE_READ_TOMATO_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { AbstractTomato } from "./abstract/AbstractTomato";
@@ -34,7 +34,11 @@ export class TomatoFree extends AbstractTomato {
             ()=>{this.mealSupp()},
             ()=>{
                 this.listenBook()
-                this.watchAds()
+                let cycleCounts = 0
+                while(++cycleCounts < MAX_CYCLES_COUNTS && 
+                    text("看视频赚金币").findOne(30 * 1000)){
+                    this.watchAds()
+                }
             },
         ])
         this.reward()
@@ -71,7 +75,7 @@ export class TomatoFree extends AbstractTomato {
     signIn(): void{
         this.goto()
         this.sign()
-        if(this.scrollNoneClick("去签到", "签到领金币|明日签到", false)) {
+        if(this.scrollClick("去签到", "签到领金币|明日签到", false)) {
             this.sign()
         }
     }
@@ -81,10 +85,9 @@ export class TomatoFree extends AbstractTomato {
         this.goTo(this.tab, 0)
         if(selectedClick("听书", 170)){
             for(let i = 1;i<5;i++){
-                const [bound, _] = search(i.toString())
+                const component = search(i.toString())
                 if(findAndClick(className("android.widget.TextView"), {
-                    bounds: {top: bound.top, left:bound.right},
-                    coverBoundsScaling: 1
+                    bounds: {top: component?.bounds.top, left:component?.bounds.right},
                 })){
                     if(fixedClick("全部播放|续播")){
                         break
@@ -100,7 +103,7 @@ export class TomatoFree extends AbstractTomato {
     @functionLog("领取餐补")
     mealSupp(): void{
         this.goto()
-        if(this.scrollNoneClick("去领取", "吃饭补贴", true)){
+        if(this.scrollClick("去领取", "吃饭补贴", true)){
             if(fixedClick("领取.*补贴[0-9]+金币")) {
                 this.watchAdsForCoin("日常福利")
             }
@@ -112,10 +115,9 @@ export class TomatoFree extends AbstractTomato {
         this.goTo(this.tab, 0)
         if(selectedClick("推荐", 170)){
             for(let i = 1;i<5;i++){
-                const [bound, _] = search(i.toString())
+                const component = search(i.toString())
                 if(findAndClick(className("android.widget.TextView"), {
-                    bounds: {top: bound.top, left:bound.right},
-                    coverBoundsScaling: 1
+                    bounds: {top: component?.bounds.top, left:component?.bounds.right},
                 })){
                     if(text("阅读电子书").exists()){
                         back()
@@ -136,7 +138,7 @@ export class TomatoFree extends AbstractTomato {
         let list = ["阅读赚金币", "听书赚金币", "看短剧赚金币"]
         for(let range of list){
             while(++cycleCounts < MAX_CYCLES_COUNTS && 
-                this.scrollNoneClick("立即领取", range, false)
+                this.scrollClick("立即领取", range, false)
             ) {
                 this.watchAdsForCoin("日常福利")
             }
@@ -146,9 +148,7 @@ export class TomatoFree extends AbstractTomato {
     @functionLog("看视频")
     watchAds(): void {
         this.goto()
-        let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && this.scrollNoneClick("立即领取", "看视频赚金币", true)){
+        if(this.scrollClick("立即领取", "看视频赚金币", true)){
             this.watch(text("日常福利"))
         }
     }

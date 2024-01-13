@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, scrollClick, scrollPopClick } from "../../common/click";
+import { findAndClick, fixedClick, scrollClick} from "../../common/click";
 import { Move } from "../../common/enums";
 import { search } from "../../common/search";
 import { closeByImageMatching, merge, swipeDown, swipeUp, waitRandomTime } from "../../common/utils";
@@ -16,7 +16,11 @@ export abstract class AbstractTomato extends Base {
     }
     
     sign(): void {
-        findAndClick('立即签到.+', {fixed:true, feedback:true})
+        findAndClick('立即签到.+', {
+            fixed:true, 
+            feedback:true,
+            disableGrayCheck:true
+        })
 
         if(findAndClick('看视频立即续签|额外领[0-9]+金币', {fixed:true})){
             this.watch(textMatches(merge(["日常福利", "看视频立即续签"])))
@@ -33,32 +37,28 @@ export abstract class AbstractTomato extends Base {
         }
     }
 
-    scrollNoneClick(text:string, range:string, clickUntilGone:boolean): boolean{
+    scrollClick(text:string, range:string, clickUntilGone:boolean): boolean{
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS
-             && search(range)[0] === undefined){
+             && search(range) === undefined){
             this.move()
         }
         if(cycleCounts >= MAX_CYCLES_COUNTS){
             return false
         }
-        if(clickUntilGone){
-            return scrollClick(text, range)
-        } else {
-            return scrollPopClick(text, range)
-        }
+        return scrollClick(text, range, {clickUntilGone:clickUntilGone})
     }
 
     move(): void {
-        const [boundsBefore,_] = search("金币献爱心", {waitFor:true})
+        const before = search("金币献爱心", {waitFor:true})
         if(this.moveFlag){
             swipeDown(Move.Fast, 1000)
         } else {
             swipeUp(Move.Fast, 1000)
         }
         waitRandomTime(2)
-        const [boundsAfter,__] = search("金币献爱心", {waitFor:true})
-        if(boundsBefore.top === boundsAfter.top){
+        const after = search("金币献爱心", {waitFor:true})
+        if(before?.bounds.top === after?.bounds.top){
             if(!closeByImageMatching()){
                 this.moveFlag = !this.moveFlag
             }

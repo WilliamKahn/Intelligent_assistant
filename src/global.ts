@@ -9,6 +9,7 @@
 
 import { waitRandomTime } from "./common/utils";
 import { ConfigInvalidException } from "./lib/exception";
+import { init } from "./lib/init";
 import { LogLevel, Record as LogRecord, setToken } from "./lib/logger";
 import { Article } from "./scripts/Article";
 import { ArticleLite } from "./scripts/ArticleLite";
@@ -37,15 +38,14 @@ import { YouShi } from "./scripts/YouShi";
 
 
 //*******************全局常量****************************/
-
 export const PROJECT_NAME = "智能助手"
 /**
  * @description: 脚本版本号。建议根据 [语义化版本号] 迭代
  */
-export const VERSION = "0.4.3";
+export const VERSION = "0.7.3";
 
 // export const LISTENER_INTERVAL = 100
-export const EVENT = events.emitter()
+// export const EVENT = events.emitter()
 
 //微信推送url
 export const WX_PUSHER_URL = "https://wxpusher.zjiecode.com/api/send/message"
@@ -212,83 +212,14 @@ export const articleLite = new ArticleLite()
 //望潮
 export const wanChao = new WanChao()
 
-//初始化map
-export const highEffmap:Record<string, number> = {}
-export const medEffMap:Record<string, number> = {}
-export const lowEffMap:Record<string, number> = {}
-export const fixedMap:Record<string, number> = {}
-
-const map:Record<string, any> = {
-    "1" : youShi,
-    "2" : shuQi,
-    "3" : starrySky,
-    "4" : marvelFree,
-    "5" : eggplantFree,
-    "6" : sevenCatsFree,
-    "7" : pandaBrain,
-    "8" : tomato,
-    "9" : tomatoFree,
-    "10": tomatoLite,
-    "11": redFruits,
-    "12": kuaiShouFree,
-    "13": speedFree,
-    "14": deJian,
-    "15": wanChao,
-    "16": kuaiShou,
-    "17": kuaiShouLite,
-    "18": baidu,
-    "19": baiduLite,
-    "20": baiduBig,
-    "21": article,
-    "22": articleLite,
-    "23": tikTokLite,
-    "24": tikTokVolcano
-}
 LogRecord.info("加载配置");
 export const {
     _TOKEN,
-    _SHOW_CONSOLE,
     APP_ENV,
     ROBOT_ID,
     ORDER,
     RESET
 } = hamibot.env;
-//是否显示控制台
-export const SHOW_CONSOLE = _SHOW_CONSOLE
-//执行列表
-export let list:any = []
-if(ORDER != undefined){
-    LogRecord.info("调整执行顺序")
-    let orderList = ORDER.split(" ")
-    if(orderList.length > 0) {
-        //去重复
-        orderList = orderList.filter((value:string, index: number, self:string) => self.indexOf(value) === index)
-        for(let key of orderList){
-            const parts = key.split(":")
-            if(parts.length === 2){
-                key = parts[0]
-                const time = Number(parts[1])
-                if(!isNaN(time)){
-                    const app = map[key]
-                    if(app != undefined) fixedMap[app.constructor.name] = time * 60
-                }
-            }
-            let app = map[key]
-            if(app != undefined) list.push(app)
-        }
-    }
-}
-if(list.length != map.length){
-    for(let key in map){
-        if(list.indexOf(map[key]) == -1){
-            list.push(map[key])
-        }
-    }
-}
-export const filteredList = list.filter(
-    item => hamibot.env[item.constructor.name] !== false
-)
-
 
 LogRecord.info(`正在启动...\n\n\t当前脚本版本: ${VERSION}\n`);
 
@@ -313,7 +244,6 @@ events.on("exit", () => {
     console.hide()
 });
 
-
 // ------------------------ validation --------------------------
 
 // pushplus token
@@ -322,4 +252,4 @@ if (_TOKEN && _TOKEN !== "" && setToken(_TOKEN) == false) {
 }
 
 LogRecord.info("开始执行脚本");
-
+init()

@@ -48,14 +48,17 @@ export abstract class AbstractTikTok extends Base{
     scrollOcrClick(str:string, left:string): boolean{
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS
-            && searchByOcrRecognize(left)[0] === undefined){
+            && searchByOcrRecognize(left) === undefined){
             this.move()
         }
         if(cycleCounts >= MAX_CYCLES_COUNTS){
             return false
         }
-        const [bounds, _]:any = searchByOcrRecognize(left)
-        if(!findAndClick(str, {fixed:true, ocrRecognize:true, bounds:{top: bounds.top, bottom: bounds.bottom + 80}})){
+        const component = searchByOcrRecognize(left)
+        if(component !== undefined && !findAndClick(str, {
+            fixed:true, 
+            ocrRecognize:true, 
+            bounds:{top: component.bounds.top, bottom: component.bounds.bottom + 80}})){
             this.move()
             return this.scrollOcrClick(str, left)
         }

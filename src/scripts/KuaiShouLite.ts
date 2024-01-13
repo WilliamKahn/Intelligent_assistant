@@ -1,7 +1,7 @@
 import { dialogClick, findAndClick, fixedClick, scrollClick } from "../common/click";
 import { Move } from "../common/enums";
 import { scrollTo, search, searchByOcrRecognize } from "../common/search";
-import { closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, doFuncAtGivenTimeByEstimate, getNumFromComponent, moveDown, randomExecute, resizeX, resizeY, swipeDown, waitRandomTime } from "../common/utils";
+import { closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, doFuncAtGivenTimeByEstimate, getNumFromComponent, moveDown, swipeDown, swipeUp, waitRandomTime } from "../common/utils";
 import { MAX_CYCLES_COUNTS, MIN_RUN_THRESHOLD, NAME_VEDIO_KUAISHOU_LITE, PACKAGE_VEDIO_KUAISHOU_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { CurrentAppBanned } from "../lib/exception";
@@ -9,6 +9,8 @@ import { Record } from "../lib/logger";
 import { Base, BaseKey } from "./abstract/Base";
 
 export class KuaiShouLite extends Base{
+
+    moveFlag:boolean = true
 
     constructor() {
         super()
@@ -48,9 +50,9 @@ export class KuaiShouLite extends Base{
     weight(): void {
         this.goTo(this.tab, 2)
         scrollTo("我的金币", {coverBoundsScaling: 1})
-        const [_, name] = searchByOcrRecognize("[0-9]+")
-        if(name != undefined){
-            const weight = parseInt(name.toString())
+        const component = searchByOcrRecognize("[0-9]+")
+        if(component != undefined){
+            const weight = parseInt(component.text)
             Record.debug(`weight: ${weight}`)
             this.store(BaseKey.Weight, weight)
         }
@@ -75,7 +77,7 @@ export class KuaiShouLite extends Base{
     @functionLog("看广告")
     watchAds(): boolean {
         this.goTo(this.tab, 2)
-        if(scrollClick("领福利", "看广告得[0-9]+金币")){
+        if(scrollClick("领福利", "看视频得[0-9]+金币")){
             this.watch(text("日常任务"))
             return true
         }
@@ -104,9 +106,9 @@ export class KuaiShouLite extends Base{
         this.goTo(this.tab, 2)
         this.watchAdsForCoin("日常福利")
         if(fixedClick("开宝箱得金币")) {
-            const [bounds, _] = search("恭喜你获得")
-            const [__, name] = search("[0-9]+金币", {bounds: {top: bounds.bottom}})
-            const coin = getNumFromComponent(name)
+            const component = search("恭喜你获得")
+            const component2 = search("[0-9]+金币", {bounds: {top: component?.bounds.bottom}})
+            const coin = getNumFromComponent(component2?.text || "0")
             if(coin < MIN_RUN_THRESHOLD) {
                 throw new CurrentAppBanned(this.appName+"账号异常")
             }

@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, dialogClick } from "../common/click";
+import { findAndClick, fixedClick } from "../common/click";
 import { getScreenImage, resizeX, resizeY, waitRandomTime } from "../common/utils";
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_WANCHAO, PACKAGE_READ_WANCHAO } from "../global";
 import { measureExecutionTime } from "../lib/decorators";
@@ -96,15 +96,13 @@ export class WanChao extends Base {
         img.recycle()
     }
 
-    /**
-     * @description 用于计算图片灰度，判断滑块
-     */
+    
     isGrayColor(red:number, green:number, blue:number): number {
     // 计算RGB通道值的标准差
-        if((red+green+blue)>200 && (red+green+blue)< 500) {
-            return Math.sqrt((Math.pow(red - green, 2) + Math.pow(red - blue, 2) + Math.pow(green - blue, 2)) / 3);
-        } else {
-            return 100
-        }
+    if((red+green+blue)>200 && (red+green+blue)< 500) {
+        return Math.sqrt((Math.pow(red - green, 2) + Math.pow(red - blue, 2) + Math.pow(green - blue, 2)) / 3);
+    } else {
+        return 100
     }
+}
 }

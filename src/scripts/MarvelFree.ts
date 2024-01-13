@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, readClick, scrollClick, scrollPopClick, selectedClick } from "../common/click";
+import { fixedClick, readClick, scrollClick, selectedClick } from "../common/click";
 import { scrollTo } from "../common/search";
 import { closeByImageMatching, doFuncAtGivenTime, resizeX, resizeY } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_MARVEL_FREE, PACKAGE_READ_MARVEL_FREE } from "../global";
@@ -23,7 +23,11 @@ export class MarvelFree extends Base{
     highEff(): void {
         this.signIn()
         this.openTreasure()
-        this.watchAds()
+        let cycleCounts = 0
+        while(++cycleCounts < MAX_CYCLES_COUNTS 
+            && textMatches("看视频领金币.+").exists()){
+            this.watchAds()
+        }
     }
 
     @measureExecutionTime
@@ -65,12 +69,10 @@ export class MarvelFree extends Base{
     @functionLog("看视频")
     watchAds(): void {
         this.goTo(this.tab, 2)
-        let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && textMatches("看视频领金币.+").exists()
-            && scrollClick("去领取", "看视频领金币.+"))
-        {
-            this.watch(text("日常福利"))
+        if(textMatches("看视频领金币.+").exists()){
+            if(scrollClick("去领取", "看视频领金币.+")){
+                this.watch(text("日常福利"))
+            }
         }
     }
 
@@ -89,7 +91,7 @@ export class MarvelFree extends Base{
         this.goTo(this.tab, 2)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && scrollPopClick("领金币", "阅读领金币")) {
+            && scrollClick("领金币", "阅读领金币", {clickUntilGone:false})) {
                 this.watchAdsForCoin("日常福利")
         }
     }

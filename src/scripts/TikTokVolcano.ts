@@ -1,7 +1,7 @@
-import { dialogClick, findAndClick, fixedClick, ocrClick, randomClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, randomClick } from "../common/click";
 import { Move } from "../common/enums";
 import { search, searchByOcrRecognize } from "../common/search";
-import { closeByImageMatching, doFuncAtGivenTime, getNumFromComponent, moveDown, randomExecute, swipeDown, swipeUp, waitRandomTime } from "../common/utils";
+import { closeByImageMatching, getNumFromComponent, moveDown, swipeDown, swipeUp, waitRandomTime } from "../common/utils";
 import { NAME_VEDIO_TIKTOK_VOLCANO, PACKAGE_VEDIO_TIKTOK_VOLCANO } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { AbstractTikTok } from "./abstract/AbstractTikTok";
@@ -20,7 +20,7 @@ export class TikTokVolcano extends AbstractTikTok{
     @measureExecutionTime
     weight(): void {
         this.goto()
-        while(searchByOcrRecognize("今日领取火苗.*")[0] === undefined){
+        while(searchByOcrRecognize("今日领取火苗.*") === undefined){
             this.move()
         }
         const [_, name]:any = searchByOcrRecognize("今日领取火苗.*")
@@ -84,15 +84,15 @@ export class TikTokVolcano extends AbstractTikTok{
     }
 
     move(): void{
-        const [boundsBefore,_] = search("我的赠送榜", {waitFor:true})
+        const before = search("我的赠送榜", {waitFor:true})
         if(this.moveFlag){
             swipeDown(Move.Fast, 1000)
         } else {
             swipeUp(Move.Fast, 1000)
         }
         waitRandomTime(2)
-        const [boundsAfter,__] = search("我的赠送榜", {waitFor:true})
-        if(boundsBefore.top === boundsAfter.top){
+        const after = search("我的赠送榜", {waitFor:true})
+        if(before?.bounds.top === after?.bounds.top){
             if(!closeByImageMatching()){
                 this.moveFlag = !this.moveFlag
             }

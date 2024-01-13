@@ -1,6 +1,6 @@
-import { findAndClick, fixedClick, dialogClick, readClick, scrollClick, ocrClick } from "../common/click";
-import { search, searchByLeftRange, searchByOcrRecognize } from "../common/search";
-import { closeByImageMatching, doFuncAtGivenTime, getScreenImage, moveDown, resizeX, resizeY } from "../common/utils";
+import { dialogClick, findAndClick, fixedClick, readClick, scrollClick } from "../common/click";
+import { scrollTo, searchByOcrRecognize } from "../common/search";
+import { closeByImageMatching, doFuncAtGivenTime } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_KUAISHOU_FREE, PACKAGE_READ_KUAISHOU_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Base, BaseKey } from "./abstract/Base";
@@ -26,7 +26,11 @@ export class KuaiShouFree extends Base{
         this.signIn()
         this.coin = this.record()
         this.openTreasure()
-        this.watchAds()
+        let cycleCounts = 0
+        while(++cycleCounts < MAX_CYCLES_COUNTS 
+            && textMatches("看视频赚[0-9]+金币").exists()){
+            this.watchAds()        
+        }
     }
     @measureExecutionTime
     lowEff(time: number): void {
@@ -56,12 +60,8 @@ export class KuaiShouFree extends Base{
     @functionLog("看视频")
     watchAds(): void {
         this.goTo(this.tab, 2)
-        let cycleCounts = 0
-        if(textMatches("看视频赚[0-9]+金币").exists()){
-            while(++cycleCounts < MAX_CYCLES_COUNTS 
-                && scrollClick("去赚钱", "看视频赚[0-9]+金币")){
-                this.watch(text("日常任务"))
-            }
+        if(scrollClick("去赚钱", "看视频赚[0-9]+金币")){
+            this.watch(text("日常任务"))
         }
     }
 
@@ -77,8 +77,18 @@ export class KuaiShouFree extends Base{
     readBook(totalTime: number): void {
         this.goTo(this.tab, 1)
         fixedClick("领[0-9]+金币")
-        if(readClick(id(this.packageName+":id/book_name"), random(0, 3))){
-            this.read(totalTime)
+        const component = scrollTo(random(1,4).toString(),{waitFor:true})
+        if(component !== undefined){
+            if(findAndClick(className("android.widget.TextView"), {
+                fixed:true,
+                bounds:{
+                    left:component.bounds.right, 
+                    top:component.bounds.top,
+                    bottom:component.bounds.bottom + 100
+                }
+            })){
+                this.read(totalTime)
+            }
         }
     }
 

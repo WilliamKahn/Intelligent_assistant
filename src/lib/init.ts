@@ -6,9 +6,8 @@
  * @FilePath: \\src\\lib\\init.ts
  * @Description: 脚本初始化
  */
-import { findAndClick, randomClick } from "../common/click";
+import { findAndClick } from "../common/click";
 import { waitRandomTime } from "../common/utils";
-import { SHOW_CONSOLE } from "../global";
 import { PermissionException, ServiceNotEnabled } from "./exception";
 import { Record } from "./logger";
 
@@ -39,6 +38,7 @@ export function init() {
         findAndClick(className("android.widget.Button").textMatches(".?立即开始.?|.?允许.?"),{
             waitFor:true,
             clickUntilGone:true,
+            disableCheckBeforeClick:true,
             fixed:true
         })
     })
@@ -48,7 +48,6 @@ export function init() {
     } else {
         Record.debug("启动视觉识别")
     }
-
     // download resource
     if (!files.exists("/sdcard/exit.png")){
         Record.debug("正在加载资源")
@@ -59,8 +58,6 @@ export function init() {
         }
     }
     device.keepScreenOn(3600 * 1000)
-    if(SHOW_CONSOLE) {
-        console.show()
-        waitRandomTime(1)
-    }
+    console.show()
+    waitRandomTime(1)
 }

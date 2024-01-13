@@ -1,8 +1,8 @@
-import { dialogClick, findAndClick, fixedClick, goneClick, normalClick, ocrClick, readClick, scrollClick, scrollPopClick, selectedClick } from "../../common/click";
+import { dialogClick, findAndClick, fixedClick, goneClick, normalClick, ocrClick, readClick, scrollClick, selectedClick } from "../../common/click";
 import { scrollTo } from "../../common/search";
 import { doFuncAtGivenTime, getNumFromComponent, randomExecute, waitRandomTime } from "../../common/utils";
 import { MAX_CYCLES_COUNTS } from "../../global";
-import { functionLog, measureExecutionTime, startDecorator } from "../../lib/decorators";
+import { functionLog, measureExecutionTime } from "../../lib/decorators";
 import { Record } from "../../lib/logger";
 import { Base, BaseKey } from "./Base";
 
@@ -58,7 +58,7 @@ export abstract class AbstractFreeNovel extends Base {
     @measureExecutionTime
     weight(): void {
         this.goTo(this.tab, 2)
-        scrollTo("我的金币", {coverBoundsScaling:1})
+        scrollTo("我的金币")
         if(fixedClick("我的金币")){
             let tmp = textStartsWith("今日金币").findOnce()
             if(tmp != null) {
@@ -109,7 +109,7 @@ export abstract class AbstractFreeNovel extends Base {
     @functionLog("阅读")
     readBook(totalTime: number): void {
         this.openBook()
-        this.read(totalTime)        
+        this.read(totalTime)
     }
 
     @functionLog("听书")
@@ -118,7 +118,7 @@ export abstract class AbstractFreeNovel extends Base {
         if(!id(this.packageName+":id/reader_listen_entry").exists()){
             normalClick(device.width/2, device.height/2)
         }
-        if(findAndClick(id(this.packageName+":id/reader_listen_entry"), {fixed:true})){
+        if(fixedClick(id(this.packageName+":id/reader_listen_entry"))){
             if(dialogClick("去看小视频")){
                 this.watch(text("边听边读"))
             }
@@ -158,7 +158,7 @@ export abstract class AbstractFreeNovel extends Base {
         const list = ["阅读赚金币.*", "听书赚金币.*"]
         for(const range of list){
             while(++cycleCounts < MAX_CYCLES_COUNTS &&
-                scrollPopClick("领金币", range)){
+                scrollClick("领金币", range, {clickUntilGone:false})){
                 this.watchAdsForCoin("日常福利")
             }
         }

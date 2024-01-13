@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, dialogClick, readClick, scrollClick, selectedClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, readClick, scrollClick } from "../common/click";
 import { scrollTo } from "../common/search";
 import { closeByImageMatching, doFuncAtGivenTime, randomExecute } from "../common/utils";
 import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_DEJIAN, PACKAGE_READ_DEJIAN } from "../global";
@@ -129,7 +129,7 @@ export class DeJian extends Base {
     joinActivity(): void {
         this.goTo(desc("discovery_button"), -1)
         
-        if(findAndClick("参与活动赚金币", {coverBoundsScaling:1})){
+        if(findAndClick("参与活动赚金币")){
             let title = id("com.zhangyue.module.ad:id/tv_reward_video_title").findOnce()
             if(title != null){
                 const regex = /\((\d+)\/(\d+)\)/;
