@@ -32,7 +32,9 @@ export class WanChao extends Base {
                 waitRandomTime(4)
             }
             while(++cycleCounts < MAX_CYCLES_COUNTS 
-                && findAndClick("待完成", {waitTimes:10, coverBoundsScaling:1})) {
+                && findAndClick("待完成", {
+                    waitTimes:10, 
+                    disableCheckBeforeClick:true})) {
                 back()
                 waitRandomTime(4)
             }

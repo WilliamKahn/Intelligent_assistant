@@ -1,3 +1,4 @@
+import { baiduLite, starrySky, wanChao } from "./global"
 
 /*
  * @Author: BATU1579
@@ -10,6 +11,6 @@
 test()
 
 function test() {
-    
+    wanChao.start(10 * 60)
 }
 

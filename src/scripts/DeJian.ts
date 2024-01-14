@@ -81,7 +81,7 @@ export class DeJian extends Base {
         this.goTo(desc("discovery_button"), -1)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && scrollClick("领取")) {
+            && scrollClick("领取", "每日阅读福利", {clickUntilGone:false})) {
             this.watchAdsForCoin("金币收益")
             if (text("恭喜获得").exists()) {
                 closeByImageMatching()
@@ -128,25 +128,27 @@ export class DeJian extends Base {
     @functionLog("参加活动")
     joinActivity(): void {
         this.goTo(desc("discovery_button"), -1)
-        
         if(findAndClick("参与活动赚金币")){
-            let title = id("com.zhangyue.module.ad:id/tv_reward_video_title").findOnce()
-            if(title != null){
-                const regex = /\((\d+)\/(\d+)\)/;
-                const match = title.text().match(regex)
-                if(match) {
-                    for(let i = parseInt(match[1]); i < parseInt(match[2]); i++){
-                        findAndClick("看视频赚金币", {fixed:true, clickUntilGone: true})
-                        Record.log(`参与活动, 正在观看${i+1}/${match[2]}个广告`)
-                        this.watch(text("金币收益"))
-                        //看视频继续赚金币
-                        // findAndClick(id("com.zhangyue.module.ad:id/iv_dialog_reward_close"))
-                    }
-                } else {
-                    Record.log("活动已完成")
-                }
-            }
+            this.activity()
             back()
+        }
+    }
+
+    activity():void{
+        let title = id("com.zhangyue.module.ad:id/tv_reward_video_title").findOnce()
+        if(title != null){
+            const regex = /\((\d+)\/(\d+)\)/;
+            const match = title.text().match(regex)
+            if(match) {
+                for(let i = parseInt(match[1]); i < parseInt(match[2]); i++){
+                    findAndClick("看视频赚金币", {fixed:true, clickUntilGone: true})
+                    Record.log(`参与活动, 正在观看${i+1}/${match[2]}个广告`)
+                    this.watch(text("金币收益"))
+                }
+                this.activity()
+            } else {
+                Record.log("活动已完成")
+            }
         }
     }
 

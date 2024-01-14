@@ -28,6 +28,7 @@ export function scrollTo(selector: string|UiSelector, options?: ScrollToOptions,
     const component = search(selector, options)
     // Record.debug(`${component?.bounds}`)
     if(component && !options?.fixed) {
+        // Record.debug("scrollTo")
         let tmpTop = component.bounds.top
         let tmpBottom = component.bounds.bottom
         let tmpRight = component.bounds.right
@@ -94,12 +95,27 @@ export function scrollTo(selector: string|UiSelector, options?: ScrollToOptions,
                 if(coverCheck(component, options)){
                     Record.debug("按钮被遮挡")
                     if(!range) range = {}
-                    if(tmpBottom > device.height/2){
-                        range.top = undefined
-                        range.bottom = tmpTop
+                    if(pointY > device.height/3 && pointY < device.height*2/3){
+                        if(tmpRight > device.width - 60){
+                            range.right = tmpLeft
+                            range.left = undefined
+                        } else {
+                            if(tmpBottom > device.height / 2){
+                                range.top = undefined
+                                range.bottom = tmpTop
+                            } else {
+                                range.bottom = undefined
+                                range.top = tmpBottom
+                            }    
+                        }
                     } else {
-                        range.bottom = undefined
-                        range.top = tmpBottom
+                        if(tmpBottom > device.height / 2){
+                            range.top = undefined
+                            range.bottom = tmpTop
+                        } else {
+                            range.bottom = undefined
+                            range.top = tmpBottom
+                        }
                     }
                     return scrollTo(selector, options, range, undefined, undefined, scrollTimes, avoidTimes)
                 }
@@ -121,16 +137,16 @@ export function coverCheck(component:Component, options?:CoverCheckOptions){
     const textHeight = component.bounds.bottom - component.bounds.top
     const bigScale = textHeight > 50 ? 1 : 50 / textHeight
     const bigImg = images.scale(img, bigScale, bigScale)
+    img.recycle()
     const grayImg = images.cvtColor(bigImg, "BGR2GRAY")
+    bigImg.recycle()
     const adaptiveImg = images.adaptiveThreshold(grayImg, 255, "GAUSSIAN_C", "BINARY", 25, 0)
+    grayImg.recycle()
     const str = options?.leftToRight?
         recognizeTextByLeftToRight(adaptiveImg)
         :ocr.recognizeText(adaptiveImg)
     // grayImg.saveTo("/sdcard/result.jpg")
     // app.viewFile("/sdcard/result.jpg")
-    img.recycle()
-    bigImg.recycle()
-    grayImg.recycle()
     adaptiveImg.recycle()
     Record.debug(`ocr str:${str}`)
     return str.search(component.text) == -1 && levenshteinDistance(component.text, str) < threshold
@@ -158,13 +174,12 @@ export function search(selector:string|UiSelector, options?:SearchOptions):Compo
 export function searchByOcrRecognize(str: string, options?:SearchByOcrRecognizeOptions):Component|undefined{
     const img = getScreenImage(options?.bounds)
     const grayImg = images.cvtColor(img, "BGR2GRAY")
+    img.recycle()
     const adaptiveImg = images.adaptiveThreshold(grayImg, 255, "GAUSSIAN_C", "BINARY", 25, 0)
-    // const adaptiveImg = images.adaptiveThreshold(grayImg, 255, "GAUSSIAN_C", "BINARY", 9, 0)
+    grayImg.recycle()
+    const res = ocr.recognize(adaptiveImg)
     // adaptiveImg.saveTo("/sdcard/exit-big.png")
     // app.viewFile("/sdcard/exit-big.png")
-    const res = ocr.recognize(adaptiveImg)
-    img.recycle()
-    grayImg.recycle()
     adaptiveImg.recycle()
     let list:OcrResultDetail[] = []
     // log(res)

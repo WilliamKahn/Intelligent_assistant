@@ -88,8 +88,14 @@ export function clearBackground(){
         waitRandomTime(4)
         if(recents()){
             waitRandomTime(4)
-            if(!findAndClick(idContains("clear"), {fixed:true})){
-                findAndClick(descContains("清除"), {fixed:true})
+            if(!findAndClick(idContains("clear"), {
+                fixed:true,
+                disableCheckBeforeClick:true
+            })){
+                findAndClick(descContains("清除"), {
+                    fixed:true,
+                    disableCheckBeforeClick:true
+                })
             }
             launchPackage(PACKAGE_HAMIBOT)
             waitRandomTime(4)
@@ -207,46 +213,42 @@ export function closeByImageMatching(filter?: boolean): boolean {
     if(img != null && tmp != null) {
         //灰度化
         const grayImg = images.cvtColor(img, "BGR2GRAY")
+        img.recycle()
         const grayTmp = images.cvtColor(tmp, "BGR2GRAY")
+        tmp.recycle()
         //反转 黑色按钮
         const grayWhiteTmp = images.adaptiveThreshold(grayTmp, 255, "GAUSSIAN_C", "BINARY", 9, 0)
         const grayInvTmp = images.adaptiveThreshold(grayTmp, 255, "GAUSSIAN_C", "BINARY_INV", 9, 0)
+        grayTmp.recycle()
         //阈值化
         const adaptiveImg = images.adaptiveThreshold(grayImg, 255, "GAUSSIAN_C", "BINARY", 25, 0)
+        grayImg.recycle()
         // adaptiveImg.saveTo("/sdcard/result.jpg")
         // app.viewFile("/sdcard/result.jpg")
         
         //验证图片
-        let list:Point[] = []
-        try{
-            for(let i = 50; i>=20; i-=5){
-                const white = images.resize(grayWhiteTmp, i)
-                const black = images.resize(grayInvTmp, i)
-                const match1 = images.matchTemplate(adaptiveImg, white, {
-                    threshold: threshold,
-                })
-                const match2 = images.matchTemplate(adaptiveImg, black, {
-                    threshold: threshold,
-                })
-                const combine:Point[] = match1.points.concat(match2.points)
-                for(let point of combine){
-                    point.x += i/2
-                    point.y += i/2
-                }
-                list.push(...combine)
-                //资源回收
-                white.recycle()
-                black.recycle()
+        let list:Point[] = []        
+        for(let i = 50; i>=20; i-=5){
+            const white = images.resize(grayWhiteTmp, i)
+            const black = images.resize(grayInvTmp, i)
+            const match1 = images.matchTemplate(adaptiveImg, white, {
+                threshold: threshold,
+            })
+            white.recycle()
+            const match2 = images.matchTemplate(adaptiveImg, black, {
+                threshold: threshold,
+            })
+            black.recycle()
+            const combine:Point[] = match1.points.concat(match2.points)
+            for(let point of combine){
+                point.x += i/2
+                point.y += i/2
             }
-        }finally{
-            img.recycle()
-            tmp.recycle()
-            grayImg.recycle()
-            grayTmp.recycle()
-            grayInvTmp.recycle()
-            grayWhiteTmp.recycle()
-            adaptiveImg.recycle()
+            list.push(...combine)
         }
+        grayInvTmp.recycle()
+        grayWhiteTmp.recycle()
+        adaptiveImg.recycle()
         if(list != null){
             const point = findPreferredCloseButton(list, filter)
             if(point != null){
@@ -360,8 +362,8 @@ export function matchAndJudge(str: string|undefined){
         const swipe = str.match(/(滑动)?浏览/)
         if(time) {
             let totalTime = parseInt(time[0], 10)
-            if(totalTime > 50 || totalTime < 3){
-                totalTime = 3
+            if(totalTime > 50 || totalTime < 1){
+                totalTime = 1
             }
             if(swipe){
                 Record.log("滑动浏览广告")
@@ -371,7 +373,7 @@ export function matchAndJudge(str: string|undefined){
             }
         }
     }
-    return 3
+    return 1
 }
 
 /**

@@ -276,7 +276,7 @@ export abstract class Base {
             this.watch(exitSign, ++times, waitTimes)
             return
         }
-        waitRandomTime(10)
+        waitRandomTime(4)
         if(!findAndClick(".*跳过.*",
         {fixed:true, bounds:{left:device.width * 2 / 3, bottom:device.height / 5}})){
             close()

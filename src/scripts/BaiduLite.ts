@@ -107,8 +107,8 @@ export class BaiduLite extends AbstractBaidu {
         if(num === -1){
             num = 2
         }
-        if(num == 2 && this.preNum == 1){
-            this.goTo(this.tab, 0)
+        if(num == 2 && this.preNum !== 1){
+            this.goTo(this.tab, 1)
             this.goTo(this.tab, 2)
         } else {
             this.goTo(this.tab, num)

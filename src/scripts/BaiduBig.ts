@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, ocrClick, scrollClick, selectedClick } from "../common/click";
+import { findAndClick, fixedClick, ocrClick, randomClick, scrollClick, selectedClick } from "../common/click";
 import { scrollTo, searchByOcrRecognize } from "../common/search";
 import { closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, moveDown, waitRandomTime } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_VEDIO_BAIDU_BIG, PACKAGE_VEDIO_BAIDU_BIG } from "../global";
@@ -38,6 +38,7 @@ export class BaiduBig extends AbstractBaidu {
             this.openTreasure()
             this.listenReward()
             this.swipeReward()
+            this.dailyReward()
         })
     }
     
@@ -55,10 +56,15 @@ export class BaiduBig extends AbstractBaidu {
     @functionLog("听书")
     listenBook(): void {
         this.goto(1)
-        if(scrollClick(className("android.widget.TextView"), random(1,4).toString())){
-            if(fixedClick("开始听书|续播")){
-                if(fixedClick("立即看视频领[0-9]+分钟")){
-                    this.watch(text("看视频领免费时长"))
+        const tmp = text(random(1,4).toString()).findOnce()
+        if(tmp !== null){
+            const parent = tmp.parent()
+            if(parent !== null){
+                randomClick(parent.bounds())
+                if(fixedClick("开始听书|续播")){
+                    if(fixedClick("立即看视频领[0-9]+分钟")){
+                        this.watch(text("看视频领免费时长"))
+                    }
                 }
             }
         }

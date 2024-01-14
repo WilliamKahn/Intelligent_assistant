@@ -16,10 +16,6 @@ export abstract class AbstractBaidu extends Base {
         this.tab = id("android:id/tabs")
         this.initialComponent = this.tab
         this.initialNum = 0
-        this.dialogBounds = {
-            bottom: device.height * 4 / 5, 
-            top: device.height * 1 / 3
-        }
     }
 
     //高效率 T0 1
@@ -31,6 +27,13 @@ export abstract class AbstractBaidu extends Base {
         if(fixedClick("额外领[0-9]+金币")){
             this.watch(text(this.exitSign))
             this.watchAdsForCoin(this.exitSign)
+        } else {
+            if(scrollClick("去签到", "今日签到|明日签到", {clickUntilGone:false})){
+                if(fixedClick("额外领[0-9]+金币")){
+                    this.watch(text(this.exitSign))
+                    this.watchAdsForCoin(this.exitSign)
+                }
+            }
         }
     }
 

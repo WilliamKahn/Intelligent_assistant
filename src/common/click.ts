@@ -1,4 +1,3 @@
-import { Thread } from "threads"
 import { MAX_CLICK_COUNTS, WAIT_TIME_AFTER_CLICK } from "../global"
 import { CurrentAppBanned, ExceedMaxNumberOfAttempts } from "../lib/exception"
 import { Record } from "../lib/logger"
@@ -7,19 +6,30 @@ import { coverCheck, scrollTo, search } from "./search"
 import { boundsCorrection, boundsScaling, closeByImageMatching, findLargestIndexes, getGrayscale, getGrayscaleHistogram, getScreenImage, judgeFuncIsWorkByImg, merge, mergeHistogram, waitRandomTime } from "./utils"
 
 export function continueWatch(){
-    return findAndClick(merge(["继续观看", "再看[0-9]+秒(可)?(领取)?奖励", "抓住奖励机会", "留下看看", "(残忍)?关闭"]), {
+    return findAndClick(merge(["继续观看", "再看[0-9]+秒(可)?(领取)?奖励", "抓住奖励机会", "留下看看"]), {
         fixed:true,
+        disableCheckBeforeClick:true,
         bounds: {
             bottom: device.height * 2 / 3, 
-            top: device.height * 1 / 3,
+            top: device.height / 3,
         }
     })
 }
 export function watchAgain(){
-    return findAndClick(merge(["领取奖励", "再看一个领取[0-9]+金币", "看视频再得[0-9]+金币"]))
+    return findAndClick(merge(["领取奖励", "再看一个领取[0-9]+金币", "看视频再得[0-9]+金币"]),{
+        fixed:true,
+        disableCheckBeforeClick:true,
+        bounds: {
+            bottom: device.height * 2 / 3,
+            top: device.height / 3,
+        }
+    })
 }
 export function closeDialogifExist(){
-    return fixedClick(merge(["取消", "(残忍)?关闭", "(以后|下次)再说", "(直接|坚持|仍要)?退出(阅读|直播间)?", "暂不(加入|添加)", "(残忍)离开", "放弃奖励", "(我)?知道了"]))
+    return findAndClick(merge(["取消", "(残忍)?关闭", "(以后|下次)再说", "(直接|坚持|仍要)?退出(阅读|直播间)?", "暂不(加入|添加|升级)", "(残忍)离开", "放弃奖励", "(我)?知道了"]),{
+        fixed:true,
+        disableCheckBeforeClick:true
+    })
 }
 
 //通用方法
@@ -41,9 +51,10 @@ export function dialogClick(text:string, bounds?:Bounds){
         right: device.width * 4 / 5
     }
     return findAndClick(text, {
-        fixed:true, 
-        ocrRecognize: true, 
+        fixed:true,
+        ocrRecognize: true,
         clickUntilGone:true,
+        disableCheckBeforeClick:true,
         bounds: boundss
     })
 }
