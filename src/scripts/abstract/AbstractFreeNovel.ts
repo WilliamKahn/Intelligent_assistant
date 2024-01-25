@@ -15,13 +15,13 @@ export abstract class AbstractFreeNovel extends Base {
         this.tab = id(packageName+":id/home_activity_navigation_bar")
         this.initialComponent = this.tab
         this.initialNum = 1
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 15 * 60)
-        this.lowEffEstimatedTime = 0
-        this.lowEffAssmitCount = 2
+        this.lowEff1Inheritance = true
+        this.lowEff2Inheritance = true
     }
 
     @measureExecutionTime
     highEff(): void {
+        //0.0065
         this.signIn()
         randomExecute([
             ()=>{this.openTreasure()},
@@ -32,28 +32,20 @@ export abstract class AbstractFreeNovel extends Base {
     }
 
     @measureExecutionTime
-    lowEff(time: number): void {
-        //每十分钟执行一次
-        doFuncAtGivenTime(time / 2, 30 * 60,(perTime: number)=>{
-            this.readBook(perTime)
-            this.reward()
-            this.openTreasure()
-            return perTime
-        })
-        let isFirst = true
-        doFuncAtGivenTime(time / 2, 30 * 60,(perTime: number)=>{
-            if(isFirst){
-                this.listenBook()
-                isFirst = false
-            } else {
-                this.continueListen()
-            }
-            let actualTime = waitRandomTime(perTime)
-            this.reward()
-            this.openTreasure()
-            return actualTime
-        })
+    lowEff1(time: number): void {
+        this.readBook(time)
+        this.readReward()
+        this.openTreasure()
     }
+
+    @measureExecutionTime
+    lowEff2(time: number): void {
+        this.listenBook()
+        sleep(time * 1000)
+        this.listenReward()
+        this.openTreasure()
+    }
+
 
     @measureExecutionTime
     weight(): void {
@@ -81,18 +73,20 @@ export abstract class AbstractFreeNovel extends Base {
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goTo(this.tab, 2)
-        if (ocrClick('开宝箱得金币')) {
+        if (findAndClick('开宝箱得金币',{fixed:true,ocrRecognize:true})) {
             this.watchAdsForCoin("日常福利")
         }
     }
 
     @functionLog("看视频")
-    watchAds(): void {
+    watchAds(): boolean {
         this.goTo(this.tab, 2)
         if(scrollClick("去观看", "看小视频赚金币.*")){
             this.watch(text("日常福利"))
             scrollClick("领金币", "看小视频赚金币.*")
+            return true
         }
+        return false
     }
 
     @functionLog("逛街")
@@ -150,17 +144,25 @@ export abstract class AbstractFreeNovel extends Base {
         }
     }
 
-    @functionLog("领取奖励")
-    reward(): void {
+    @functionLog("阅读赚金币")
+    readReward():void{
         this.goTo(this.tab, 2)
         this.watchAdsForCoin("日常福利")
         let cycleCounts = 0
-        const list = ["阅读赚金币.*", "听书赚金币.*"]
-        for(const range of list){
-            while(++cycleCounts < MAX_CYCLES_COUNTS &&
-                scrollClick("领金币", range, {clickUntilGone:false})){
-                this.watchAdsForCoin("日常福利")
-            }
+        while(++cycleCounts < MAX_CYCLES_COUNTS &&
+            scrollClick("领金币", "阅读赚金币.*", {clickUntilGone:false})){
+            this.watchAdsForCoin("日常福利")
+        }
+    }
+
+    @functionLog("听书赚金币")
+    listenReward():void{
+        this.goTo(this.tab, 2)
+        this.watchAdsForCoin("日常福利")
+        let cycleCounts = 0
+        while(++cycleCounts < MAX_CYCLES_COUNTS &&
+            scrollClick("领金币", "听书赚金币.*", {clickUntilGone:false})){
+            this.watchAdsForCoin("日常福利")
         }
     }
 

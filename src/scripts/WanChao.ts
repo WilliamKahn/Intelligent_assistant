@@ -11,7 +11,6 @@ export class WanChao extends Base {
         super()
         this.appName = NAME_READ_WANCHAO
         this.packageName = PACKAGE_READ_WANCHAO
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME)
     }
 
     @measureExecutionTime

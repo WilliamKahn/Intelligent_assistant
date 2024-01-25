@@ -1,19 +1,17 @@
-import { dialogClick, findAndClick, fixedClick, ocrClick, randomClick, scrollClick, selectedClick } from "../common/click";
+import { findAndClick, ocrClick, scrollClick, selectedClick } from "../common/click";
 import { scrollTo, searchByOcrRecognize } from "../common/search";
-import { closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, merge, moveDown, randomExecute, waitRandomTime } from "../common/utils";
+import { closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, moveDown } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_VEDIO_BAIDU, PACKAGE_VEDIO_BAIDU } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { AbstractBaidu } from "./abstract/AbstractBaidu";
-import { Base, BaseKey } from "./abstract/Base";
+import { BaseKey } from "./abstract/Base";
 
 export class Baidu extends AbstractBaidu {
 
     constructor() {
         super(PACKAGE_VEDIO_BAIDU)
         this.appName = NAME_VEDIO_BAIDU
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 30 * 60)
-        this.lowEffEstimatedTime = 0
     }
 
     @measureExecutionTime
@@ -26,19 +24,16 @@ export class Baidu extends AbstractBaidu {
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
             && this.watchAds()){}
-        this.swipeVideo(4 * 60)
+        this.swipeVideo(6 * 60)
         this.swipeReward()
         this.openTreasure()
         this.dailyReward()
     }
-
     @measureExecutionTime
-    lowEff(time: number): void {
-        doFuncAtGivenTime(time, 20 * 60, (perTime:number) => {
-            this.swipeVideo(perTime)
-            this.openTreasure()
-            this.swipeReward()
-        })
+    lowEff1(time: number): void {
+        this.swipeVideo(time)
+        this.openTreasure()
+        this.swipeReward()
         this.dailyReward()
     }
     
@@ -78,15 +73,11 @@ export class Baidu extends AbstractBaidu {
 
     @functionLog("刷视频")
     swipeVideo(totalTime: number): void {
-        this.goto(-1)
-        if(scrollClick("去阅读", "看文章或视频赚金币")){
-            this.first = true
-            this.preNum = 0
-            if(selectedClick("发现", 170)){
-                if(findAndClick(className("android.widget.ImageView"), {bounds:{top:device.height/5}})){
-                    Record.log(`预计刷视频${convertSecondsToMinutes(totalTime)}分钟`)
-                    moveDown(totalTime, 30)
-                }
+        this.goto(0)
+        if(selectedClick("发现", 170)){
+            if(findAndClick(className("android.widget.ImageView"), {bounds:{top:device.height/5}})){
+                Record.log(`预计刷视频${convertSecondsToMinutes(totalTime)}分钟`)
+                moveDown(totalTime, 30)
             }
         }
     }
@@ -105,6 +96,7 @@ export class Baidu extends AbstractBaidu {
                 this.backUntilFind(text("金币收益"))
             }
         } else {
+            this.first = true
             this.goTo(this.tab, num)
         }
     }

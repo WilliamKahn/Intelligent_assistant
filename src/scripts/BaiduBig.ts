@@ -12,8 +12,6 @@ export class BaiduBig extends AbstractBaidu {
     constructor() {
         super(PACKAGE_VEDIO_BAIDU_BIG)
         this.appName = NAME_VEDIO_BAIDU_BIG
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 30 * 60)
-        this.lowEffEstimatedTime = 0
         this.readRewardText = "看视频/热搜赚金币"
         this.exitSign = "现金收益"
     }
@@ -28,18 +26,18 @@ export class BaiduBig extends AbstractBaidu {
         while(++cycleCounts <= MAX_CYCLES_COUNTS 
             && this.watchAds()){}
         this.openTreasure()
+        this.swipeVideo(3 * 60)
         this.dailyReward()
+        this.swipeReward()
+        this.listenReward()
     }
-
     @measureExecutionTime
-    lowEff(time: number): void {
-        doFuncAtGivenTime(time, 20 * 60, (perTime:number) => {
-            this.swipeVideo(perTime)
-            this.openTreasure()
-            this.listenReward()
-            this.swipeReward()
-            this.dailyReward()
-        })
+    lowEff1(time: number): void {
+        this.swipeVideo(time)
+        this.openTreasure()
+        this.listenReward()
+        this.swipeReward()
+        this.dailyReward()
     }
     
     @measureExecutionTime
@@ -84,7 +82,7 @@ export class BaiduBig extends AbstractBaidu {
         this.goto(-1)
         let cycleCounts = 0
         while(++cycleCounts <= MAX_CYCLES_COUNTS 
-            && scrollClick("领取", undefined, {clickUntilGone:false})){
+            && findAndClick("领取")){
             this.watchAdsForCoin("现金收益")
         }
     }

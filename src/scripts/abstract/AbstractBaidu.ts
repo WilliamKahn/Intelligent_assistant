@@ -16,6 +16,11 @@ export abstract class AbstractBaidu extends Base {
         this.tab = id("android:id/tabs")
         this.initialComponent = this.tab
         this.initialNum = 0
+        this.lowEff1Inheritance = true
+        this.dialogBounds = {
+            bottom: device.height * 4 / 5, 
+            top: device.height * 1 / 3,
+        }
     }
 
     //高效率 T0 1
@@ -24,12 +29,12 @@ export abstract class AbstractBaidu extends Base {
     @functionLog("签到")
     signIn(): void {
         this.goto(-1)
-        if(fixedClick("额外领[0-9]+金币")){
+        if(fixedClick("额外领[0-9]+金币|立即签到")){
             this.watch(text(this.exitSign))
             this.watchAdsForCoin(this.exitSign)
         } else {
             if(scrollClick("去签到", "今日签到|明日签到", {clickUntilGone:false})){
-                if(fixedClick("额外领[0-9]+金币")){
+                if(fixedClick("额外领[0-9]+金币|立即签到")){
                     this.watch(text(this.exitSign))
                     this.watchAdsForCoin(this.exitSign)
                 }
@@ -101,7 +106,7 @@ export abstract class AbstractBaidu extends Base {
     swipeReward(): void{
         this.goto(-1)
         let cycleCounts = 0
-        const component = scrollTo(this.readRewardText,{waitFor:true},{bottom:device.height/2})
+        const component = scrollTo(this.readRewardText,undefined,{bottom:device.height/2})
         while(++cycleCounts <= MAX_CYCLES_COUNTS && component !== undefined
             && findAndClick("领",{
                 ocrRecognize:true, 

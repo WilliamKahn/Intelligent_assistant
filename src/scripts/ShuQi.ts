@@ -1,5 +1,6 @@
-import { dialogClick, readClick, scrollClick, selectedClick } from "../common/click";
-import { closeByImageMatching, doFuncAtGivenTime, } from "../common/utils";
+import { dialogClick, findAndClick, readClick, scrollClick, selectedClick } from "../common/click";
+import { search } from "../common/search";
+import { closeByImageMatching } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_SHUQI, PACKAGE_READ_SHUQI } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Base, BaseKey } from "./abstract/Base";
@@ -13,29 +14,31 @@ export class ShuQi extends Base{
         this.tab = id("android:id/tabs")
         this.initialComponent = this.tab
         this.initialNum = 1
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 15 * 60)
-        this.lowEffEstimatedTime = 0
+        this.lowEff1Inheritance = true
     }
 
     @measureExecutionTime
     highEff(): void {
+        //0.0133
         this.signIn()
-        this.watchAds()
+        let cycleCounts = 0
+        while(++cycleCounts < MAX_CYCLES_COUNTS 
+            && this.watchAds()){}
         this.reward()
     }
+
     @measureExecutionTime
-    lowEff(time: number): void {
-        doFuncAtGivenTime(time, 20 * 60, (perTime:number) => {
-            this.readBook(perTime)
-            this.reward()
-        })
+    lowEff1(time: number): void {
+        this.readBook(time)
+        this.reward()
     }
+
     @measureExecutionTime
     weight(): void {
         this.goTo(this.tab, 4)
-        let tmp = id(this.packageName+":id/account_worth_money").findOnce()
-        if(tmp != null){
-            const weight = parseInt(tmp.text())
+        const component = search(id(this.packageName+":id/account_worth_money"),{waitFor:true})
+        if(component !== undefined){
+            const weight = parseInt(component.text)
             this.store(BaseKey.Weight, weight)
         }
     }
@@ -57,13 +60,13 @@ export class ShuQi extends Base{
     }
 
     @functionLog("看视频")
-    watchAds(): void {
+    watchAds(): boolean {
         this.goTo(this.tab, 2)
-        let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && scrollClick("去观看", "看视频赚[0-9]+金币")){
+        if(scrollClick("去观看", "看视频赚[0-9]+金币")){
             this.watch(text("做任务 赚金币"))
+            return true
         }
+        return false
     }
 
     @functionLog("阅读")
@@ -79,7 +82,7 @@ export class ShuQi extends Base{
     @functionLog("领取奖励")
     reward(): void {
         this.goTo(this.tab, 2)
-        if(scrollClick("(一键|加倍)收取")){
+        if(findAndClick("(一键|加倍)收取")){
             this.watchAdsForCoin("做任务 赚金币")
             dialogClick("领取加倍奖励")
             closeByImageMatching()

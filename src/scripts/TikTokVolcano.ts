@@ -23,9 +23,11 @@ export class TikTokVolcano extends AbstractTikTok{
         while(searchByOcrRecognize("今日领取火苗.*") === undefined){
             this.move()
         }
-        const [_, name]:any = searchByOcrRecognize("今日领取火苗.*")
-        const weight = getNumFromComponent(name)
-        this.store(BaseKey.Weight, weight)
+        const component = searchByOcrRecognize("今日领取火苗.*")
+        if(component !== undefined){
+            const weight = getNumFromComponent(component.text)
+            this.store(BaseKey.Weight, weight)
+        }
     }
 
     @functionLog("签到")
@@ -44,11 +46,13 @@ export class TikTokVolcano extends AbstractTikTok{
     }
 
     @functionLog("看广告")
-    watchAds(): void {
+    watchAds(): boolean {
         this.goto()
         if(this.scrollOcrClick(".?去领取.?", "限时任务赚火苗.*")){
             this.watch(text("我的赠送榜"))
+            return true
         }
+        return false
     }
 
     @functionLog("逛街")

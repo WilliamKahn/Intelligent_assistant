@@ -1,4 +1,4 @@
-import { dialogClick, findAndClick, randomClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, randomClick } from "../common/click";
 import { Move } from "../common/enums";
 import { search, searchByOcrRecognize } from "../common/search";
 import { closeByImageMatching, getNumFromComponent, moveDown, swipeDown, swipeUp, waitRandomTime } from "../common/utils";
@@ -39,13 +39,18 @@ export class TikTokLite extends AbstractTikTok{
         while(searchByOcrRecognize("金币收益.*") === undefined){
             this.move()
         }
-        const [_, name]:any = searchByOcrRecognize("金币收益.*")
-        let weight = getNumFromComponent(name)
-        if(weight === 0){
-            const [_, num]:any = searchByOcrRecognize("[0-9]+")
-            weight = getNumFromComponent(num)
+        const component = searchByOcrRecognize("金币收益.*")
+        if(component !== undefined){
+            let weight = getNumFromComponent(component.text)
+            if(weight === 0){
+                const component1 = searchByOcrRecognize("[0-9]+")
+                if(component1 !== undefined){
+                    weight = getNumFromComponent(component1.text)
+                }
+                
+            }
+            this.store(BaseKey.Weight, weight)
         }
-        this.store(BaseKey.Weight, weight)
     }
 
     @functionLog("签到")
@@ -59,17 +64,24 @@ export class TikTokLite extends AbstractTikTok{
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goto(-1)
-        if(findAndClick(".?开宝箱得金币", {ocrRecognize:true, bounds:{top:device.height*4/5,left:device.width/3}})){
+        if(findAndClick(".?开宝箱得金币|.?点击立得[0-9]+", {
+            fixed:true,
+            ocrRecognize:true, 
+            bounds:{top:device.height*4/5,left:device.width/3},
+            disableCheckBeforeClick:true
+        })){
             this.watchAdsForCoin("首页")
         }
     }
 
     @functionLog("看视频")
-    watchAds(): void {
+    watchAds(): boolean {
         this.goto(-1)
         if(this.scrollOcrClick(".?去领取.?", "看广告赚金币.*")){
             this.watch(text("首页"))
+            return true
         }
+        return false
     }
 
     @functionLog("看直播")
@@ -102,6 +114,7 @@ export class TikTokLite extends AbstractTikTok{
     shopping(): void{
         this.goto(-1)
         if(this.scrollOcrClick(".?去.?街.?", ".?街赚钱.*")){
+            fixedClick("知道了")
             moveDown(65, 4)
             this.backUntilFind(text("首页"))
         }
@@ -117,17 +130,20 @@ export class TikTokLite extends AbstractTikTok{
     goto(num: number){
         const component = search(className("android.widget.HorizontalScrollView"), {waitFor:true})
         if(component !== undefined){
-            const center = (component.bounds.top + component.bounds.bottom)/2
-            this.goTo(this.tab, 0)
+            const exists = search(className("android.view.ViewGroup"), {
+                bounds:{
+                    top:device.height/3,
+                    bottom:device.height*2/3},
+                fixed:true})
             //任务页
             if(num === -1){
-                if(center < 500){
-                    findAndClick(className("android.widget.FrameLayout"),{fixed:true, bounds:{top:center, bottom:device.height / 3, left:device.width * 2 / 3}})
-                } else {
-                    this.backUntilFind(this.tab)
+                if(!exists){
+                    findAndClick(className("android.widget.FrameLayout"),{
+                        fixed:true, 
+                        bounds:{top:component.bounds.bottom, bottom:device.height / 3}})
                 }
             } else if(num === 0){
-                if(center > 500){
+                if(exists){
                     back()
                 }
             }

@@ -1,6 +1,6 @@
 import { dialogClick, findAndClick, fixedClick, scrollClick } from "../common/click";
 import { Move } from "../common/enums";
-import { scrollTo } from "../common/search";
+import { scrollTo, search } from "../common/search";
 import { closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, doFuncAtGivenTimeByEstimate, moveDown, randomExecute, resizeX, resizeY, swipeDown, waitRandomTime } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_VEDIO_KUAISHOU, PACKAGE_VEDIO_KUAISHOU } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
@@ -16,8 +16,8 @@ export class KuaiShou extends Base{
         this.tab = id(this.packageName+":id/tab_layout")
         this.initialComponent = this.tab
         this.depth = 1
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60)
-        this.lowEffEstimatedTime = 0
+        this.lowEff1Inheritance = true
+        this.lowEff2Inheritance = true
     }
 
     @measureExecutionTime
@@ -35,30 +35,30 @@ export class KuaiShou extends Base{
         ])
     }
     @measureExecutionTime
-    lowEff(time: number): void {
+    lowEff1(time: number): void {
         let count = 0
-        doFuncAtGivenTimeByEstimate(time/2, ()=>{
+        doFuncAtGivenTimeByEstimate(time, ()=>{
             this.watchAds()
             if(++count % 25 === 0){
                 this.openTreasure()
             }
         })
-        doFuncAtGivenTime(time/2, 25 * 60, (perTime: number) => {
-            this.swipeVideo(perTime)
-            this.openTreasure()
-        })
+    }
+    @measureExecutionTime
+    lowEff2(time: number): void {
+        this.swipeVideo(time)
+        this.openTreasure()
         this.reward()
     }
     @measureExecutionTime
     weight(): void {
         this.goto(-1)
-        scrollTo("[0-9]+")
-        let tmp = textMatches(/(\d+)/)
-        .boundsInside(0, 0, resizeX(549), resizeY(429)).findOnce()
-        if(tmp != null) {
-            const weight = parseInt(tmp.text())
-            Record.debug(`weight: ${weight}`)
-            this.store(BaseKey.Weight, weight)
+        if(findAndClick("金币收益", {clickUntilGone:false})){
+            const component = search("[0-9]+金币")
+            if(component !== undefined){
+                const weight = parseInt(component.text)
+                this.store(BaseKey.Weight, weight)
+            }
         }
     }
 

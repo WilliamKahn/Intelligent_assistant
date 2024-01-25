@@ -1,6 +1,6 @@
 import { dialogClick, findAndClick, fixedClick, readClick, scrollClick } from "../common/click";
-import { scrollTo } from "../common/search";
-import { doFuncAtGivenTime, merge, resizeX, resizeY, } from "../common/utils";
+import { scrollTo, search } from "../common/search";
+import { merge } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_SPEED_FREE, PACKAGE_READ_SPEED_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Base, BaseKey } from "./abstract/Base";
@@ -13,13 +13,8 @@ export class SpeedFree extends Base {
         this.packageName = PACKAGE_READ_SPEED_FREE
         this.initialComponent = desc("bookstore_button")
         this.exchangeRate = 33000
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60)
-        this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 100 * 60)
-        this.lowEffEstimatedTime = 0
-        // this.dialogBounds = {
-        //     bottom: device.height * 4 / 5, 
-        //     top: device.height * 1 / 3,
-        // }
+        this.medEffInheritance = true
+        this.lowEff1Inheritance = true
     }
 
     @measureExecutionTime
@@ -32,31 +27,30 @@ export class SpeedFree extends Base {
         this.listenBook()
         this.openTreasure()
         let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && text("去观看").exists()){
-            this.watchAds()
-        }
-        this.reward()
+        while(++cycleCounts < MAX_CYCLES_COUNTS
+            && this.watchAds()){}
+        this.listenReward()
     }
 
     @measureExecutionTime
-    lowEff(time: number): void {
-        doFuncAtGivenTime(time, 10 * 60, (perTime:number) => {
-            this.listenBook()
-            this.readBook(perTime)
-            this.openTreasure()
-            this.reward()
-        })
+    lowEff1(time: number): void {
+        this.listenBook()
+        this.readBook(time)
+        this.openTreasure()
+        this.readReward()
+        this.listenReward()
     }
 
     @measureExecutionTime
     weight(): void {
         this.goTo(desc("discovery_button"), -1)
-        scrollTo("金币收益")
-        let tmp = textMatches("[0-9]+").boundsInside(0,0,resizeX(420), resizeY(432)).findOnce()
-        if(tmp != null) {
-            const weight = parseInt(tmp.text())
-            this.store(BaseKey.Weight, weight)
+        const component = scrollTo("币",{waitFor:true,  disableCoverCheck:true})
+        if(component !== undefined){
+            const component1 = search("[0-9]+",{bounds:{right:component.bounds.left}})
+            if(component1 !== undefined){
+                const weight = parseInt(component1.text)
+                this.store(BaseKey.Weight, weight)
+            }
         }
     }
 
@@ -79,12 +73,14 @@ export class SpeedFree extends Base {
     }
 
     @functionLog("看广告")
-    watchAds(): void {
+    watchAds(): boolean {
         this.goTo(desc("discovery_button"), -1)
         if(scrollClick("去观看", "看视频赚金币")){
             this.watch(text("日常福利"))
             this.watchAdsForCoin("日常福利")
+            return true
         }
+        return false
     }
 
     @functionLog("阅读")
@@ -124,16 +120,23 @@ export class SpeedFree extends Base {
         }
     }
 
-    @functionLog("领取奖励")
-    reward(): void {
+    @functionLog("领取阅读金币")
+    readReward():void{
         this.goTo(desc("discovery_button"), -1)
         let cycleCounts = 0
-        let list = ["阅读赚海量金币", "听书赚海量金币"]
-        for(let range of list){
-            while(++cycleCounts < MAX_CYCLES_COUNTS
-                && scrollClick("领取", range, {clickUntilGone:false})) {
-                this.watchAdsForCoin("日常福利")
-            }
+        while(++cycleCounts < MAX_CYCLES_COUNTS
+            && scrollClick("领取", "阅读赚海量金币", {clickUntilGone:false})){
+            this.watchAdsForCoin("日常福利")
+        }
+    }
+
+    @functionLog("领取听书金币")
+    listenReward():void{
+        this.goTo(desc("discovery_button"), -1)
+        let cycleCounts = 0
+        while(++cycleCounts < MAX_CYCLES_COUNTS
+            && scrollClick("领取", "听书赚海量金币", {clickUntilGone:false})){
+            this.watchAdsForCoin("日常福利")
         }
     }
 }

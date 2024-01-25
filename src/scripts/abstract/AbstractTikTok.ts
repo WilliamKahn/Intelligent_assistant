@@ -1,4 +1,4 @@
-import { findAndClick } from "../../common/click";
+import { findAndClick, randomClick } from "../../common/click";
 import { searchByOcrRecognize } from "../../common/search";
 import { doFuncAtGivenTime, randomExecute } from "../../common/utils";
 import { MAX_CYCLES_COUNTS } from "../../global";
@@ -11,9 +11,8 @@ export abstract class AbstractTikTok extends Base{
 
     constructor() {
         super()
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 10 * 60)
-        this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 30 * 60)
-        this.lowEffEstimatedTime = 0
+        this.medEffInheritance = true
+        this.lowEff1Inheritance = true
     }
 
     abstract move():void
@@ -32,35 +31,44 @@ export abstract class AbstractTikTok extends Base{
     medEff(): void {
         this.watchLive()
     }
-
     @measureExecutionTime
-    lowEff(time: number): void {
-        doFuncAtGivenTime(time, 20 * 60, (perTime: number) => {
-            this.swipeVideo(perTime)
-            randomExecute([
-                ()=>{this.openTreasure()},
-                ()=>{this.watchAds()},
-                ()=>{this.shopping()},
-            ])
-        })
+    lowEff1(time: number): void {
+        this.swipeVideo(time)
+        randomExecute([
+            ()=>{this.openTreasure()},
+            ()=>{this.watchAds()},
+            ()=>{this.shopping()},
+        ])
     }
 
     scrollOcrClick(str:string, left:string): boolean{
         let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS
+        while(++cycleCounts < 10
             && searchByOcrRecognize(left) === undefined){
             this.move()
         }
-        if(cycleCounts >= MAX_CYCLES_COUNTS){
+        if(cycleCounts >= 10){
             return false
         }
         const component = searchByOcrRecognize(left)
-        if(component !== undefined && !findAndClick(str, {
-            fixed:true, 
-            ocrRecognize:true, 
-            bounds:{top: component.bounds.top, bottom: component.bounds.bottom + 80}})){
-            this.move()
-            return this.scrollOcrClick(str, left)
+        if(component !== undefined){
+            const com = searchByOcrRecognize(str, {
+                bounds:{top: component.bounds.top, bottom: component.bounds.bottom + 200}
+            })
+            if(component.bounds.bottom > device.height/3){    
+                if(com !== undefined){
+                    randomClick(com.bounds)
+                } else {
+                    return false
+                }
+            } else {
+                if(com !== undefined){
+                    randomClick(com.bounds)
+                } else {
+                    this.move()
+                    return this.scrollOcrClick(str, left)
+                }
+            }
         }
         return true
     }

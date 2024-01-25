@@ -16,15 +16,20 @@ import { ArticleLite } from "./scripts/ArticleLite";
 import { Baidu } from "./scripts/Baidu";
 import { BaiduBig } from "./scripts/BaiduBig";
 import { BaiduLite } from "./scripts/BaiduLite";
+import { ChangReadFree } from "./scripts/ChangReadFree";
 import { DeJian } from "./scripts/DeJian";
+import { EggFlower } from "./scripts/EggFlower";
 import { EggplantFree } from "./scripts/EggplantFree";
+import { XimalayaLite } from "./scripts/XimalayaLite";
 import { KuaiShou } from "./scripts/KuaiShou";
 import { KuaiShouFree } from "./scripts/KuaiShouFree";
 import { KuaiShouLite } from "./scripts/KuaiShouLite";
+import { LightningSearch } from "./scripts/LightningSearch";
 import { MarvelFree } from "./scripts/MarvelFree";
 import { PandaBrain } from "./scripts/PandaBrain";
 import { RedFruits } from "./scripts/RedFruits";
 import { SevenCatsFree } from "./scripts/SevenCatsFree";
+import { ShengRead } from "./scripts/ShengRead";
 import { ShuQi } from "./scripts/ShuQi";
 import { SpeedFree } from "./scripts/SpeedFree";
 import { StarrySky } from "./scripts/StarrySky";
@@ -34,7 +39,10 @@ import { Tomato } from "./scripts/Tomato";
 import { TomatoFree } from "./scripts/TomatoFree";
 import { TomatoLite } from "./scripts/TomatoLite";
 import { WanChao } from "./scripts/WanChao";
+import { Watermelon } from "./scripts/Watermelon";
+import { XinyaFree } from "./scripts/XinyaFree";
 import { YouShi } from "./scripts/YouShi";
+import { BaseKey } from "./scripts/abstract/Base";
 
 
 //*******************全局常量****************************/
@@ -75,8 +83,8 @@ export const STORAGE_APP = "app"
 export const STORAGE_DATE = "date"
 //不记录运行时间
 export const STORAGE_NO_RECORD = "noRecord"
-//存储名称29
-export const STORAGE_WEIGHT_CONTAINER = "YWfjbEVp32"
+//存储名称32
+export const STORAGE_WEIGHT_CONTAINER = "YWfjbEVp33"
 //存储
 export const STORAGE = storages.create(STORAGE_WEIGHT_CONTAINER);
 //基于设备分辨率
@@ -157,6 +165,41 @@ export const PACKAGE_READ_ARTICLE = "com.ss.android.article.news"
 export const NAME_READ_ARTICLE_LITE = "头条搜索极速版"
 export const PACKAGE_READ_ARTICLE_LITE = "com.ss.android.article.lite"
 
+export const NAME_VEDIO_WATERMELON = "西瓜视频"
+export const PACKAGE_VEDIO_WATERMELON = "com.ss.android.article.video"
+
+export const NAME_READ_XIMALAYA_LITE = "喜马拉雅极速版"
+export const PACKAGE_READ_XIMALAYA_LITE = "com.ximalaya.ting.lite"
+
+export const NAME_READ_SHENGREAD = "盛读"
+export const PACKAGE_READ_SHENGREAD = "com.kangaroo.shengdu"
+
+export const NAME_VEDIO_LIGHTNING_SEARCH = "闪电搜索"
+export const PACKAGE_VEDIO_LIGHTNING_SEARCH = "com.ss.android.article.daziban"
+
+export const NAME_READ_CHANG_READ_FREE = "常读免费小说"
+export const PACKAGE_READ_CHANG_READ_FREE = "com.woodleaves.read"
+
+export const NAME_READ_EGG_FLOWER = "蛋花免费小说"
+export const PACKAGE_READ_EGG_FLOWER = "com.eggflower.read"
+
+export const NAME_READ_XINGYA_FREE = "星芽免费小说"
+export const PACKAGE_READ_XINGYA_FREE = "com.jz.xydj"
+
+export const {
+    _TOKEN,
+    APP_ENV,
+    ROBOT_ID,
+    ORDER,
+    RESET
+} = hamibot.env;
+
+
+if(RESET === true){
+    LogRecord.info("脚本重置")
+    STORAGE.clear()
+}
+
 //有柿 
 export const youShi = new YouShi()
 //书旗小说
@@ -211,15 +254,49 @@ export const article = new Article()
 export const articleLite = new ArticleLite()
 //望潮
 export const wanChao = new WanChao()
+//西瓜
+export const watermelon = new Watermelon()
+
+export const changReadFree = new ChangReadFree()
+export const eggFlower = new EggFlower()
+export const ximalayaLite = new XimalayaLite()
+export const shengRead = new ShengRead()
+export const xinyaFree = new XinyaFree()
+export const lightningSearch = new LightningSearch()
+
+export const list = [
+    speedFree,
+    deJian,
+    starrySky,
+    eggplantFree,
+    pandaBrain,
+    sevenCatsFree,
+    shuQi,
+    marvelFree,
+    kuaiShouFree,
+    redFruits,
+    tomato,
+    tomatoFree,
+    tomatoLite,
+    kuaiShou,
+    kuaiShouLite,
+    baidu,
+    baiduLite,
+    baiduBig,
+    youShi,
+    article,
+    articleLite,
+    tikTokLite,
+    tikTokVolcano,
+    changReadFree,
+    eggFlower,
+    ximalayaLite,
+    shengRead,
+    xinyaFree,
+    lightningSearch
+]
 
 LogRecord.info("加载配置");
-export const {
-    _TOKEN,
-    APP_ENV,
-    ROBOT_ID,
-    ORDER,
-    RESET
-} = hamibot.env;
 
 LogRecord.info(`正在启动...\n\n\t当前脚本版本: ${VERSION}\n`);
 
@@ -230,19 +307,21 @@ if(APP_ENV === 'production'){
 } else if(APP_ENV === 'development') {
     LogRecord.debug("处于开发环境")
 }
-
-if(RESET === true){
-    LogRecord.info("脚本重置")
-    STORAGE.clear()
-}
 // -------------------- register listener -----------------------
 // register exit listener
 events.on("exit", () => {
     threads.shutDownAll()
     LogRecord.info("结束...")
+    for(const app of list){
+        app.store(BaseKey.HighEffIncomePerMinute, app.highEffIncomePerMinute)
+        app.store(BaseKey.MedEffIncomePerMinute, app.medEffIncomePerMinute)
+        app.store(BaseKey.LowEff1IncomePerMinute, app.lowEff1IncomePerMinute)
+        app.store(BaseKey.LowEff2IncomePerMinute, app.lowEff2IncomePerMinute)
+        app.store(BaseKey.LowEff3IncomePerMinute, app.lowEff3IncomePerMinute)
+    }
     waitRandomTime(5)
     console.hide()
-});
+})
 
 // ------------------------ validation --------------------------
 

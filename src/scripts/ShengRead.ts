@@ -1,18 +1,17 @@
-import { dialogClick, findAndClick, fixedClick, readClick, scrollClick } from "../common/click";
-import { scrollTo } from "../common/search";
-import { closeByImageMatching, doFuncAtGivenTime, randomExecute } from "../common/utils";
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_DEJIAN, PACKAGE_READ_DEJIAN } from "../global";
-import { functionLog, measureExecutionTime } from "../lib/decorators";
-import { Record } from "../lib/logger";
-import { Base, BaseKey } from "./abstract/Base";
+import { dialogClick, findAndClick, fixedClick, readClick, scrollClick } from "../common/click"
+import { scrollTo } from "../common/search"
+import { randomExecute, closeByImageMatching, padZero, getNumFromComponent } from "../common/utils"
+import { MAX_CYCLES_COUNTS, NAME_READ_SHENGREAD, PACKAGE_READ_SHENGREAD } from "../global"
+import { measureExecutionTime, functionLog } from "../lib/decorators"
+import { Record } from "../lib/logger"
+import { Base, BaseKey } from "./abstract/Base"
 
-
-export class DeJian extends Base {
+export class ShengRead extends Base {
 
     constructor() {
         super()
-        this.appName = NAME_READ_DEJIAN
-        this.packageName = PACKAGE_READ_DEJIAN
+        this.appName = NAME_READ_SHENGREAD
+        this.packageName = PACKAGE_READ_SHENGREAD
         this.initialComponent = desc("bookstore_button")
         this.medEffInheritance = true
         this.lowEff1Inheritance = true
@@ -25,7 +24,6 @@ export class DeJian extends Base {
         randomExecute([
             ()=>{this.openTreasure()},
             ()=>{this.mealSupp()},
-            ()=>{this.joinActivity()},
         ])
     }
     @measureExecutionTime
@@ -47,14 +45,31 @@ export class DeJian extends Base {
 
     @measureExecutionTime
     weight(): void {
-
         this.goTo(desc("discovery_button"), -1)
-        scrollTo("金币收益")
-        let tmp = textEndsWith("币").findOnce()
-        if(tmp != null) {
-            const weight = parseInt(tmp.text())
-            this.store(BaseKey.Weight, weight)
+        if(findAndClick("金币[0-9]+", {clickUntilGone:false})){
+            if(fixedClick("金币明细")){
+                const year = this.startTime.getFullYear()
+                const month = padZero(this.startTime.getMonth() + 1)
+                const day = padZero(this.startTime.getDate())
+                const list = textMatches(`${year}-${month}-${day}.*`).find()
+                let weight = 0
+                for(let i =0;i<list.length;i++){
+                    const parent = list[i].parent()
+                    if(parent!==null){
+                        const coin = parent.child(0)
+                        if(coin !== null){
+                            weight+=getNumFromComponent(coin.text())
+                        }
+                    }
+                }
+                Record.debug(`weight: ${weight}`)
+                this.store(BaseKey.Weight, weight)
+            }
         }
+    }
+
+    beforeDoTask(): void {
+        fixedClick("立即领取")
     }
 
     @functionLog("阅读")
@@ -63,19 +78,24 @@ export class DeJian extends Base {
         let tmp = id(this.packageName+":id/channel_tab").findOnce()
         if(tmp != null && findAndClick("推荐", 
         {fixed:true, ocrRecognize:true, bounds: tmp.bounds(), selectedThreshold:100})){
-            if(readClick(id("com.zhangyue.iReader.bookStore:id/id_tv_book_name"), random(0, 5))){
+            if(findAndClick(id("com.zhangyue.iReader.bookStore:id/id_tv_book_name"), {
+                index:random(0, 5),
+                waitFor:true,
+                clickUntilGone:true,
+                disableCoverCheck:true
+            })){
                 this.read(totalTime)
             }
         }
     }
 
-    @functionLog("领取奖励")
+    @functionLog("领取阅读奖励")
     readReward(): void {
         this.goTo(desc("discovery_button"), -1)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
             && scrollClick("领取", "每日阅读福利", {clickUntilGone:false})) {
-            this.watchAdsForCoin("金币收益")
+            this.watchAdsForCoin("去提现")
             if (text("恭喜获得").exists()) {
                 closeByImageMatching()
             }
@@ -98,7 +118,7 @@ export class DeJian extends Base {
     mealSupp(): void{
         this.goTo(desc("discovery_button"), -1)
         if(findAndClick("点击领取")){
-            this.watchAdsForCoin("金币收益")
+            this.watchAdsForCoin("去提现")
             if (text("恭喜获得").exists()) {
                 closeByImageMatching()
             }
@@ -109,8 +129,8 @@ export class DeJian extends Base {
     watchAds(): boolean {
         this.goTo(desc("discovery_button"), -1)
         if(scrollClick("去观看", "看视频赚金币与声望")){
-            this.watch(text("金币收益"))
-            if(!dialogClick("知道了")){    
+            this.watch(text("去提现"))
+            if(!dialogClick("知道了")){
                 closeByImageMatching()
             }
             return true
@@ -118,38 +138,11 @@ export class DeJian extends Base {
         return false
     }
 
-    @functionLog("参加活动")
-    joinActivity(): void {
-        this.goTo(desc("discovery_button"), -1)
-        if(findAndClick("参与活动赚金币")){
-            this.activity()
-            back()
-        }
-    }
-
-    activity():void{
-        let title = id("com.zhangyue.module.ad:id/tv_reward_video_title").findOnce()
-        if(title != null){
-            const regex = /\((\d+)\/(\d+)\)/;
-            const match = title.text().match(regex)
-            if(match) {
-                for(let i = parseInt(match[1]); i < parseInt(match[2]); i++){
-                    findAndClick("看视频赚金币", {fixed:true, clickUntilGone: true})
-                    Record.log(`参与活动, 正在观看${i+1}/${match[2]}个广告`)
-                    this.watch(text("金币收益"))
-                }
-                this.activity()
-            } else {
-                Record.log("活动已完成")
-            }
-        }
-    }
-
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goTo(desc("discovery_button"), -1)
         if(fixedClick("开宝箱得金币")) {
-            this.watchAdsForCoin("金币收益")
+            this.watchAdsForCoin("去提现")
             if (text("恭喜获得").exists()) {
                 closeByImageMatching()
             }

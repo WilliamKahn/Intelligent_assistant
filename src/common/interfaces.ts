@@ -12,6 +12,17 @@ export interface ComponentBounds{
     bottom: number
 }
 
+export interface FuncIncome{
+    index: string,
+    funcName: string,
+    income: number
+}
+export interface Priority{
+    middle: number,
+    right: number,
+    left: number
+}
+
 export interface Component{
     text: string,
     bounds: ComponentBounds
@@ -38,7 +49,9 @@ export type RandomClickOptions = NormalClickOptions & {
     check?: boolean,
 }
 
-export type ScrollToOptions = SearchOptions & CoverCheckOptions
+export type ScrollToOptions = SearchOptions & CoverCheckOptions & {
+    disableCoverCheck?:boolean
+}
 
 export interface CoverCheckOptions {
     //遮挡范围系数
@@ -51,10 +64,6 @@ export type SearchOptions = SearchByUiSelectOptions & {
     //是否启动ocr
     ocrRecognize?: boolean
 }
-
-// export type SearchByLeftRangeOptions = SearchByUiSelectOptions & {
-//     leftRange?: string|UiSelector
-// }
 
 export type SearchByUiSelectOptions = SearchByOcrRecognizeOptions & {
     //是否需要滑动

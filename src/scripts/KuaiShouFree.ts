@@ -1,14 +1,13 @@
-import { dialogClick, findAndClick, fixedClick, readClick, scrollClick } from "../common/click";
-import { scrollTo, searchByOcrRecognize } from "../common/search";
-import { closeByImageMatching, doFuncAtGivenTime } from "../common/utils";
+import { dialogClick, findAndClick, fixedClick, scrollClick } from "../common/click";
+import { scrollTo } from "../common/search";
+import { closeByImageMatching, doFuncAtGivenTime, padZero } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_KUAISHOU_FREE, PACKAGE_READ_KUAISHOU_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
+import { CurrentAppBanned } from "../lib/exception";
+import { Record } from "../lib/logger";
 import { Base, BaseKey } from "./abstract/Base";
 
 export class KuaiShouFree extends Base{
-
-    coin: number = 0
-    isFirst: boolean = true
 
     constructor(){
         super()
@@ -17,34 +16,43 @@ export class KuaiShouFree extends Base{
         this.tab = id(this.packageName+":id/home_bottom_bar")
         this.initialComponent = this.tab
         this.initialNum = 1
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 20 * 60)
-        this.lowEffEstimatedTime = 0
+        this.lowEff1Inheritance = true
     }
 
     @measureExecutionTime
     highEff(): void {
         this.signIn()
-        this.coin = this.record()
         this.openTreasure()
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && textMatches("看视频赚[0-9]+金币").exists()){
-            this.watchAds()        
-        }
+            && textMatches("看视频赚[0-9]+金币").exists() 
+            && this.watchAds()){}
     }
     @measureExecutionTime
-    lowEff(time: number): void {
-        //每十分钟执行一次
-        doFuncAtGivenTime(time, 10 * 60, (perTime: number) =>{
-            this.readBook(perTime)
-            this.openTreasure()
-            this.reward()
-        })
+    lowEff1(time: number): void {
+        this.readBook(time)
+        this.openTreasure()
+        this.reward()
     }
     @measureExecutionTime
     weight(): void {
-        const weight = this.record() - this.coin
-        if(weight > 0){
+        this.goTo(this.tab, 4)
+        if(fixedClick(id(this.packageName+":id/total_coin_tv"))){
+            const year = this.startTime.getFullYear()
+            const month = padZero(this.startTime.getMonth() + 1)
+            const day = padZero(this.startTime.getDate())
+            const list = textMatches(`${year}-${month}-${day}.*`).find()
+            let weight = 0
+            for(let i =0;i<list.length;i++){
+                const parent = list[i].parent()
+                if(parent!==null){
+                    const coin = parent.child(2)
+                    if(coin !== null){
+                        weight+=parseInt(coin.text())
+                    }
+                }
+            }
+            Record.debug(`weight: ${weight}`)
             this.store(BaseKey.Weight, weight)
         }
     }
@@ -52,17 +60,23 @@ export class KuaiShouFree extends Base{
     @functionLog("签到")
     signIn(): void {
         this.goTo(this.tab, 2)
-        if(dialogClick("立即签到")){
-            closeByImageMatching()
+        if(fixedClick("立即签到")){
+            if(fixedClick("立即签到")){
+                throw new CurrentAppBanned(this.appName)
+            } else {
+                closeByImageMatching()
+            }
         }
     }
 
     @functionLog("看视频")
-    watchAds(): void {
+    watchAds(): boolean {
         this.goTo(this.tab, 2)
         if(scrollClick("去赚钱", "看视频赚[0-9]+金币")){
             this.watch(text("日常任务"))
+            return true
         }
+        return false
     }
 
     @functionLog("开宝箱")
@@ -92,23 +106,14 @@ export class KuaiShouFree extends Base{
         }
     }
 
-    @functionLog("领取奖励")
-    reward(): void {
+    @functionLog("领取阅读奖励")
+    readReward(): void {
         this.goTo(this.tab, 2)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
             && scrollClick("去领取", "认真阅读小说额外奖励")) {
             this.watchAdsForCoin("日常任务")
         }
-    }
-
-    record(): number{
-        this.goTo(this.tab, 2)
-        const [_, name]:any = searchByOcrRecognize("[0-9]+",{bounds:{bottom: device.height/5}})
-        if(name != undefined){
-            return parseInt(name)
-        }
-        return 0
     }
 
 }

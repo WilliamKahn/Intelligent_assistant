@@ -2,11 +2,11 @@
     "name": "智能助手(小说短剧24合1)",
     "scriptId": "659e58c739b29430c2ec4f82",
     "executeRobot": {
-        "_id": "6544a824b0abc7e24334b507",
-        "name": "小米"
+        "_id": "64e56c4074d0f2070f490920",
+        "name": "华为"
     },
     "fileMark": {
-        "configFile": "src/main/second/config.json",
+        "configFile": "src/main/first/config.json",
         "scriptFile": "dist/index.js"
     }
 }

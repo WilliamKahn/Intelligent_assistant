@@ -12,9 +12,13 @@ export class BaiduLite extends AbstractBaidu {
         super(PACKAGE_VEDIO_BAIDU_LITE)
         this.appName = NAME_VEDIO_BAIDU_LITE
         this.initialNum = 1
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 40 * 60)
-        this.lowEffEstimatedTime = 0
         this.exitSign = "每日任务"
+        this.dialogBounds = {
+            bottom: device.height * 4 / 5, 
+            top: device.height * 1 / 3,
+            right: device.width *5/6,
+            left: device.width/6
+        }
     }
 
     @measureExecutionTime
@@ -23,19 +27,18 @@ export class BaiduLite extends AbstractBaidu {
         this.openTreasure()
         let cycleCounts = 0
         while(++cycleCounts <= MAX_CYCLES_COUNTS 
-            && this.watchAds()){}
+            && textMatches("看广告赚钱.*").exists()){
+            this.watchAds()
+        }
         this.searchForCoin()
         this.mealSupp()
         this.openTreasure()
     }
-
     @measureExecutionTime
-    lowEff(time: number): void {
-        doFuncAtGivenTime(time, 20 * 60, (perTime:number) => {
-            this.swipeVideo(perTime)
-            this.openTreasure()
-            this.readReward()
-        })
+    lowEff1(time: number): void {
+        this.swipeVideo(time)
+        this.openTreasure()
+        this.readReward()
     }
     
     @measureExecutionTime
@@ -61,7 +64,7 @@ export class BaiduLite extends AbstractBaidu {
             scrollClick("随心搜", "搜索赚金币.*")){
             waitRandomTime(15)
             this.backUntilFind(text("每日任务"))
-            waitRandomTime(2)
+            waitRandomTime(4)
             this.watchAdsForCoin("每日任务")
         }
     }
@@ -72,7 +75,7 @@ export class BaiduLite extends AbstractBaidu {
         fixedClick("立即收下")
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS
-            && scrollClick("可领")){
+            && findAndClick("可领")){
         }
     }
 
@@ -107,45 +110,16 @@ export class BaiduLite extends AbstractBaidu {
         if(num === -1){
             num = 2
         }
-        if(num == 2 && this.preNum !== 1){
-            this.goTo(this.tab, 1)
-            this.goTo(this.tab, 2)
+        if(num == 2){
+            if(this.preNum === 1 || this.preNum === 2){
+                this.goTo(this.tab, 2)
+            } else {
+                this.goTo(this.tab, 1)
+                this.goTo(this.tab, 2)
+            }
         } else {
             this.goTo(this.tab, num)
         }
     }
-
-    // @functionLog("领取听书奖励")
-    // listenReward(): void {
-    //     this.goto(2)
-    //     if(scrollClick("去听书", "听书赚金币")){
-    //         if(findAndClick(className("android.widget.ImageView"), {bounds:{top:device.height*2/3, left:device.width*2/3}})){
-    //             let cycleCounts = 0
-    //             while(++cycleCounts<MAX_CYCLES_COUNTS
-    //                 && scrollClick("可领取")){
-    //                 this.watchAdsForCoin("听书赚金币")
-    //             }
-    //         }
-    //     }
-    // }
-
-    // @functionLog("听书")
-    // listenBook(): void {
-    //     this.goto(0)
-    //     if(findAndClick("听书",{
-    //         selectedThreshold: 170,
-    //         waitFor:true,
-    //     })){
-    //         if(scrollClick(className("android.widget.TextView"), random(1,4).toString())){
-    //             if(fixedClick("开始听书|续播")){
-    //                 if(fixedClick("立即看视频领[0-9]+分钟")){
-    //                     this.watch(text("看视频领免费时长"))
-    //                     // const tmp = this.backUntilFind(id("com.baidu.searchbox.reader:id/novel_voice_lav_play"))
-    //                     // randomClick(tmp.bounds())
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
 
 }

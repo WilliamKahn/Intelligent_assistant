@@ -92,11 +92,11 @@ export function scrollTo(selector: string|UiSelector, options?: ScrollToOptions,
             waitRandomTime(1)
             //列表项才需要ocr识别
             if(++avoidTimes < 3){
-                if(coverCheck(component, options)){
+                if(!options?.disableCoverCheck && coverCheck(component, options)){
                     Record.debug("按钮被遮挡")
                     if(!range) range = {}
                     if(pointY > device.height/3 && pointY < device.height*2/3){
-                        if(tmpRight > device.width - 60){
+                        if(tmpRight > device.width - 70){
                             range.right = tmpLeft
                             range.left = undefined
                         } else {
@@ -193,6 +193,7 @@ export function searchByOcrRecognize(str: string, options?:SearchByOcrRecognizeO
     let result: Component|undefined = undefined
     if(list.length > 0){
         const index = options?.index? options.index:0
+        // log(index)
         const tmp = list[index]
         if(tmp){
             if(options?.bounds){
@@ -217,8 +218,10 @@ export function searchByUiSelect(selector:UiSelector, options?:SearchByUiSelectO
     if(options?.waitFor){
         if(!selector.findOne(10 * 1000)){
             for(let i = 0; i < 3; i++){
-                closeByImageMatching()
-                closeDialogifExist()
+                if(!closeByImageMatching() && !closeDialogifExist()){
+                    back()
+                    waitRandomTime(4)
+                }
                 if(selector.findOne(5 * 1000)){
                     break
                 }
@@ -233,7 +236,9 @@ export function searchByUiSelect(selector:UiSelector, options?:SearchByUiSelectO
         if(options?.fixed){
             list = list.filter(element => {
                 const bounds = element.bounds()
-                return bounds.height() > 0 && bounds.width() > 0
+                return bounds.height() > 0 
+                    && bounds.width() > 0 
+                    && myBoundsContains({},bounds)
             })
         }
         if(options?.bounds){
@@ -256,6 +261,9 @@ export function searchByUiSelect(selector:UiSelector, options?:SearchByUiSelectO
                 return boundsA.centerY() - boundsB.centerY()
             }
         })
+        // for(const tmp of list){
+        //     log(tmp.bounds())
+        // }
         const index = options?.index ? options.index:0
         const tmp = list[index]
         if(tmp !== undefined){

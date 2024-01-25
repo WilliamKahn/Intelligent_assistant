@@ -1,6 +1,6 @@
-import { dialogClick, findAndClick, fixedClick, scrollClick, selectedClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, scrollClick, selectedClick, waitClick } from "../common/click";
 import { scrollTo, search } from "../common/search";
-import { randomExecute, resizeX, resizeY } from "../common/utils";
+import { convertMinutesToSeconds, randomExecute, resizeX, resizeY } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_TOMATO_LITE, PACKAGE_READ_TOMATO_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
@@ -17,42 +17,25 @@ export class TomatoLite extends AbstractTomato {
         this.randomTab = className("android.widget.RadioGroup")
         .boundsInside(0, device.height*2/3, device.width, device.height)
         this.initialNum = 0
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 10 * 60)
-        this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 45 * 60)
     }
 
     @measureExecutionTime
     highEff(): void {
         this.signIn()
+        this.listenBook()
         this.openTreasure()
+        this.winGoldCoin()
+        this.mealSupp()
+        let cycleCounts = 0
+        while(++cycleCounts < MAX_CYCLES_COUNTS 
+            && this.watchAds()) {}
+        this.listenReward()
+        this.depositReward()
+        this.dailyReward()
     }
 
-    @measureExecutionTime
-    medEff(): void {
-        randomExecute([
-            ()=>{this.mealSupp()},
-            ()=>{this.winGoldCoin()},
-            ()=>{
-                this.listenBook()
-                let cycleCounts = 0
-                while(++cycleCounts < MAX_CYCLES_COUNTS 
-                    && text("立即观看").findOne(3 * 60 * 1000)) {
-                    this.watchAds()
-                }
-            },
-        ])
-        this.reward()
-    }
-
-    @measureExecutionTime
-    weight(): void {
+    goto(): void {
         this.goTo(this.tab, 2)
-        scrollTo("金币收益")
-        let tmp = textMatches(/(\d+)/).boundsInside(0, 0, resizeX(540), resizeY(373)).findOnce()
-        if(tmp != null) {
-            const weight = parseInt(tmp.text())
-            this.store(BaseKey.Weight, weight)
-        }
     }
 
     @functionLog("签到")
@@ -82,16 +65,27 @@ export class TomatoLite extends AbstractTomato {
         
     }
 
-    @functionLog("领取奖励")
-    reward(): void {
+    @functionLog("领取听歌奖励")
+    listenReward(): void{
         this.goTo(this.tab, 2)
-        let list = ["听音乐赚金币", "每日听歌赚钱"]
         let cycleCounts = 0
-        for(let range of list){
-            while(++cycleCounts < MAX_CYCLES_COUNTS 
-                && scrollClick("立即领取", range, {clickUntilGone:false})) {
-                    this.watchAdsForCoin("日常福利")
-            }
+        while(++cycleCounts < MAX_CYCLES_COUNTS 
+            && scrollClick("立即领取", "听音乐赚金币", {clickUntilGone:false})) {
+                this.watchAdsForCoin("日常福利")
+        }
+    }
+    @functionLog("领取每日听歌奖励")
+    dailyReward():void{
+        this.goTo(this.tab, 2)
+        if(scrollClick("立即领取", "每日听歌赚钱", {clickUntilGone:false})){
+            this.watchAdsForCoin("日常福利")
+        }
+    }
+    @functionLog("领取额外存金币奖励")
+    depositReward(): void{
+        this.goTo(this.tab, 2)
+        if(scrollClick("立即领取", "听音乐额外存金币", {clickUntilGone:false})){
+            this.watchAdsForCoin("日常福利")
         }
     }
 
@@ -106,12 +100,13 @@ export class TomatoLite extends AbstractTomato {
     }
 
     @functionLog("看广告")
-    watchAds(): void {
+    watchAds(): boolean {
         this.goTo(this.tab, 2)
-        if(scrollClick("立即观看", "看视频赚金币")){
+        if(waitClick("立即观看", "看视频赚金币")){
             this.watch(text("日常福利"))
+            return true
         }
-        
+        return false
     }
 
     @functionLog("开宝箱")

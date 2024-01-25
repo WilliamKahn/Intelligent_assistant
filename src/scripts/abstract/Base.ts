@@ -1,7 +1,7 @@
 import { closeDialogifExist, continueWatch, dialogClick, findAndClick, fixedClick, normalClick, randomClick, watchAgain } from "../../common/click"
 import { Bounds } from "../../common/interfaces"
 import { search } from "../../common/search"
-import { close, closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, executeDynamicLoop, findLargestIndexes, getGrayscaleHistogram, getScreenImage, matchAndJudge, merge, resizeX, resizeY, waitRandomTime } from "../../common/utils"
+import { close, closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, executeDynamicLoop, executeDynamicLoop2, findLargestIndexes, getGrayscaleHistogram, getScreenImage, matchAndJudge, merge, resizeX, resizeY, waitRandomTime } from "../../common/utils"
 import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, MAX_BACK_COUNTS, MAX_CYCLES_COUNTS, STORAGE } from "../../global"
 import { startDecorator } from "../../lib/decorators"
 import { ConfigInvalidException, ExceedMaxNumberOfAttempts } from "../../lib/exception"
@@ -38,16 +38,14 @@ export abstract class Base {
 
     dialogBounds: Bounds|undefined = undefined
 
+    //是否可执行
+    executable: boolean = true
+
     //签到时间
+    startTime: Date = new Date()
     lastSignInTime: Date = new Date()
     canSign:boolean = false
-
-    //执行预估时间
-    highEffEstimatedTime: number = BASE_ASSIMT_TIME
-    medEffEstimatedTime: number = MAX_ASSIMT_TIME
-    lowEffEstimatedTime: number = MAX_ASSIMT_TIME
-    //耗时任务数量（涉及到时间分配）
-    lowEffAssmitCount = 1
+    terminalAfterSign:boolean = false
 
     //高效率 T0 1
     abstract highEff(): void
@@ -56,33 +54,109 @@ export abstract class Base {
     medEff(): void {}
 
     //低效率 T3
-    lowEff(time: number): void { time }
+    lowEff1(time: number): void { time }
+    lowEff2(time: number): void { time }
+    lowEff3(time: number): void { time }
+
+    //是否执行
+    medEffFlag: boolean = false
+    lowEff1Flag: boolean = false
+    lowEff2Flag: boolean = false
+    lowEff3Flag: boolean = false
+
+    //是否继承
+    medEffInheritance: boolean = false
+    lowEff1Inheritance: boolean = false
+    lowEff2Inheritance: boolean = false
+    lowEff3Inheritance: boolean = false
+
+    lowEff1Start: number = 0
+    lowEff2Start: number = 0
+    lowEff3Start: number = 0
+
+    //阅读收益最大index
+    //1 10 2 30 3 60 4 120 5 180 6 240
+    lowEff1Index: number = 6
+    lowEff2Index: number = 6
+    lowEff3Index: number = 6
+
+    //分均收益
+    highEffIncomePerMinute: number = this.fetch(BaseKey.HighEffIncomePerMinute, 0)
+    medEffIncomePerMinute: number = this.fetch(BaseKey.MedEffIncomePerMinute, 0)
+    lowEff1IncomePerMinute: number = this.fetch(BaseKey.LowEff1IncomePerMinute, 0)
+    lowEff2IncomePerMinute: number = this.fetch(BaseKey.LowEff2IncomePerMinute, 0)
+    lowEff3IncomePerMinute: number = this.fetch(BaseKey.LowEff3IncomePerMinute, 0)
 
     //权重
     abstract weight(): void
 
     @startDecorator
-    start(time: number): void {
-        if (this.lauchApp()) {
-            Record.info(`${this.appName}预计执行${convertSecondsToMinutes(time)}分钟`)
-            this.reset()
-            this.reSearchTab()
-            let flag = false
-            if(time >= this.highEffEstimatedTime) {
-                const processTime:any = this.highEff()
-                time -= processTime
-                flag = true
-            }
-            if(time >= this.medEffEstimatedTime) {
+    start1(): void{
+        if(this.lauchApp()){
+            this.startReset()
+            const processTime:any = this.highEff()
+            this.weight()
+            const weight = this.fetch(BaseKey.Weight)
+            const income = weight / convertSecondsToMinutes(processTime) / this.exchangeRate
+            this.highEffIncomePerMinute = income > 1 || processTime < 60 ? 0 : income
+            Record.debug(`highEff金币: ${weight},时间: ${convertSecondsToMinutes(processTime)}分钟, 分均: ${this.highEffIncomePerMinute.toFixed(4)}`)
+            if(this.medEffFlag){
                 const processTime:any = this.medEff()
-                time -= processTime
+                const tmp = this.fetch(BaseKey.Weight)
+                this.weight()
+                const weight = this.fetch(BaseKey.Weight) - tmp
+                const income = weight / convertSecondsToMinutes(processTime) / this.exchangeRate
+                this.medEffIncomePerMinute = income > 1 || processTime < 60 ? 0 : income
+                Record.debug(`medEff金币: ${weight},时间: ${convertSecondsToMinutes(processTime)}分钟, 分均: ${this.medEffIncomePerMinute.toFixed(4)}`)
             }
-            if(time > this.lowEffEstimatedTime) {
-                const processTime:any = this.lowEff(time - 5 * 60)
-                time -= processTime
+            for(let i = 1; i<=3; i++){
+                if(this[`lowEff${i}Flag`]){
+                    const index = this[`lowEff${i}Start`]
+                    let length = this[`lowEff${i}Index`]
+                    for(let j = index; j < length;j++){
+                        let param:number
+                        if(j < 3){
+                            param = j+1
+                        } else {
+                            param = 6
+                        }
+                        const time = (param * 10 + j) * 60
+                        const processTime:any = this[`lowEff${i}`].call(this, time)
+                        const tmp = this.fetch(BaseKey.Weight)
+                        this.weight()
+                        const weight = this.fetch(BaseKey.Weight) - tmp
+                        const lowIncomePerMinute = 
+                            weight / convertSecondsToMinutes(processTime) / this.exchangeRate
+                        Record.debug(`lowEff${i}金币: ${weight},时间: ${convertSecondsToMinutes(processTime)}分钟, 分均: ${lowIncomePerMinute.toFixed(4)}`)                        
+                        this[`lowEff${i}Start`] = j + 1
+                        if(lowIncomePerMinute < 0.0035){
+                            break
+                        }
+                        this[`lowEff${i}IncomePerMinute`] = lowIncomePerMinute
+                    }
+                }
             }
-            if (flag) {
-                Record.info("统计当前app金币")
+        } else {
+            this.executable = false
+        }
+    }
+    @startDecorator
+    startContinue(funcName: string): void{
+        const start = this[`${funcName}Start`]
+        const length = this[`${funcName}Index`]
+        if(start < length && this.lauchApp()){
+            this.reset()
+            this.beforeDoTask()
+            this.reSearchTab()
+            for(let i = start;i < length;i++){
+                let param:number
+                if(i < 3){
+                    param = i+1
+                } else {
+                    param = 6
+                }
+                const time = (param * 10 + i)* 60
+                this[`${funcName}`].call(this, time)
                 this.weight()
             }
         }
@@ -92,8 +166,7 @@ export abstract class Base {
     start2(): void{
         const runCode = hamibot.env[this.constructor.name]
         if (runCode !== "" && this.lauchApp()){
-            this.reset()
-            this.reSearchTab()
+            this.startReset()
             this.executeRichText(runCode)
             this.weight()
         }
@@ -104,29 +177,16 @@ export abstract class Base {
             richText.replace(/(\n?)\{(\n?)/g, '\n{\n')
             .replace(/(\n?)\}(\n?)/g, '\n}\n')
             .replace(/(\n)(\n)/, '\n').split('\n'):richText
-        const signFlag = this.findMethodName("签到") !== null ? true:false
         for(let i = 0; i< lines.length; i++){
             let line = lines[i]
-            const tokens = line.trim().split(/\(|\)/);
+            const tokens = line.trim().split(/\(|\)/)
 
-            const command = this.findMethodName(tokens[0]);
-            const params = tokens[1] ? tokens[1].split(',') : [];
+            const command = this.findMethodName(tokens[0])
+            const params = tokens[1] ? tokens[1].split(',') : []
 
             if(command != null){
                 const method = this[command]
                 if (typeof method === 'function') {
-                    if(signFlag){
-                        if(command === "signIn"){
-                            this.lastSignInTime = new Date()
-                            this.canSign = true
-                        } else if(this.canSign){
-                            const now = new Date()
-                            if(now.getDay() !== this.lastSignInTime.getDay()){
-                                this.lastSignInTime = now
-                                this.signIn()
-                            }
-                        }
-                    }
                     const time = parseInt(params[0], 10) * 60
                     method.call(this, time)
                   } else {
@@ -154,11 +214,15 @@ export abstract class Base {
                 if(index === -1){
                     throw new ConfigInvalidException("语法错误")
                 }
-                const loopCount = parseInt(params[0], 10);
                 const loopBody = () => {
                     this.executeRichText(lines.slice(i+2, index))
                 }
-                executeDynamicLoop(loopCount, loopBody)
+                if(params[0] === "看广告"){
+                    executeDynamicLoop2(()=>this.watchAds() as any, loopBody)
+                } else {
+                    const loopCount = parseInt(params[0], 10);
+                    executeDynamicLoop(loopCount, loopBody)
+                }
                 i = index
             } else if (tokens[0] === "等待") {
                 const sleepTime = parseInt(params[0], 10);
@@ -171,6 +235,7 @@ export abstract class Base {
         if(this.randomTab.toString() !== text("").toString()){
             search(this.randomTab, {waitFor:true})
             let tmp:any = this.randomTab.findOnce()
+            // let tmp = this.backUntilFind(this.randomTab)
             if(tmp !== null){
                 this.tab = id(tmp.id())
                 this.initialComponent = this.tab
@@ -180,8 +245,6 @@ export abstract class Base {
             }
         }
     }
-
-    beforeDoTask(): void{}
 
     /**
      * @description 启动app
@@ -243,9 +306,10 @@ export abstract class Base {
             const grayHistogram = getGrayscaleHistogram(img)
             img.recycle()
             const [index] = findLargestIndexes(grayHistogram, 1)
-            Record.debug(`watch index: ${index}`)
             if(index < exitSign + 20 && index > exitSign - 20){
                 flag = true
+            } else {
+                Record.debug(`watch index: ${index}`)
             }
         } else {
             flag = exitSign.exists()
@@ -263,9 +327,19 @@ export abstract class Base {
             this.lauchApp()
         }
         let str:string|undefined = undefined
-        const component = search(".*[0-9]+[ ]?[s秒]?.*", {ocrRecognize:true, bounds:{bottom: device.height / 4}})
-        if(component !== undefined){
-            str = component.text
+        const first = search("浏览页面[0-9]+s 领取奖励")
+        if(first === undefined){
+            const second = search(".*[0-9]+[ ]?[s秒]?.*", {ocrRecognize:true, bounds:{bottom: device.height / 4}})
+            if(second === undefined){
+                const com = search("[0-9]+秒", {bounds:{left:device.width*2/3,top:device.height*2/3}})
+                if(com !== undefined){
+                    str = `滑动浏览${com.text}`
+                }
+            } else {
+                str = second.text
+            }
+        } else {
+            str = first.text
         }
         const waitTime = matchAndJudge(str)
         waitTimes += waitTime
@@ -357,8 +431,8 @@ export abstract class Base {
         }
     }
 
-    watchAdsForCoin(backSign: string){
-        const str = "(观)?看.*(视频|内容|广告).*(得|领|赚|收取).*([0-9]+金币|更多|火苗)"
+    watchAdsForCoin(backSign: string, sign:string = ""){
+        const str = "(观)?看.*(视频|内容|广告).*(得|领|赚|收取).*([0-9]+金币|更多|火苗)"+sign
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS
             && (dialogClick(str, this.dialogBounds))){
@@ -367,14 +441,45 @@ export abstract class Base {
         dialogClick(merge(["(开心|立即)收下", "(我)?知道了"]))
     }
 
+    watchAdsForCoin2(backSign: string, sign:string = ""){
+        const str = "(观)?看.*(视频|内容|广告).*(得|领|赚|收取).*([0-9]+金币|更多|火苗)"+sign
+        let cycleCounts = 0
+        do{
+            this.watch(textMatches(merge([backSign, str])))
+        }while(++cycleCounts < MAX_CYCLES_COUNTS
+            && (dialogClick(str, this.dialogBounds)))
+        dialogClick(merge(["(开心|立即)收下", "(我)?知道了"]))
+    }
+
+    /**
+     * @description 执行任务前置操作
+     */
+    beforeDoTask(): void{}
+
+    /**
+     * @description 启动初始化
+     */
+    startReset(){
+        //参数初始化
+        //start初始化
+        this.startTime = new Date()
+        this.lowEff1Start = 0
+        this.lowEff2Start = 0
+        this.lowEff3Start = 0
+        this.enablewatchAds()
+        //启动初始化
+        this.reset()
+        //前置操作
+        this.beforeDoTask()
+        this.reSearchTab()
+    }
+
     /**
      * @description 重置
      */
     reset(){
-        this.beforeDoTask()
         LOG_STACK.clear()
         //广告重置
-        this.enablewatchAds()
         //跳转留存记录
         this.preComponent = this.initialComponent
         this.preNum = this.initialNum
@@ -442,5 +547,13 @@ export enum BaseKey {
     HighEffEstimatedTime,
     MedEffEstimatedTime,
     LowEffEstimatedTime,
+    HighEffIncomePerMinute,
+    MedEffIncomePerMinute,
+    LowEff1IncomePerMinute,
+    LowEff2IncomePerMinute,
+    LowEff3IncomePerMinute,
+    lowEff1Index,
+    lowEff2Index,
+    lowEff3Index
 }
 

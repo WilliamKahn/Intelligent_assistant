@@ -1,23 +1,21 @@
-import { findAndClick, fixedClick, selectedClick } from "../common/click";
-import { Move } from "../common/enums";
+import { findAndClick, fixedClick, scrollClick, selectedClick } from "../common/click";
 import { search } from "../common/search";
-import { convertSecondsToMinutes, merge, swipeDown, waitRandomTime } from "../common/utils";
-import { MAX_CYCLES_COUNTS, NAME_READ_TOMATO_FREE, PACKAGE_READ_TOMATO_FREE } from "../global";
+import { clearBackground, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_READ_CHANG_READ_FREE, PACKAGE_READ_CHANG_READ_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { AbstractTomato } from "./abstract/AbstractTomato";
 
 
 
-export class TomatoFree extends AbstractTomato {
+export class ChangReadFree extends AbstractTomato {
 
     constructor() {
         super()
-        this.appName = NAME_READ_TOMATO_FREE
-        this.packageName = PACKAGE_READ_TOMATO_FREE
+        this.appName = NAME_READ_CHANG_READ_FREE
+        this.packageName = PACKAGE_READ_CHANG_READ_FREE
         this.initialNum = 0
         this.lowEff1Inheritance = true
-        this.lowEff2Inheritance = true
     }
 
     reSearchTab(): void {
@@ -42,11 +40,11 @@ export class TomatoFree extends AbstractTomato {
         this.signIn()
         this.listenBook()
         this.openTreasure()
-        this.mealSupp()
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS && 
             this.watchAds()){}
         this.listenReward()
+        this.freshGift()
     }
     @measureExecutionTime
     lowEff1(time: number): void {
@@ -54,19 +52,19 @@ export class TomatoFree extends AbstractTomato {
         this.openTreasure()
         this.readReward()
     }
-    @measureExecutionTime
-    lowEff2(time: number): void {
-        this.swipeVideo(time)
-        this.openTreasure()
-        this.swipeReward()
-    }
 
     @functionLog("签到")
     signIn(): void{
         this.goto()
         this.sign()
-        if(this.scrollClick("去签到", "签到领金币|明日签到")) {
+        if(scrollClick("去签到", "签到领金币|明日签到", {clickUntilGone:false})) {
             this.sign()
+        }
+    }
+
+    afterDetection(): void {
+        if(!text("日常福利").exists()){
+            throw "空白页"
         }
     }
     
@@ -90,95 +88,55 @@ export class TomatoFree extends AbstractTomato {
         }
     }
 
-    @functionLog("领取餐补")
-    mealSupp(): void{
-        this.goto()
-        if(this.scrollClick("去领取", "吃饭补贴", true)){
-            if(fixedClick("领取.*补贴[0-9]+金币")) {
-                this.watchAdsForCoin("日常福利")
-            }
-        }
-    }
-
     @functionLog("阅读")
     readBook(totalTime: number): void {
         this.goTo(this.tab, 0)
         if(selectedClick("推荐", 170)){
-            for(let i = 1;i<5;i++){
-                const component = search(i.toString())
-                if(findAndClick(className("android.widget.TextView"), {
-                    bounds: {top: component?.bounds.top, left:component?.bounds.right},
-                })){
-                    if(text("阅读电子书").exists()){
-                        back()
-                        waitRandomTime(4)
-                    } else{
-                        break
-                    }
-                }
+            const component = search(random(1,4).toString())
+            if(findAndClick(className("android.widget.TextView"), {
+                bounds: {top: component?.bounds.top, left:component?.bounds.right},
+            })){
+                this.read(totalTime)    
             }
-            this.read(totalTime)
         }
     }
-    @functionLog("领取阅读奖励")
+
+    @functionLog("阅读赚金币")
     readReward(): void{
         this.goto()
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS && 
-            this.scrollClick("立即领取", "阅读赚金币")
+            scrollClick("立即领取", "阅读赚金币", {clickUntilGone:false})
         ) {
             this.watchAdsForCoin("日常福利")
         }
     }
-    @functionLog("领取听书奖励")
+    @functionLog("听书赚金币")
     listenReward(): void{
         this.goto()
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS && 
-            this.scrollClick("立即领取", "听书赚金币")
+            scrollClick("立即领取", "听书赚金币", {clickUntilGone:false})
         ) {
             this.watchAdsForCoin("日常福利")
         }
     }
-    @functionLog("领取短剧奖励")
-    swipeReward():void{
+
+    freshGift():void{
         this.goto()
-        let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS && 
-            this.scrollClick("立即领取", "看短剧赚金币")
-        ) {
-            this.watchAdsForCoin("日常福利")
+        if(scrollClick("立即领取","新人限时见面礼",{clickUntilGone:false})){
+            fixedClick("立即领取")
         }
     }
 
     @functionLog("看视频")
     watchAds(): boolean {
         this.goto()
-        if(this.waitClick("立即领取", "看视频赚金币")){
+        if(scrollClick("立即领取", "看视频赚金币")){
             this.watch(text("日常福利"))
             return true
         }
         return false
-    }
-
-    @functionLog("看短剧")
-    swipeVideo(totalTime: number) {
-        this.goTo(this.tab, 0)
-        if(selectedClick("看剧", 170)){
-            if(findAndClick(className("android.widget.ImageView"), {
-                fixed:true,
-                index: random(2, 13)
-            })){
-                Record.log(`计划时间: ${convertSecondsToMinutes(totalTime)}分钟`)
-                let watchTime=0;
-                while(totalTime > watchTime){
-                    if(textMatches(merge(["上滑查看下一集", "上滑继续观看短剧"])).exists()){
-                        swipeDown(Move.Fast, 200)
-                    }
-                    watchTime += waitRandomTime(30)
-                }
-            }
-        }
     }
 
     @functionLog("开宝箱")
@@ -187,12 +145,8 @@ export class TomatoFree extends AbstractTomato {
         this.open()
     }
 
-    goto(): void{
-        let tmp = this.backUntilFind(this.tab)
-        if(tmp.childCount() === 6){
-            this.goTo(this.tab, 3)
-        } else {
-            this.goTo(this.tab, 2)
-        }
+    goto(): void {
+        this.goTo(this.tab, 2)
+        this.checkDetection()
     }
 }

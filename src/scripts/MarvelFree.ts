@@ -15,8 +15,7 @@ export class MarvelFree extends Base{
         this.initialComponent = this.tab
         this.initialNum = 0
         this.depth = 1
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 15 * 60)
-        this.lowEffEstimatedTime = 0
+        this.lowEff1Inheritance = true
     }
 
     @measureExecutionTime
@@ -31,12 +30,10 @@ export class MarvelFree extends Base{
     }
 
     @measureExecutionTime
-    lowEff(time: number): void {
-        doFuncAtGivenTime(time, 10 * 60, (perTime:number) => {
-            this.readBook(perTime)
-            this.openTreasure()
-            this.reward()
-        })
+    lowEff1(time: number): void {
+        this.readBook(time)
+        this.reward()
+        this.openTreasure()
     }
 
     @measureExecutionTime
@@ -67,13 +64,15 @@ export class MarvelFree extends Base{
     }
 
     @functionLog("看视频")
-    watchAds(): void {
+    watchAds(): boolean {
         this.goTo(this.tab, 2)
         if(textMatches("看视频领金币.+").exists()){
             if(scrollClick("去领取", "看视频领金币.+")){
                 this.watch(text("日常福利"))
             }
+            return true
         }
+        return false
     }
 
     @functionLog("阅读")
@@ -86,8 +85,8 @@ export class MarvelFree extends Base{
         }   
     }
 
-    @functionLog("领取奖励")
-    reward(): void {
+    @functionLog("领取阅读奖励")
+    readReward(): void {
         this.goTo(this.tab, 2)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 

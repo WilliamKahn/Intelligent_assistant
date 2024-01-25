@@ -15,7 +15,7 @@ export function sendIncomeMessageToWxPuher(str: string){
             ],
             "verifyPay":false
         })
-        return res.statusCode === 200;        
+        return res.statusCode === 200
     }
 }
 
@@ -29,7 +29,9 @@ export function toShowString(list: any[]){
         Record.debug(`${app.appName}: ${weight}`)
         sumWeight += weight
         sumMoney += money
-        stack.push(`${app.appName}: ${weight} - - - ${money.toFixed(2)}元`)
+        if(weight > 0){
+          stack.push(`${app.appName}: ${weight} - - - ${money.toFixed(2)}元`)
+        }
     }
     stack.push(`\n今日总收益: ${sumWeight}金币 - - - ${sumMoney.toFixed(2)}元`)
     return stack.join('\n')

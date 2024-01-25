@@ -20,9 +20,8 @@ export class KuaiShouLite extends Base{
         this.initialComponent = this.tab
         this.initialNum = 0
         this.depth = 1
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, 5 * 60)
-        this.lowEffEstimatedTime = 0
-        this.lowEffAssmitCount = 2
+        this.lowEff1Inheritance = true
+        this.lowEff2Inheritance = true
     }
 
     @measureExecutionTime
@@ -30,20 +29,20 @@ export class KuaiShouLite extends Base{
         this.signIn()
         this.openTreasure()
     }
-
     @measureExecutionTime
-    lowEff(time: number): void {
+    lowEff1(time: number): void {
         let count = 0
-        doFuncAtGivenTimeByEstimate(time/2, ()=>{
+        doFuncAtGivenTimeByEstimate(time, ()=>{
             this.watchAds()
             if(++count % 15 === 0){
                 this.openTreasure()
             }
         })
-        doFuncAtGivenTime(time/2, 10 * 60, (perTime: number) => {
-            this.swipeVideo(perTime)
-            this.openTreasure()
-        })
+    }
+    @measureExecutionTime
+    lowEff2(time: number): void {
+        this.swipeVideo(time)
+        this.openTreasure()
     }
 
     @measureExecutionTime

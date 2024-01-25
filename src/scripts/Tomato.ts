@@ -15,9 +15,9 @@ export class Tomato extends AbstractTomato {
         this.randomTab = className("android.widget.RadioGroup")
         .boundsInside(0, device.height*2/3, device.width, device.height)
         this.initialNum = 0
-        this.highEffEstimatedTime = this.fetch(BaseKey.HighEffEstimatedTime, BASE_ASSIMT_TIME)
-        this.medEffEstimatedTime = this.fetch(BaseKey.MedEffEstimatedTime, 90 * 60)
-        this.lowEffEstimatedTime = 0
+        this.medEffInheritance = true
+        this.lowEff1Inheritance = true
+        this.lowEff1Start = 5
     }
 
     @measureExecutionTime
@@ -26,53 +26,45 @@ export class Tomato extends AbstractTomato {
         randomExecute([
             ()=>{this.openTreasure()},
             ()=>{this.winGoldCoin()},
-            ()=>{this.listenBook()},
-            ()=>{this.watchAds()},
         ])
     }
-
     @measureExecutionTime
     medEff(): void {
+        this.listenBook()
         let cycleCounts = 0
-        do{
+        while(++cycleCounts < 50 && this.watchAds()){
             this.readBook(3 * 60)
             if(cycleCounts % 3 ==0){
                 this.openTreasure()
             }
-        }while(++cycleCounts < MAX_CYCLES_COUNTS && this.watchAds())
-        this.reward()
-    }
-
-    @measureExecutionTime
-    lowEff(time: number): void {
-        //听书看广告可以领奖
-        //每十分钟执行一次
-        doFuncAtGivenTime(time, 10 * 60, (perTime: number)=>{
-            this.readBook(perTime)
-            this.watchAds()
-            this.openTreasure()
-            this.reward()
-        })
-    }
-    
-    @measureExecutionTime
-    weight(): void {
-
-        this.goTo(this.tab, 2)
-        scrollTo("金币收益")
-        let tmp = textMatches(/(\d+)/)
-        .boundsInside(0, 0, resizeX(535), resizeY(627)).findOnce()
-        if(tmp != null) {
-            const weight = parseInt(tmp.text())
-            this.store(BaseKey.Weight, weight)
         }
+        this.listenReward()
+        this.depositReward()
+        if(cycleCounts * 3 >= 120){
+            this.lowEff1Start = 4
+        } else if(cycleCounts * 3 >= 60){
+            this.lowEff1Start = 3
+        }
+    }
+    @measureExecutionTime
+    lowEff1(time: number): void {
+        this.listenBook()
+        this.readBook(time)
+        this.openTreasure()
+        this.readReward()
+        this.listenReward()
+        this.depositReward()
+    }
+
+    goto(): void {
+        this.goTo(this.tab, 2)
     }
 
     @functionLog("签到")
     signIn(): void {
         this.goTo(this.tab, 2)
         this.sign()
-        if (this.scrollClick("立即签到", "(明日)?签到", false)) {
+        if (this.scrollClick("立即签到", "(明日)?签到")) {
             this.sign()
         }
     }
@@ -84,10 +76,40 @@ export class Tomato extends AbstractTomato {
         let list = ["听书赚金币", "阅读赚金币", "听书额外存金币"]
         for(let range of list) {
             while(++cycleCounts < MAX_CYCLES_COUNTS &&
-                this.scrollClick("(?:立即|翻倍)领取", range, false))
+                this.scrollClick("(?:立即|翻倍)领取", range))
             {
                 this.watchAdsForCoin("日常福利")
             }
+        }
+    }
+    @functionLog("领取阅读奖励")
+    readReward(): void{
+        this.goTo(this.tab, 2)
+        let cycleCounts = 0
+        while(++cycleCounts < MAX_CYCLES_COUNTS &&
+            this.scrollClick("(?:立即|翻倍)领取", "阅读赚金币"))
+        {
+            this.watchAdsForCoin("日常福利")
+        }
+    }
+    @functionLog("领取听书奖励")
+    listenReward(): void{
+        this.goTo(this.tab, 2)
+        let cycleCounts = 0
+        while(++cycleCounts < MAX_CYCLES_COUNTS &&
+            this.scrollClick("(?:立即|翻倍)领取", "听书赚金币"))
+        {
+            this.watchAdsForCoin("日常福利")
+        }
+    }
+    @functionLog("领取额外存金币奖励")
+    depositReward(): void{
+        this.goTo(this.tab, 2)
+        let cycleCounts = 0
+        while(++cycleCounts < MAX_CYCLES_COUNTS &&
+            this.scrollClick("(?:立即|翻倍)领取", "听书额外存金币"))
+        {
+            this.watchAdsForCoin("日常福利")
         }
     }
 
@@ -130,10 +152,6 @@ export class Tomato extends AbstractTomato {
         this.goTo(this.tab, 2)
         if(this.scrollClick("立即观看", "看视频赚金币", true)){
             this.watch(text("日常福利"))
-            let tmp = text("立即观看").findOne(10 * 1000)
-            if(tmp != null){
-                this.watchAds()
-            }
             return true
         } 
         return false
@@ -152,7 +170,7 @@ export class Tomato extends AbstractTomato {
             if(findAndClick("抽奖", {fixed:true, waitTimes:10})){
                 let cycleCounts = 0
                 while(++cycleCounts < MAX_CYCLES_COUNTS 
-                    && scrollClick("待领取", undefined, {clickUntilGone:false})){
+                    && findAndClick("待领取")){
                     this.watchAdsForCoin("已领取")
                 }
             }

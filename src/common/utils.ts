@@ -1,9 +1,9 @@
 import { Image, Point } from "images";
-import { DEVICE_HEIGHT, DEVICE_WIDTH, PACKAGE_HAMIBOT } from "../global";
+import { DEVICE_HEIGHT, DEVICE_WIDTH, MAX_CYCLES_COUNTS, PACKAGE_HAMIBOT } from "../global";
 import { Record } from "../lib/logger";
 import { findAndClick, fixedClick, normalClick } from './click';
 import { Move } from "./enums";
-import { Bounds, ComponentBounds } from './interfaces';
+import { Bounds, ComponentBounds, Priority } from './interfaces';
 
 
 //转化坐标
@@ -169,8 +169,8 @@ export function merge(buttonNameList: string[]){
  * @param seconds 秒钟
  */
 export function convertSecondsToMinutes(seconds: number) {
-    var minutes = Math.floor(seconds / 60); // 使用 Math.floor() 函数向下取整
-    return minutes;
+    const minutes = Math.ceil(seconds / 60); // 使用 Math.floor() 函数向下取整
+    return minutes
 }
 
 /**
@@ -183,15 +183,21 @@ export function close(){
         if(!fixedClick(idContains("close"))){
             switch(times){
                 case 0:
-                    if(!findAndClick(classNameMatches("android\.widget\.(ImageView|Button|FrameLayout)"),
-                    {fixed:true, bounds:{left:device.width * 3 / 5, bottom:device.height * 1 / 5}})){
+                    if(!findAndClick(classNameMatches("android\.widget\.(ImageView|Button|FrameLayout)"),{
+                        fixed:true, 
+                        bounds:{left:device.width * 3 / 5, bottom:device.height / 5},
+                        disableCheckBeforeClick:true
+                    })){
                         back()
                         waitRandomTime(4)
                     }
                     break
                 case 1:
-                    if(!findAndClick(className("android\.widget\.(Button|ImageView)"),
-                    {fixed:true, bounds:{right:device.width * 2 / 5, bottom:device.height * 1 / 5}})){
+                    if(!findAndClick(className("android\.widget\.(Button|ImageView)"),{
+                        fixed:true, 
+                        bounds:{right:device.width * 2 / 5, bottom:device.height / 5},
+                        disableCheckBeforeClick:true
+                    })){
                         back()
                         waitRandomTime(4)
                     }
@@ -205,7 +211,7 @@ export function close(){
  * @description 关闭任意带有叉叉的弹窗,基于视觉处理
  * @returns true: 关闭成功, false: 未发现控件
  */
-export function closeByImageMatching(filter?: boolean): boolean {
+export function closeByImageMatching(filter?: boolean, priority?:Priority): boolean {
     const img = getScreenImage()
     const threshold = 0.7
     //需要从网络远程获取
@@ -250,7 +256,7 @@ export function closeByImageMatching(filter?: boolean): boolean {
         grayWhiteTmp.recycle()
         adaptiveImg.recycle()
         if(list != null){
-            const point = findPreferredCloseButton(list, filter)
+            const point = findPreferredCloseButton(list, filter, priority)
             if(point != null){
                 Record.debug(`close(${point.x},${point.y})`)
                 normalClick(point.x, point.y)
@@ -261,13 +267,13 @@ export function closeByImageMatching(filter?: boolean): boolean {
     img.recycle()
     return false
 }
-export function findPreferredCloseButton(list:Point[], filter?:boolean){
+export function findPreferredCloseButton(list:Point[], filter?:boolean, priority?:Priority){
     //距离原点排序
     const sortedCoordinates = list.slice().sort((a, b) => {
         const distanceA = calculateDistance(a, {x:0,y:0});
         const distanceB = calculateDistance(b, {x:0,y:0});
         return distanceA - distanceB;
-    });
+    })
     // for(let t of sortedCoordinates){
     //     log(t)
     // }
@@ -290,8 +296,8 @@ export function findPreferredCloseButton(list:Point[], filter?:boolean){
         }
     }
     sortedCoordinates.sort((a, b) => {
-        const {priority: priorityA, distance: distanceA} = calculatePriority(a);
-        const {priority: priorityB, distance: distanceB} = calculatePriority(b);
+        const {priority: priorityA, distance: distanceA} = calculatePriority(a, priority);
+        const {priority: priorityB, distance: distanceB} = calculatePriority(b, priority);
         if (priorityA === priorityB) {
             return distanceA - distanceB;
         }
@@ -306,17 +312,18 @@ export function calculateDistance(pointA: Point, pointB: Point): number {
     return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 }
 // 辅助函数，用于计算匹配项的优先级
-export function calculatePriority(point: Point) {
+export function calculatePriority(point: Point, priority?:Priority) {
     const centerX = device.width/2
     const centerY = device.height/2
-    const leftPriority = random(1,2)
-    const rightPriority = 3 - leftPriority
+    const leftPriority = priority?priority.left:random(1,2)
+    const rightPriority = priority?priority.right:3 - leftPriority
+    const middlePriority = priority?priority.middle:3
     if(point.x < centerX && point.y < centerY){
         return {priority:leftPriority, distance:calculateDistance(point, {x:0, y:0})}
     } else if(point.x > centerX && point.y < centerY){
         return {priority:rightPriority, distance:calculateDistance(point, {x:centerX, y:centerY})}
     } else{
-        return {priority:3, distance:Math.abs(point.x - centerX)}
+        return {priority:middlePriority, distance:Math.abs(point.x - centerX)}
     }
 }
 
@@ -386,7 +393,7 @@ export function judgeFuncIsWorkByImg(func: ()=>void, bounds:Bounds){
     const after = getScreenImage(bounds)
     const compare = findImage(before, after, {
         threshold: 1
-    });
+    })
     before.recycle()
     after.recycle()
     if (compare) {
@@ -546,7 +553,15 @@ export function getNumFromComponent(str:string){
 
 export function executeDynamicLoop(loopCount: number, loopBody: () => void): void {
     for (let i = 0; i < loopCount; i++) {
-      loopBody();
+        loopBody();
+    }
+}
+export function executeDynamicLoop2(loopCondition: ()=>boolean, loopBody:()=>void){
+    let cycleCounts = 0
+    while(++cycleCounts < MAX_CYCLES_COUNTS
+        && loopCondition()
+        ){
+        loopBody()
     }
 }
 
@@ -570,11 +585,42 @@ export function getGrayscale(img:Image, rate:number = 4){
 
 function isGray(r: number, g: number, b: number): boolean {
     
-    const brightnessThreshold = 150; // 亮度阈值，根据实际情况调整
-    const contrastThreshold = 150;   // 对比度阈值，根据实际情况调整
+    const brightnessThreshold = 150 // 亮度阈值，根据实际情况调整
+    const contrastThreshold = 150;  // 对比度阈值，根据实际情况调整
 
     const brightness = (r + g + b) / 3;
     const contrast = Math.max(r, g, b) - Math.min(r, g, b);
 
     return brightness <= brightnessThreshold && contrast <= contrastThreshold;
+}
+
+export function padZero(num: number): string {
+    return num < 10 ? `0${num}` : num.toString();
+}
+
+export function overDetection(detectionBounds:ComponentBounds, slideBounds:ComponentBounds, offset:number): void{
+    const scalBounds = boundsScaling(detectionBounds, 0.4)
+    const img = getScreenImage(scalBounds)
+    const bimg = getScreenImage({
+        left:detectionBounds.right,
+        top: detectionBounds.top,
+        bottom:detectionBounds.bottom,
+        right: device.width-detectionBounds.right
+    })
+    const p = findImage(bimg, img, {threshold:0.7})
+    img.recycle()
+    bimg.recycle()
+    if(p){
+        const index = detectionBounds.right - scalBounds.left + p.x
+        const centerX = (slideBounds.left+slideBounds.right)/2
+        const centerY = (slideBounds.top+slideBounds.bottom)/2
+        gesture(500, [centerX, centerY], [centerX + index - offset, centerY + random(-50, 50)])
+    } else {
+        throw "无法识别的验证码"
+    }
+}
+
+export function convertMinutesToSeconds(str:string){
+    const time = str.split(":")
+    return parseInt(time[0])*60+parseInt(time[1])
 }

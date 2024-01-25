@@ -28,7 +28,8 @@
             "watchAds|看广告":"看广告",
             "listenBook|听书":"听书",
             "readBook|阅读":"阅读(分钟)",
-            "reward|领取奖励":"领取奖励"
+            "readReward|领取阅读奖励":"领取阅读奖励",
+            "listenReward|领取听书奖励":"领取听书奖励"
         },
         "default":[
             "signIn|签到",
@@ -36,14 +37,15 @@
             "watchAds|看广告",
             "listenBook|听书",
             "readBook|阅读",
-            "reward|领取奖励"
+            "readReward|领取阅读奖励",
+            "listenReward|领取听书奖励"
         ]
     },
     {
         "name": "SpeedFree",
         "type": "textarea",
         "label": "执行流程",
-        "default": "签到\n开宝箱\n听书\n循环(30){\n看广告\n}\n领取奖励\n循环(6){\n阅读(30)\n听书()\n开宝箱\n领取奖励\n}"
+        "default": "签到\n开宝箱\n听书\n循环(30){\n看广告\n}\n领取听书奖励\n循环(8){\n听书\n阅读(32)\n开宝箱\n领取阅读奖励\n领取听书奖励\n}"
     },
     {
         "label": "2.得间小说",
@@ -52,27 +54,27 @@
         "options":{
             "signIn|签到":"签到",
             "openTreasure|开宝箱":"开宝箱",
-            "joinActivity|参加活动":"参加活动",
+            "joinActivity|参与活动":"参与活动",
             "watchAds|看广告":"看广告",
             "mealSupp|吃饭补贴":"吃饭补贴",
             "readBook|阅读":"阅读(分钟)",
-            "reward|领取奖励":"领取奖励"
+            "readReward|领取阅读奖励":"领取阅读奖励"
         },
         "default":[
             "signIn|签到",
             "openTreasure|开宝箱",
-            "joinActivity|参加活动",
+            "joinActivity|参与活动",
             "watchAds|看广告",
             "mealSupp|吃饭补贴",
             "readBook|阅读",
-            "reward|领取奖励"
+            "readReward|领取阅读奖励"
         ]
     },
     {
         "name": "DeJian",
         "type": "textarea",
         "label": "执行流程",
-        "default": "签到\n开宝箱\n吃饭补贴\n参加活动\n循环(10){\n看广告\n阅读(3)\n}\n领取奖励\n循环(5){\n阅读(30)\n开宝箱\n领取奖励\n}"
+        "default": "签到\n开宝箱\n吃饭补贴\n参与活动\n循环(10){\n看广告\n阅读(3)\n}\n领取阅读奖励\n循环(5){\n阅读(32)\n开宝箱\n领取阅读奖励\n}"
     },
     {
         "label": "3.星空免费小说",
@@ -86,7 +88,8 @@
             "luckySpin|幸运大转盘": "幸运大转盘",
             "readBook|阅读": "阅读(分钟)",
             "listenBook|听书": "听书",
-            "reward|领取奖励": "领取奖励"
+            "readReward|领取阅读奖励": "领取阅读奖励",
+            "listenReward|领取听书奖励":"领取听书奖励"
         },
         "default":[
             "signIn|签到",
@@ -96,14 +99,15 @@
             "luckySpin|幸运大转盘",
             "readBook|阅读",
             "listenBook|听书",
-            "reward|领取奖励"
+            "readReward|领取阅读奖励",
+            "listenReward|领取听书奖励"
         ]
     },
     {
         "name": "StarrySky",
         "type": "textarea",
         "label": "执行流程",
-        "default": "签到\n开宝箱\n看广告\n逛街\n幸运大转盘\n循环(5){\n阅读(10)\n领取奖励\n开宝箱}\n循环(5){\n听书\n等待(600)\n领取奖励\n开宝箱\n}"
+        "default": "签到\n开宝箱\n看广告\n逛街\n幸运大转盘\n循环(6){\n阅读(32)\n领取阅读奖励\n开宝箱}\n循环(6){\n听书\n等待(2000)\n领取听书奖励\n开宝箱\n}"
     },
     {
         "label": "4.茄子免费小说",
@@ -117,7 +121,8 @@
             "luckySpin|幸运大转盘": "幸运大转盘",
             "readBook|阅读": "阅读(分钟)",
             "listenBook|听书": "听书",
-            "reward|领取奖励": "领取奖励"
+            "readReward|领取阅读奖励": "领取阅读奖励",
+            "listenReward|领取听书奖励":"领取听书奖励"
         },
         "default":[
             "signIn|签到",
@@ -127,14 +132,15 @@
             "luckySpin|幸运大转盘",
             "readBook|阅读",
             "listenBook|听书",
-            "reward|领取奖励"
+            "readReward|领取阅读奖励",
+            "listenReward|领取听书奖励"
         ]
     },
     {
         "name": "EggplantFree",
         "type": "textarea",
         "label": "执行流程",
-        "default": "签到\n开宝箱\n看广告\n逛街\n幸运大转盘\n循环(5){\n阅读(10)\n领取奖励\n开宝箱}\n循环(5){\n听书\n等待(600)\n领取奖励\n开宝箱\n}"
+        "default": "签到\n开宝箱\n看广告\n逛街\n幸运大转盘\n循环(6){\n阅读(32)\n领取阅读奖励\n开宝箱}\n循环(6){\n听书\n等待(2000)\n领取听书奖励\n开宝箱\n}"
     },
     {
         "label": "5.熊猫脑洞小说",
@@ -148,7 +154,8 @@
             "luckySpin|幸运大转盘": "幸运大转盘",
             "readBook|阅读": "阅读(分钟)",
             "listenBook|听书": "听书",
-            "reward|领取奖励": "领取奖励"
+            "readReward|领取阅读奖励": "领取阅读奖励",
+            "listenReward|领取听书奖励":"领取听书奖励"
         },
         "default":[
             "signIn|签到",
@@ -158,14 +165,15 @@
             "luckySpin|幸运大转盘",
             "readBook|阅读",
             "listenBook|听书",
-            "reward|领取奖励"
+            "readReward|领取阅读奖励",
+            "listenReward|领取听书奖励"
         ]
     },
     {
         "name": "PandaBrain",
         "type": "textarea",
         "label": "执行流程",
-        "default": "签到\n开宝箱\n看广告\n逛街\n幸运大转盘\n循环(5){\n阅读(10)\n领取奖励\n开宝箱}\n循环(5){\n听书\n等待(600)\n领取奖励\n开宝箱\n}"
+        "default": "签到\n开宝箱\n看广告\n逛街\n幸运大转盘\n循环(6){\n阅读(32)\n领取阅读奖励\n开宝箱}\n循环(6){\n听书\n等待(2000)\n领取听书奖励\n开宝箱\n}"
     },
     {
         "label": "6.七猫免费小说",
@@ -179,7 +187,8 @@
             "luckySpin|幸运大转盘": "幸运大转盘",
             "readBook|阅读": "阅读(分钟)",
             "listenBook|听书": "听书",
-            "reward|领取奖励": "领取奖励"
+            "readReward|领取阅读奖励": "领取阅读奖励",
+            "listenReward|领取听书奖励":"领取听书奖励"
         },
         "default":[
             "signIn|签到",
@@ -189,14 +198,15 @@
             "luckySpin|幸运大转盘",
             "readBook|阅读",
             "listenBook|听书",
-            "reward|领取奖励"
+            "readReward|领取阅读奖励",
+            "listenReward|领取听书奖励"
         ]
     },
     {
         "name": "SevenCatsFree",
         "type": "textarea",
         "label": "执行流程",
-        "default": "签到\n开宝箱\n看广告\n逛街\n幸运大转盘\n循环(5){\n阅读(10)\n领取奖励\n开宝箱}\n循环(5){\n听书\n等待(600)\n领取奖励\n开宝箱\n}"
+        "default": "签到\n开宝箱\n看广告\n逛街\n幸运大转盘\n循环(6){\n阅读(32)\n领取阅读奖励\n开宝箱}\n循环(6){\n听书\n等待(2000)\n领取听书奖励\n开宝箱\n}"
     },
     {
         "label": "7.书旗小说",
@@ -219,7 +229,7 @@
         "name": "ShuQi",
         "type": "textarea",
         "label": "执行流程",
-        "default": "签到\n看广告\n循环(2){\n阅读(30)\n领取奖励\n}"
+        "default": "签到\n循环(看广告){}\n领取奖励\n循环(6){\n阅读(32)\n领取奖励\n}"
     },
     {
         "label": "8.奇迹免费小说",
@@ -230,21 +240,21 @@
             "openTreasure|开宝箱": "开宝箱",
             "watchAds|看广告": "看广告",
             "readBook|阅读":"阅读(分钟)",
-            "reward|领取奖励":"领取奖励"
+            "readReward|领取阅读奖励":"领取阅读奖励"
         },
         "default":[
             "signIn|签到",
             "openTreasure|开宝箱",
             "watchAds|看广告",
             "readBook|阅读",
-            "reward|领取奖励"
+            "readReward|领取阅读奖励"
         ]
     },
     {
         "name": "MarvelFree",
         "type": "textarea",
         "label": "执行流程",
-        "default": "签到\n开宝箱\n循环(6){\n看广告\n}\n循环(2){\n阅读(30)\n领取奖励\n}"
+        "default": "签到\n开宝箱\n循环(6){\n看广告\n}\n循环(8){\n阅读(32)\n领取阅读奖励\n}"
     },
     {
         "label": "9.快手免费小说",
@@ -255,21 +265,21 @@
             "openTreasure|开宝箱":"开宝箱",
             "watchAds|看广告":"看广告",
             "readBook|阅读":"阅读(分钟)",
-            "reward|领取奖励":"领取奖励"
+            "reward|领取阅读奖励":"领取阅读奖励"
         },
         "default":[
             "signIn|签到",
             "openTreasure|开宝箱",
             "watchAds|看广告",
             "readBook|阅读",
-            "reward|领取奖励"
+            "reward|领取阅读奖励"
         ]
     },
     {
         "name": "KuaiShouFree",
         "type": "textarea",
         "label": "执行流程",
-        "default": "签到\n开宝箱\n循环(10){\n看广告\n}\n循环(2){\n阅读(30)\n开宝箱\n领取奖励\n}"
+        "default": "签到\n开宝箱\n循环(10){\n看广告\n}\n循环(6){\n阅读(32)\n开宝箱\n领取阅读奖励\n}"
     },
     {
         "label": "10.红果免费短剧",
@@ -282,8 +292,9 @@
             "mealSupp|吃饭补贴":"吃饭补贴",
             "swipeVideo|看短剧":"看短剧(分钟)",
             "readBook|阅读":"阅读(分钟)",
-            "readReward|阅读奖励领取":"阅读奖励领取",
-            "swipeReward|看短剧奖励领取":"看短剧奖励领取"
+            "readReward|领取阅读奖励":"领取阅读奖励",
+            "swipeReward|领取短剧奖励":"领取短剧奖励",
+            "depositReward|领取额外存金币奖励":"领取额外存金币奖励"
         },
         "default":[
             "signIn|签到",
@@ -292,15 +303,16 @@
             "mealSupp|吃饭补贴",
             "swipeVideo|看短剧",
             "readBook|阅读",
-            "readReward|阅读奖励领取",
-            "swipeReward|看短剧奖励领取"
+            "readReward|领取阅读奖励",
+            "swipeReward|领取短剧奖励",
+            "depositReward|领取额外存金币奖励"
         ]
     },
     {
         "name": "RedFruits",
         "type": "textarea",
         "label": "执行流程",
-        "default": "签到\n开宝箱\n循环(10){\n看广告\n等待(30)\n}\n循环(2){\n看短剧(30)\n看短剧奖励领取\n}\n循环(2){\n阅读(30)\n阅读奖励领取\n}"
+        "default": "签到\n开宝箱\n循环(看广告){}\n循环(4){\n看短剧(32)\n领取短剧奖励\n}\n领取额外存金币奖励\n循环(6){\n阅读(32)\n领取阅读奖励\n}"
     },
     {
         "label": "11.番茄畅听",
@@ -313,7 +325,9 @@
             "listenBook|听书":"听书",
             "watchAds|看广告":"看广告",
             "readBook|阅读":"阅读(分钟)",
-            "reward|领取奖励":"领取奖励"
+            "readReward|领取阅读奖励":"领取阅读奖励",
+            "listenReward|领取听书奖励":"领取听书奖励",
+            "depositReward|领取额外存金币奖励": "领取额外存金币奖励"
         },
         "default":[
             "signIn|签到",
@@ -322,14 +336,16 @@
             "listenBook|听书",
             "watchAds|看广告",
             "readBook|阅读",
-            "reward|领取奖励"
+            "readReward|领取阅读奖励",
+            "listenReward|领取听书奖励",
+            "depositReward|领取额外存金币奖励"
         ]
     },
     {
         "name": "Tomato",
         "type": "textarea",
         "label": "执行流程",
-        "default": "签到\n开宝箱\n抽奖赢金币\n听书\n循环(20){\n看广告\n阅读(3)\n}\n领取奖励\n循环(3){\n阅读(30)\n领取奖励\n}"
+        "default": "签到\n开宝箱\n抽奖赢金币\n听书\n循环(20){\n看广告\n阅读(3)\n}\n领取听书奖励\n领取额外存金币奖励\n循环(2){\n听书\n阅读(65)\n领取阅读奖励\n领取听书奖励\n领取额外存金币奖励\n}"
     },
     {
         "label": "12.番茄免费小说",
@@ -343,7 +359,9 @@
             "readBook|阅读":"阅读(分钟)",
             "listenBook|听书":"听书",
             "swipeVideo|看短剧":"看短剧(分钟)",
-            "reward|领取奖励":"领取奖励"
+            "readReward|领取阅读奖励":"领取阅读奖励",
+            "listenReward|领取听书奖励":"领取听书奖励",
+            "swipeReward|领取短剧奖励":"领取短剧奖励"
         },
         "default":[
             "signIn|签到",
@@ -353,14 +371,16 @@
             "readBook|阅读",
             "listenBook|听书",
             "swipeVideo|看短剧",
-            "reward|领取奖励"
+            "readReward|领取阅读奖励",
+            "listenReward|领取听书奖励",
+            "swipeReward|领取短剧奖励"
         ]
     },
     {
         "name": "TomatoFree",
         "type": "textarea",
         "label": "执行流程",
-        "default": "签到\n开宝箱\n吃饭补贴\n听书\n循环(10){\n看广告\n等待(10)\n}\n循环(2){\n阅读(30)\n开宝箱\n}\n循环(2){\n看短剧(30)\n开宝箱\n}"
+        "default": "签到\n开宝箱\n吃饭补贴\n听书\n循环(看广告){}\n领取听书奖励\n循环(6){\n听书\n阅读(32)\n开宝箱\n领取阅读奖励\n领取听书奖励\n}\n循环(4){\n看短剧(32)\n开宝箱\n领取短剧奖励\n}"
     },
     {
         "label": "13.番茄畅听音乐版",
@@ -373,7 +393,9 @@
             "winGoldCoin|抽奖赢金币":"抽奖赢金币",
             "listenBook|听音乐":"听音乐",
             "watchAds|看广告":"看广告",
-            "reward|领取奖励":"领取奖励"
+            "listenReward|领取听歌奖励":"领取听歌奖励",
+            "dailyReward|领取每日听歌奖励":"领取每日听歌奖励",
+            "depositReward|领取额外存金币奖励":"领取额外存金币奖励"
         },
         "default":[
             "signIn|签到",
@@ -382,14 +404,16 @@
             "winGoldCoin|抽奖赢金币",
             "listenBook|听音乐",
             "watchAds|看广告",
-            "reward|领取奖励"
+            "listenReward|领取听歌奖励",
+            "dailyReward|领取每日听歌奖励",
+            "depositReward|领取额外存金币奖励"
         ]
     },
     {
         "name": "TomatoLite",
         "type": "textarea",
         "label": "执行流程",
-        "default": "签到\n开宝箱\n吃饭补贴\n抽奖赢金币\n听音乐\n循环(10){\n看广告\n等待(30)\n}\n领取奖励"
+        "default": "签到\n开宝箱\n吃饭补贴\n抽奖赢金币\n听音乐\n循环(看广告){}\n领取听歌奖励\n领取额外存金币奖励\n领取每日听歌奖励\n"
     },
     {
         "label": "14.快手",
@@ -694,5 +718,190 @@
         "type": "textarea",
         "label": "执行流程",
         "default": "签到\n开宝箱\n看广告\n逛街\n看直播\n循环(3){\n刷视频(20)\n开宝箱\n看广告\n逛街\n}"
+    },
+    {
+        "label": "24.西瓜视频",
+        "type": "checkbox",
+        "name": "WatermelonFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "watchAds|看广告":"看广告",
+            "mealSupp|吃饭打卡":"吃饭打卡",
+            "watchLive|看直播":"看直播",
+            "swipeVideo|刷视频":"刷视频(分钟)",
+            "swipeReward|领取刷视频奖励":"领取刷视频奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "mealSupp|吃饭打卡",
+            "watchLive|看直播",
+            "swipeVideo|刷视频",
+            "swipeReward|领取刷视频奖励"
+        ]
+    },
+    {
+        "name": "Watermelon",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n看直播\n逛街\n吃饭打卡\n循环(看广告){\n刷视频(10)\n}\n领取刷视频奖励\n循环(3){\n刷视频(32)\n领取刷视频奖励\n}"
+    },
+    {
+        "label": "25.常读免费小说",
+        "type": "checkbox",
+        "name": "ChangReadFreeFunc",
+        "options": {
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "watchAds|看广告":"看广告",
+            "listenBook|听书":"听书",
+            "readBook|阅读":"阅读(分钟)",
+            "listenReward|领取听书奖励":"领取听书奖励",
+            "readReward|领取阅读奖励":"领取阅读奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "listenBook|听书",
+            "readBook|阅读",
+            "listenReward|领取听书奖励",
+            "readReward|领取阅读奖励"
+        ]
+    },
+    {
+        "name": "ChangReadFree",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n听书\n开宝箱\n循环(看广告){}\n领取听书奖励\n循环(6){\n阅读(32)\n领取阅读奖励\n}"
+    },
+    {
+        "label": "26.蛋花免费小说",
+        "type": "checkbox",
+        "name": "EggFlowerFunc",
+        "options": {
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "watchAds|看广告":"看广告",
+            "listenBook|听书":"听书",
+            "readBook|阅读":"阅读(分钟)",
+            "listenReward|领取听书奖励":"领取听书奖励",
+            "readReward|领取阅读奖励":"领取阅读奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "listenBook|听书",
+            "readBook|阅读",
+            "listenReward|领取听书奖励",
+            "readReward|领取阅读奖励"
+        ]
+    },
+    {
+        "name": "EggFlower",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n听书\n开宝箱\n循环(看广告){}\n领取听书奖励\n循环(6){\n阅读(32)\n领取阅读奖励\n}"
+    },
+    {
+        "label": "27.喜马拉雅极速版",
+        "type": "checkbox",
+        "name": "XimalayaLiteFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "watchAds|看广告":"看广告",
+            "listenBook|听书":"听书",
+            "listenReward|领取听书奖励":"领取听书奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "listenBook|听书",
+            "listenReward|领取听书奖励"
+        ]
+    },
+    {
+        "name": "XimalayaLite",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n听书\n开宝箱\n循环(看广告){}\n领取听书奖励"
+    },
+    {
+        "label": "28.盛读",
+        "type": "checkbox",
+        "name": "ShengReadFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "mealSupp|吃饭补贴":"吃饭补贴",
+            "watchAds|看广告":"看广告",
+            "readBook|阅读":"阅读(分钟)",
+            "readReward|领取阅读奖励":"领取阅读奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "mealSupp|吃饭补贴",
+            "watchAds|看广告",
+            "readBook|阅读",
+            "readReward|领取阅读奖励"
+        ]
+    },
+    {
+        "name": "ShengRead",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n吃饭补贴\n循环(看广告){\n阅读(3)\n}\n领取阅读奖励\n循环(5){\n阅读(32)\n领取阅读奖励\n}"
+    },
+    {
+        "label": "29.星芽免费小说",
+        "type": "checkbox",
+        "name": "XinyaFreeFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "watchAds|看广告":"看广告",
+            "swipeVideo|看短剧":"看短剧(分钟)",
+            "swipeReward|领取短剧奖励":"领取短剧奖励"
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "watchAds|看广告",
+            "swipeVideo|看短剧",
+            "swipeReward|领取短剧奖励"
+        ]
+    },
+    {
+        "name": "XinyaFree",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n循环(看广告){}\n开宝箱\n循环(6){\n看短剧(32)\n领取短剧奖励\n}"
+    },
+    {
+        "label": "30.闪电搜索",
+        "type": "checkbox",
+        "name": "LightningSearchFunc",
+        "options":{
+            "signIn|签到":"签到",
+            "openTreasure|开宝箱":"开宝箱",
+            "doubleEarn|奖励翻倍":"奖励翻倍",
+            "toSearch|搜一搜赚钱":"搜一搜赚钱",
+            "randomSearch|随机搜赚钱":"随机搜赚钱",
+            "swipeVideo|刷视频":"刷视频(分钟)",
+            "reward|领取奖励":"领取奖励",
+            "swipeReward|刷视频奖励领取":"刷视频奖励领取"
+        }
+    },
+    {
+        "name": "LightningSearch",
+        "type": "textarea",
+        "label": "执行流程",
+        "default": "签到\n开宝箱\n奖励翻倍\n搜一搜赚钱\n随机搜赚钱\n领取奖励\n循环(6){\n刷视频(32)\n刷视频奖励领取\n}"
     }
 ]

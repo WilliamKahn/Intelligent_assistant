@@ -1,4 +1,5 @@
-import { baiduLite, starrySky, wanChao } from "./global"
+import { lightningSearch, ximalayaLite } from "./global"
+
 
 /*
  * @Author: BATU1579
@@ -11,6 +12,13 @@ import { baiduLite, starrySky, wanChao } from "./global"
 test()
 
 function test() {
-    wanChao.start(10 * 60)
+    // for(const app of list){
+    //     log(`${app.appName}:${app.fetch(BaseKey.Weight)}`)
+    //     // log(`${app.appName}:${app.fetch(BaseKey.HighEffIncomePerMinute)}`)
+    //     // log(`${app.appName}:${app.fetch(BaseKey.MedEffIncomePerMinute)}`)
+    //     // log(`${app.appName}:${app.fetch(BaseKey.LowEff1IncomePerMinute)}`)
+    //     // log(`${app.appName}:${app.fetch(BaseKey.LowEff2IncomePerMinute)}`)
+    //     // log(`${app.appName}:${app.fetch(BaseKey.LowEff3IncomePerMinute)}`)
+    // }
+    ximalayaLite.weight()
 }
-

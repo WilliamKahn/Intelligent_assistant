@@ -1,20 +1,14 @@
-import { sendIncomeMessageToWxPuher, toShowString } from "../../common/report";
-import { clearBackground, convertSecondsToMinutes } from "../../common/utils";
-import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, ORDER, STORAGE, STORAGE_APP, STORAGE_DATE, article, articleLite, baidu, baiduBig, baiduLite, deJian, eggplantFree, kuaiShou, kuaiShouFree, kuaiShouLite, marvelFree, pandaBrain, redFruits, sevenCatsFree, shuQi, speedFree, starrySky, tikTokLite, tikTokVolcano, tomato, tomatoFree, tomatoLite, wanChao, youShi } from "../../global";
-import { ConfigInvalidException } from "../../lib/exception";
-import { Record as LogRecord } from "../../lib/logger";
-import { BaseKey } from "../../scripts/abstract/Base";
+import { FuncIncome } from "../../common/interfaces"
+import { sendIncomeMessageToWxPuher, toShowString } from "../../common/report"
+import { clearBackground } from "../../common/utils"
+import { ORDER, STORAGE, STORAGE_APP, STORAGE_DATE, article, articleLite, baidu, baiduBig, baiduLite, changReadFree, deJian, eggFlower, eggplantFree, kuaiShou, kuaiShouFree, kuaiShouLite, lightningSearch, marvelFree, pandaBrain, redFruits, sevenCatsFree, shengRead, shuQi, speedFree, starrySky, tikTokLite, tikTokVolcano, tomato, tomatoFree, tomatoLite, watermelon, ximalayaLite, xinyaFree, youShi } from "../../global"
+import { BaseKey } from "../../scripts/abstract/Base"
 
-//初始化map
-const highEffmap:Record<string, number> = {}
-const medEffMap:Record<string, number> = {}
-const lowEffMap:Record<string, number> = {}
-const fixedMap:Record<string, number> = {}
-
+//阈值10元标准0.007  视频70金币（10000）  230（33000）
+const threshold:number = 0.0035
+const recover:number = 0.0005
 main()
-
-export function main() {
-
+export function main(){
     const map:Record<string, any> = {
         "1" : speedFree,
         "2" : deJian,
@@ -39,32 +33,29 @@ export function main() {
         "21": articleLite,
         "22": tikTokLite,
         "23": tikTokVolcano,
-        "24": wanChao
+        "24": watermelon,
+        "25": changReadFree,
+        "26": eggFlower,
+        "27": ximalayaLite,
+        "28": shengRead,
+        "29": xinyaFree,
+        "30": lightningSearch
     }
-    //执行列表
+
     const list:any = []
-    if(ORDER != undefined){
-        LogRecord.info("调整执行顺序")
+    if(ORDER){
         let orderList = ORDER.split(" ")
-        if(orderList.length > 0) {
+        if(orderList.length > 0){
             //去重复
             orderList = orderList.filter((value:string, index: number, self:string) => self.indexOf(value) === index)
-            for(let key of orderList){
-                const parts = key.split(":")
-                if(parts.length === 2){
-                    key = parts[0]
-                    const time = Number(parts[1])
-                    if(!isNaN(time)){
-                        const app = map[key]
-                        if(app != undefined) fixedMap[app.constructor.name] = time * 60
-                    }
+            for(const key of orderList){
+                const app = map[key]
+                if(app){
+                    list.push(app)
                 }
-                let app = map[key]
-                if(app != undefined) list.push(app)
             }
         }
     }
-
     if(list.length != map.length){
         for(let key in map){
             if(list.indexOf(map[key]) == -1){
@@ -72,183 +63,139 @@ export function main() {
             }
         }
     }
-    const filteredList = list.filter(
-        item => hamibot.env[item.constructor.name] !== false
-    )
-
-    while (true) {
-        //实际运行列表
-        let runList = filteredList
-        if(runList.length == 0){
-            throw new ConfigInvalidException("拿我这测试了?");
-        }
-        //脚本运行当前时间
-        const startTime = new Date();
-        const endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate(), 23, 59, 59);
-        const date = startTime.getMonth().toString()+"/"+startTime.getDate().toString()
-        //断开重连
-        if(date === STORAGE.get(STORAGE_DATE)){
-            runList = runList.filter(
-                app => app.fetch(BaseKey.Executed, false) === false
-            )
-        } else {
-            for(let app of runList){
-                app.store(BaseKey.Executed, false)
+    //特殊处理
+    for(const app of list){
+        // log(`${app.appName}: ${app.fetch(BaseKey.Weight)}`)
+        app.terminalAfterSign = true
+        app.canSign = true
+    }
+    // exit()
+    let first = true
+    while(true){
+        let indexList = list
+        indexList = indexList.filter(app=>{
+            return app.executable = true
+        })
+        const funcIncomeList:FuncIncome[] = []
+        const funcList = ["medEff", "lowEff1", "lowEff2", "lowEff3"]
+        for(const index in indexList){
+            const app = indexList[index]
+            funcIncomeList.push({
+                index: index,
+                funcName: "highEff",
+                income: app.highEffIncomePerMinute
+            })
+            for(const funcName of funcList){
+                if(app[`${funcName}Inheritance`]){
+                    app[`${funcName}Flag`] = false
+                    funcIncomeList.push({
+                        index: index,
+                        funcName: funcName,
+                        income: app[`${funcName}IncomePerMinute`]
+                    })
+                }
             }
-            STORAGE.remove(STORAGE_APP)
+        }
+        
+        const allIncomesZero = funcIncomeList.every((item) => item.income === 0)
+        if (!allIncomesZero) {
+            funcIncomeList.sort((a, b)=>{
+                const incomeComparison = b.income - a.income
+                if(b.income === 0){
+                    if(a.income >= threshold){
+                        return -1
+                    } else if(a.income > 0) {
+                        return 1
+                    }
+                } else if(a.income === 0){
+                    if(b.income >= threshold){
+                        return 1
+                    } else if(b.income > 0){
+                        return -1
+                    }
+                }
+                return incomeComparison
+            })
+        }
+        // for(const item of funcIncomeList){
+        //     log(`${indexList[item.index].appName},${item.funcName},${item.income}`)
+        // }
+        // exit()
+        //funcList.includes(element.funcName)
+        const lowEffList = funcIncomeList.filter(element => {
+            const str = element.funcName
+            return str === "medEff" || str === "lowEff1" || str === "lowEff2" || str === "lowEff3"
+        })
+        lowEffList.sort((a, b) => b.income - a.income)
+
+        let runList:any[] = []
+        
+        for (let i = 0; i < funcIncomeList.length; i++) {
+            const item = funcIncomeList[i]
+            const app = indexList[item.index]
+            app[`${item.funcName}Flag`] = true
+            runList.push(app)
+            for (let j = i + 1; j < funcIncomeList.length; j++) {
+                const next = funcIncomeList[j]
+                if (next.index === item.index) {
+                    if(next.income > threshold || next.income === 0){
+                        app[`${next.funcName}Flag`] = true
+                    }
+                    funcIncomeList.splice(j, 1);
+                    j--; // 调整索引，因为删除了一个元素
+                }
+            }
+        }
+        const startTime = new Date()
+        const date = startTime.getMonth().toString()+"/"+startTime.getDate().toString()
+        if(first && date === STORAGE.get(STORAGE_DATE) &&STORAGE.get(STORAGE_APP) !== undefined){
+            first = false
+            let index = -1
+            for(let i = 0;i < runList.length; i++){
+                if(runList[i].constructor.name === STORAGE.get(STORAGE_APP)){
+                    index = i
+                    break
+                }
+            }
+            runList = runList.slice(index)
         }
         STORAGE.put(STORAGE_DATE, date)
-        const timeDifference = endTime.getTime() - startTime.getTime();
-        //化毫秒为秒
-        const timePerMethod = timeDifference / 1000 - runList.length * 60
-        //将数组按照权重等级排序
-        const sortedList = runList.slice().sort((a:any,b:any) => 
-            b.fetch(BaseKey.Weight, 0) / b.exchangeRate * 100 - a.fetch(BaseKey.Weight, 0) /a.exchangeRate * 100
-        )
-        //执行数组清空
-        for (let app of sortedList) {
-            highEffmap[app.constructor.name] = 0
-            medEffMap[app.constructor.name] = 0
-            lowEffMap[app.constructor.name] = 0
-            LogRecord.debug(`${app.appName}`)
-        }
-        //时间分配算法
-        appTimeAllocation(timePerMethod, sortedList)
-        //显示执行时间
-        for(let app of runList){
-            const sum = highEffmap[app.constructor.name] + medEffMap[app.constructor.name] + lowEffMap[app.constructor.name]
-            if(sum != 0){
-                LogRecord.log(`${app.appName}: ${convertSecondsToMinutes(sum)}分钟`)
-            }
-        }
-        //前一个app剩余时间
-        let surplus:any = 0;
-        //主流程
-        LogRecord.info("进入主流程")
+        // for(const app of runList){
+        //     log(`${app.appName}`)
+        // }
+        // exit()
         clearBackground()
-        for (let app of runList) {
-            const executeTime = surplus + highEffmap[app.constructor.name] + medEffMap[app.constructor.name] + lowEffMap[app.constructor.name]
-            //时间为正数才执行
-            if(executeTime > 0){
-                //权重置零 避免前天的遗留权重，导致即使昨天运行失败但是权重依然存在
-                app.store(BaseKey.Weight, 0)
-                //执行流程
+        let execute = true
+        for(const app of runList){
+            if(execute){
                 STORAGE.put(STORAGE_APP, app.constructor.name)
-                surplus = app.start(executeTime)
-                //代表app已执行
-                app.store(BaseKey.Executed, true)
-                allocateSurplus(surplus, sortedList)
+                app.store(BaseKey.Weight, 0)
+                app.start1()
                 clearBackground()
-            }
-        }
-        LogRecord.info("发送今日收益")
-        sendIncomeMessageToWxPuher(toShowString(filteredList))
-        //等待新的一天
-        const doneTime = new Date();
-        if(endTime.getTime() > doneTime.getTime()) {
-            const waitTime = (endTime.getTime() - doneTime.getTime())
-            LogRecord.log(`等待${convertSecondsToMinutes(waitTime/1000 + 1)}分钟开启新一天任务`)
-            sleep(waitTime + 60 * 1000)
-        }
-    }
-}
-
-function allocateSurplus(surplus:number, sortedList: any[]){
-    LogRecord.debug(`surplus: ${surplus}`)
-    //surplus分配算法
-    let remainingAllocation = 30 * 60
-    if(surplus < 0){
-        for (let tmp of sortedList.reverse()) {
-            if(tmp.fetch(BaseKey.Executed) === false){
-                const valueToSubtract = Math.min(lowEffMap[tmp.constructor.name], -surplus)
-                lowEffMap[tmp.constructor.name] -= valueToSubtract
-                surplus += valueToSubtract
-            }
-        }
-    } else if (surplus > 0){
-        for (let tmp of sortedList) {
-            if(tmp.fetch(BaseKey.Executed) === false){
-                const allocation = Math.min(surplus, remainingAllocation)
-                lowEffMap[tmp.constructor.name] += allocation
-                surplus -= allocation
-            }
-        }
-    }
-}
-
-/**
- * @param timePerMethod 刷app总时间
- * @param sortedList 按照权重排序后的数组
- */
-function appTimeAllocation(timePerMethod: number, sortedList: any[]){
-    LogRecord.info("分配执行时间")
-    //分配固定时间
-    for (let app of sortedList){
-        let fixedTime = fixedMap[app.constructor.name]
-        if(fixedTime != undefined){
-            //对比总时间取最小时间
-            let currentAppFixedRunTime = Math.min(timePerMethod, fixedTime)
-            //执行一阶段
-            if(currentAppFixedRunTime >= app.highEffEstimatedTime){
-                currentAppFixedRunTime -= app.highEffEstimatedTime
-                //总时间去除
-                timePerMethod -= app.highEffEstimatedTime
-                highEffmap[app.constructor.name] += app.highEffEstimatedTime
-                //执行二阶段
-                if(currentAppFixedRunTime >= app.medEffEstimatedTime){
-                    currentAppFixedRunTime -= app.medEffEstimatedTime
-                    timePerMethod -= app.medEffEstimatedTime
-                    medEffMap[app.constructor.name] += app.medEffEstimatedTime
+                const endTime = new Date()
+                if(startTime.getDay() !== endTime.getDay()){
+                    execute = false
                 }
-                //执行三阶段
-                if(app.lowEffEstimatedTime != MAX_ASSIMT_TIME && currentAppFixedRunTime > 0){
-                    timePerMethod -= currentAppFixedRunTime
-                    lowEffMap[app.constructor.name] += currentAppFixedRunTime
+            } else {
+                app.highEffIncomePerMinute += recover
+                for(const funcName of funcList){
+                    if(app[`${funcName}Inheritance`]){
+                        app[`${funcName}IncomePerMinute`] += recover
+                    }
                 }
             }
         }
-    }
-    //基础时间分配
-    for (let app of sortedList) {
-        if(timePerMethod >= app.highEffEstimatedTime 
-            && fixedMap[app.constructor.name] === undefined) {
-            highEffmap[app.constructor.name] = app.highEffEstimatedTime
-            timePerMethod -= app.highEffEstimatedTime
-        }
-    }
-
-    //进阶任务时间分配(进阶任务必须在基础任务后)
-    for (let app of sortedList) {
-        if (timePerMethod >= app.medEffEstimatedTime
-            && fixedMap[app.constructor.name] === undefined
-            && highEffmap[app.constructor.name] > 0) {
-            medEffMap[app.constructor.name] += app.medEffEstimatedTime
-            timePerMethod -= app.medEffEstimatedTime
-        }
-    }
-
-    //耗时任务时间分配
-    let count = 1
-    if(sortedList.length > 0){
-        let flag = true
-        //等时间分配结束
-        while(flag && timePerMethod >= BASE_ASSIMT_TIME){
-            //时间按照10，20，30，30分配
-            const time = count * BASE_ASSIMT_TIME
-            flag = false
-            for (let app of sortedList) {
-                if (app.lowEffEstimatedTime != MAX_ASSIMT_TIME
-                    && fixedMap[app.constructor.name] === undefined
-                    && highEffmap[app.constructor.name] > 0) {
-                    flag = true
-                    const allocaTime = Math.min(time * app.lowEffAssmitCount, timePerMethod)
-                    lowEffMap[app.constructor.name] += allocaTime
-                    timePerMethod -= allocaTime
+        if(execute){
+            for(const item of lowEffList){
+                const app = indexList[item.index]
+                app.startContinue(item.funcName)
+                clearBackground()
+                const endTime = new Date()
+                if(startTime.getDay() !== endTime.getDay()){
+                    break
                 }
             }
-            if(count < 4) {
-                count++
-            }
         }
+        sendIncomeMessageToWxPuher(toShowString(list))
     }
 }
