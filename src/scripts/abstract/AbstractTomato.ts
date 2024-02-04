@@ -1,11 +1,11 @@
-import { findAndClick, fixedClick, scrollClick, waitClick} from "../../common/click";
+import { findAndClick, fixedClick, scrollClick, waitClick } from "../../common/click";
 import { Move } from "../../common/enums";
+import { closeByImageMatching } from "../../common/ocr";
 import { scrollTo, search } from "../../common/search";
-import { closeByImageMatching, merge, overDetection, swipeDown, swipeUp, waitRandomTime } from "../../common/utils";
-import { MAX_CYCLES_COUNTS } from "../../global";
-import { measureExecutionTime } from "../../lib/decorators";
+import { merge, swipeDown, swipeUp, waitRandomTime } from "../../common/utils";
+import { MAX_CYCLES_COUNTS, NORMAL_WAIT_TIME } from "../../global";
+import { functionLog, measureExecutionTime } from "../../lib/decorators";
 import { CurrentAppBanned } from "../../lib/exception";
-import { Record } from "../../lib/logger";
 import { Base, BaseKey } from "./Base";
 
 export abstract class AbstractTomato extends Base {
@@ -27,65 +27,87 @@ export abstract class AbstractTomato extends Base {
     weight(): void {
         this.goto()
         const component = scrollTo("金币",{
-            waitFor:true,
-            disableCoverCheck:true
+            throwErrIfNotExist:true,
         })
-        if(component !== undefined){
-            const component1 = search("[0-9]+",{bounds:{right:component.bounds.left}})
-            if(component1 !== undefined){
-                const weight = parseInt(component1.text)
+        if(component){
+            const component1 = search("[0-9]+",{
+                bounds:{
+                    right:component.bounds().left
+                }
+            })
+            if(component1){
+                const weight = parseInt(component1.text())
                 this.store(BaseKey.Weight, weight)
             }
         }
     }
-    
-    sign(): void {
-        findAndClick('立即签到.+', {
-            fixed:true, 
-            feedback:true,
-            disableGrayCheck:true
-        })
 
-        if(findAndClick('看视频立即续签|额外领[0-9]+金币', {fixed:true})){
+    sign(): boolean {
+        if(findAndClick('立即签到.+', {
+            fixed:true, 
+            feedback:true
+        })){
+            this.watchAdsForCoin("日常福利")
+            return true
+        } else if(fixedClick('看视频立即续签|额外领[0-9]+金币')){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(textMatches(merge(["日常福利", "看视频立即续签"])))
-            if(text("看视频立即续签").exists()){
+            if(search("看视频立即续签", {waitFor:2})){
                 throw new CurrentAppBanned(this.appName)
             }
+            return true
         }
-        this.watchAdsForCoin("日常福利")
+        return false
     }
 
-    open(): void{
-        if (fixedClick("开宝箱得金币")) {
+    @functionLog("开宝箱")
+    openTreasure(): void {
+        this.goto()
+        if (findAndClick("开宝箱得金币", {
+            fixed:true,
+            feedback:true
+        })) {
             this.watchAdsForCoin("日常福利")
         }
     }
 
-    checkDetection(): void{
-        let flag = false
-        let checkText = text("请完成下列验证后继续").findOnce()
-        while(checkText !== null){
-            Record.log("检测到滑块验证")
-            flag = true
-            const parent = checkText.parent()?.parent()
-            if(parent){
-                const detection = parent?.child(2)?.child(1)
-                const slide = parent?.child(3)?.child(1)?.child(1)
-                if(detection  && slide){
-                    overDetection(detection.bounds(), slide.bounds(),0)
-                    waitRandomTime(3)
-                    checkText = text("请完成下列验证后继续").findOnce()
+    openBook(str: string): void{
+        let find = false
+        for(let i = 1; i < 5 ;i++){
+            if(this.readClick(i)){
+                if(fixedClick(str)){
+                    find = true
+                    break
+                } else{
+                    back()
                 }
             }
         }
-        if(flag){
-            this.afterDetection()
+        if(!find){
+            throw "执行错误"
         }
     }
 
-    afterDetection(): void{}
+    readClick(num: number):boolean{
+        const tmp = search(text(num.toString()), {
+            fixed:true,
+            waitFor:10,
+            throwErrIfNotExist:true
+        })
+        if(tmp){
+            const parent = tmp.parent()
+            if(parent){
+                return findAndClick(className("android.widget.TextView"),{
+                    bounds: parent.bounds(),
+                    index: 1,
+                    disableCoverCheck:true
+                })
+            }
+        }
+        return false
+    }
 
-    scrollClick(text:string, range:string, clickUntilGone:boolean = false): boolean{
+    scrollClick(text:string, range:string): boolean{
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS
              && search(range) === undefined){
@@ -94,7 +116,7 @@ export abstract class AbstractTomato extends Base {
         if(cycleCounts >= MAX_CYCLES_COUNTS){
             return false
         }
-        return scrollClick(text, range, {clickUntilGone:clickUntilGone})
+        return scrollClick(text, range)
     }
 
     waitClick(text:string, range:string): boolean{
@@ -110,15 +132,18 @@ export abstract class AbstractTomato extends Base {
     }
 
     move(): void {
-        const before = search("金币献爱心", {waitFor:true})
+        const before = search("金币献爱心", {
+            throwErrIfNotExist:true
+        })
         if(this.moveFlag){
             swipeDown(Move.Fast, 1000)
         } else {
             swipeUp(Move.Fast, 1000)
         }
         waitRandomTime(2)
-        const after = search("金币献爱心", {waitFor:true})
-        if(before?.bounds.top === after?.bounds.top){
+        const after = search("金币献爱心", {
+            throwErrIfNotExist:true})
+        if(before?.bounds().top === after?.bounds().top){
             if(!closeByImageMatching()){
                 this.moveFlag = !this.moveFlag
             }

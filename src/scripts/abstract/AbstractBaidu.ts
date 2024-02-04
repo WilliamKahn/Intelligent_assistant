@@ -1,7 +1,8 @@
-import { findAndClick, fixedClick, scrollClick } from "../../common/click";
-import { scrollTo } from "../../common/search";
-import { closeByImageMatching, waitRandomTime } from "../../common/utils";
-import { MAX_CYCLES_COUNTS } from "../../global";
+import { findAndClick, fixedClick, ocrClick, scrollClick } from "../../common/click";
+import { closeByImageMatching } from "../../common/ocr";
+import { scrollTo, search } from "../../common/search";
+import { waitRandomTime } from "../../common/utils";
+import { MAX_CYCLES_COUNTS, NORMAL_WAIT_TIME } from "../../global";
 import { functionLog } from "../../lib/decorators";
 import { Base } from "./Base";
 
@@ -30,11 +31,13 @@ export abstract class AbstractBaidu extends Base {
     signIn(): void {
         this.goto(-1)
         if(fixedClick("额外领[0-9]+金币|立即签到")){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(text(this.exitSign))
             this.watchAdsForCoin(this.exitSign)
         } else {
-            if(scrollClick("去签到", "今日签到|明日签到", {clickUntilGone:false})){
+            if(scrollClick("去签到", "今日签到|明日签到")){
                 if(fixedClick("额外领[0-9]+金币|立即签到")){
+                    waitRandomTime(NORMAL_WAIT_TIME)
                     this.watch(text(this.exitSign))
                     this.watchAdsForCoin(this.exitSign)
                 }
@@ -45,23 +48,23 @@ export abstract class AbstractBaidu extends Base {
     @functionLog("搜索赚金币")
     searchForCoin():void{
         this.goto(-1)
-        scrollTo("搜索赚金币.*", {waitFor:true},{bottom:device.height/2})
-        let tmp = textMatches("搜索赚金币.*").findOnce()
-        if(tmp !== null){
+        const tmp = scrollTo("搜索赚金币.*", {
+            throwErrIfNotExist:true
+        },{bottom:device.height/2})
+        if(tmp){
             const regex = /\((\d+)\/(\d+)\)/;
             const match = tmp.text().match(regex)
             if(match){
                 for(let i = parseInt(match[1]); i < parseInt(match[2]); i++){
                     if(findAndClick(className("android.widget.TextView"),{
                         bounds:tmp.parent()?.parent()?.parent()?.child(1)?.bounds(),
-                        waitTimes: 17,
                         fixed:true,
-                        disableCheckBeforeClick:true
+                        disableGrayCheck:true
                     })){
+                        waitRandomTime(17)
                         this.backUntilFind(text(this.exitSign))
-                        waitRandomTime(2)
                         this.watchAdsForCoin(this.exitSign)
-                        if(text("立即添加").exists()){
+                        if(search("立即添加", {waitFor:2})){
                             closeByImageMatching()
                         }
                     }
@@ -74,6 +77,7 @@ export abstract class AbstractBaidu extends Base {
     watchAds(): boolean {
         this.goto(-1)
         if(scrollClick("去完成", "看广告赚钱.*")){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(text(this.exitSign))
             this.watchAdsForCoin(this.exitSign)
             return true
@@ -94,10 +98,11 @@ export abstract class AbstractBaidu extends Base {
         this.goto(-1)
         let cycleCounts = 0
         const component = scrollTo("今日任务")
-        while(++cycleCounts <= MAX_CYCLES_COUNTS && component !== undefined
-            && findAndClick(".?领取.?", {
-                ocrRecognize:true,
-                bounds:{top:component.bounds.top - 30, bottom:component.bounds.bottom + 30}
+        while(++cycleCounts <= MAX_CYCLES_COUNTS && component
+            && ocrClick(".?领取", {
+                bounds:{
+                    top:component.bounds().top - 30, 
+                    bottom:component.bounds().bottom + 30}
             })){
         }
     }
@@ -107,11 +112,11 @@ export abstract class AbstractBaidu extends Base {
         this.goto(-1)
         let cycleCounts = 0
         const component = scrollTo(this.readRewardText,undefined,{bottom:device.height/2})
-        while(++cycleCounts <= MAX_CYCLES_COUNTS && component !== undefined
-            && findAndClick("领",{
-                ocrRecognize:true, 
-                bounds:{top:component.bounds.bottom, bottom:component.bounds.bottom+500},
-                fixed:true,
+        while(++cycleCounts <= MAX_CYCLES_COUNTS && component
+            && ocrClick("领",{
+                bounds:{
+                    top:component.bounds().bottom, 
+                    bottom:component.bounds().bottom+500},
             })){
         }
     }

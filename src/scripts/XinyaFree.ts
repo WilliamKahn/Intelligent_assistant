@@ -1,9 +1,8 @@
-import { findAndClick, fixedClick, readClick, scrollClick } from "../common/click"
+import { dialogClick, findAndClick, fixedClick } from "../common/click"
 import { search } from "../common/search"
-import { convertSecondsToMinutes, getNumFromComponent, merge, resizeX, resizeY, waitRandomTime } from "../common/utils"
-import { MAX_CYCLES_COUNTS, NAME_READ_XINGYA_FREE, PACKAGE_READ_XINGYA_FREE } from "../global"
+import { convertSecondsToMinutes, getNumFromComponent, resizeX, resizeY, waitRandomTime } from "../common/utils"
+import { MAX_CYCLES_COUNTS, NAME_READ_XINGYA_FREE, NORMAL_WAIT_TIME, PACKAGE_READ_XINGYA_FREE } from "../global"
 import { functionLog, measureExecutionTime } from "../lib/decorators"
-import { isWidgetNotFoundException } from "../lib/exception"
 import { Record } from "../lib/logger"
 import { Base, BaseKey } from "./abstract/Base"
 
@@ -18,6 +17,12 @@ export class XinyaFree extends Base {
         this.initialNum = 0
         this.lowEff1Inheritance = true
         this.exchangeRate = 20000
+        this.dialogBounds = {
+            left: device.width / 6,
+            top: device.height / 3,
+            right: device.width * 5 / 6,
+            bottom: device.height * 4 / 5,
+        }
     }
 
     beforeDoTask(): void {
@@ -47,11 +52,21 @@ export class XinyaFree extends Base {
     @measureExecutionTime
     weight(): void {
         this.goTo(this.tab,2)
-        const component = search("金币余额.*", {waitFor:true})
-        if(component !== undefined){
-            const weight = getNumFromComponent(component.text.replace(",",""))
+        const component = search("金币余额.*", {
+            throwErrIfNotExist:true
+        })
+        if(component){
+            const weight = getNumFromComponent(component.text().replace(",",""))
             Record.debug(`weight: ${weight}`)
             this.store(BaseKey.Weight, weight)
+        }
+    }
+
+    @functionLog("签到")
+    signIn(): void {
+        this.goTo(this.tab,2)
+        if(dialogClick("签到.+")){
+            this.watchAdsForCoin("日常任务")
         }
     }
 
@@ -83,7 +98,8 @@ export class XinyaFree extends Base {
     watchAds(): boolean {
         this.goTo(this.tab,2)
         if(findAndClick("去完成")){
-            this.watch(text("日常任务"))
+            waitRandomTime(NORMAL_WAIT_TIME)
+            this.watch(textMatches("日常任务|看广告最高赚.+金币"))
             this.watchAdsForCoin("日常任务")
             return true
         }

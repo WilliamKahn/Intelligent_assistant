@@ -1,8 +1,9 @@
 import { closeDialogifExist, continueWatch, dialogClick, findAndClick, fixedClick, normalClick, randomClick, watchAgain } from "../../common/click"
 import { Bounds } from "../../common/interfaces"
+import { getScreenImage, getGrayscaleHistogram, closeByImageMatching } from "../../common/ocr"
 import { search } from "../../common/search"
-import { close, closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, executeDynamicLoop, executeDynamicLoop2, findLargestIndexes, getGrayscaleHistogram, getScreenImage, matchAndJudge, merge, resizeX, resizeY, waitRandomTime } from "../../common/utils"
-import { BASE_ASSIMT_TIME, MAX_ASSIMT_TIME, MAX_BACK_COUNTS, MAX_CYCLES_COUNTS, STORAGE } from "../../global"
+import { close, convertSecondsToMinutes, doFuncAtGivenTime, executeDynamicLoop, executeDynamicLoop2, findLargestIndexes, matchAndJudge, merge, resizeX, resizeY, waitRandomTime } from "../../common/utils"
+import { INCOME_THRESHOLD, MAX_BACK_COUNTS, MAX_CYCLES_COUNTS, NORMAL_WAIT_TIME, STORAGE } from "../../global"
 import { startDecorator } from "../../lib/decorators"
 import { ConfigInvalidException, ExceedMaxNumberOfAttempts } from "../../lib/exception"
 import { LOG_STACK, Record } from "../../lib/logger"
@@ -46,6 +47,8 @@ export abstract class Base {
     lastSignInTime: Date = new Date()
     canSign:boolean = false
     terminalAfterSign:boolean = false
+
+    dialogCheck:boolean = true
 
     //高效率 T0 1
     abstract highEff(): void
@@ -92,7 +95,7 @@ export abstract class Base {
 
     @startDecorator
     start1(): void{
-        if(this.lauchApp()){
+        if(this.lauchApp(true)){
             this.startReset()
             const processTime:any = this.highEff()
             this.weight()
@@ -129,7 +132,7 @@ export abstract class Base {
                             weight / convertSecondsToMinutes(processTime) / this.exchangeRate
                         Record.debug(`lowEff${i}金币: ${weight},时间: ${convertSecondsToMinutes(processTime)}分钟, 分均: ${lowIncomePerMinute.toFixed(4)}`)                        
                         this[`lowEff${i}Start`] = j + 1
-                        if(lowIncomePerMinute < 0.0035){
+                        if(lowIncomePerMinute < INCOME_THRESHOLD){
                             break
                         }
                         this[`lowEff${i}IncomePerMinute`] = lowIncomePerMinute
@@ -233,11 +236,13 @@ export abstract class Base {
 
     reSearchTab(): void{
         if(this.randomTab.toString() !== text("").toString()){
-            search(this.randomTab, {waitFor:true})
-            let tmp:any = this.randomTab.findOnce()
+            const component = search(this.randomTab, {
+                throwErrIfNotExist:true
+            })
+            //let tmp:any = this.randomTab.findOnce()
             // let tmp = this.backUntilFind(this.randomTab)
-            if(tmp !== null){
-                this.tab = id(tmp.id())
+            if(component){
+                this.tab = id(component.id()||"")
                 this.initialComponent = this.tab
                 Record.debug(`${this.tab}`)
             } else {
@@ -246,18 +251,19 @@ export abstract class Base {
         }
     }
 
-    /**
-     * @description 启动app
-     * @returns 成功启动app返回true
-     */
-    lauchApp(): boolean {
+    lauchApp(start:boolean = false): boolean {
         Record.log(`尝试启动${this.appName}`)
-        let isLauchApp = launchPackage(this.packageName)
+        const isLauchApp = launchPackage(this.packageName)
         if(isLauchApp) {
-            waitRandomTime(2)
-            findAndClick(className("android.widget.Button").textMatches("打开"), {fixed:true})
+            if(start){
+                findAndClick("跳过", {
+                    fixed:true,
+                    disableCoverCheck:true,
+                    disableGrayCheck:true
+                })
+            }
             Record.log(`${this.appName}已启动`)
-            waitRandomTime(13)
+            //fixedClick(className("android.widget.Button").textMatches("打开"))
         } else {
             Record.log(`${this.appName}应用未安装`)
         }
@@ -273,6 +279,7 @@ export abstract class Base {
      * @todo 防止广告 防止页内跳转
      */
     read(totalTime: number){
+        waitRandomTime(NORMAL_WAIT_TIME)
         Record.log(`准备看书${convertSecondsToMinutes(totalTime)}分钟`)
         let readTime = 0
         if(text("简介").exists()) {
@@ -289,7 +296,10 @@ export abstract class Base {
                 resizeY(random(1900, 2000))
             )
             readTime += waitRandomTime(perTime)
-            fixedClick(merge([".*不再提示", "我知道了", "放弃下载"]))
+            findAndClick(merge([".*不再提示", "我知道了", "放弃下载"]),{
+                fixed:true,
+                waitFor:-1
+            })
             this.watch(index)
         })
     }
@@ -312,7 +322,9 @@ export abstract class Base {
                 Record.debug(`watch index: ${index}`)
             }
         } else {
-            flag = exitSign.exists()
+            if(search(exitSign, {waitFor:2})){
+                flag = true
+            }
         }
         if(flag){
             Record.debug("watch return")
@@ -327,34 +339,48 @@ export abstract class Base {
             this.lauchApp()
         }
         let str:string|undefined = undefined
-        const first = search("浏览页面[0-9]+s 领取奖励")
-        if(first === undefined){
-            const second = search(".*[0-9]+[ ]?[s秒]?.*", {ocrRecognize:true, bounds:{bottom: device.height / 4}})
-            if(second === undefined){
-                const com = search("[0-9]+秒", {bounds:{left:device.width*2/3,top:device.height*2/3}})
-                if(com !== undefined){
-                    str = `滑动浏览${com.text}`
-                }
-            } else {
-                str = second.text
-            }
+        const first = search("浏览页面[0-9]+s 领取奖励", {
+            waitFor:-1
+        })
+        if(first){
+            str = first.text()
         } else {
-            str = first.text
+            const second = search(".*[0-9]+[ ]?[s秒]?.*", {
+                // ocrRecognize:true, 
+                waitFor:-1,
+                bounds:{bottom: device.height / 4
+            }})
+            if(second){
+                str = second.text()
+            } else {
+                const com = search("[0-9]+秒", {
+                    waitFor:-1,
+                    bounds:{
+                        left:device.width*2/3,
+                        top:device.height*2/3
+                }})
+                if(com){
+                    str = `滑动浏览${com.text()}`
+                }
+            }
         }
         const waitTime = matchAndJudge(str)
         waitTimes += waitTime
         Record.debug(`watchTimes = ${times}, waitTime = ${waitTime}`)
-        if(text("该视频提到的内容是").findOne(waitTime * 1000)){
+        if(search("该视频提到的内容是", {waitFor:waitTime})){
             back()
             waitRandomTime(1)
             this.watch(exitSign, ++times, waitTimes)
             return
         }
         waitRandomTime(4)
-        if(!findAndClick(".*跳过.*",
-        {fixed:true, bounds:{left:device.width * 2 / 3, bottom:device.height / 5}})){
+        if(!findAndClick(".*跳过.*",{
+            waitFor:-1,
+            fixed:true, 
+            bounds:{left:device.width * 2 / 3, bottom:device.height / 5}})){
             close()
         }
+        waitRandomTime(1)
         if(waitTimes > 60 * 2 || times >= 4){
             closeDialogifExist()
         } else {
@@ -383,22 +409,22 @@ export abstract class Base {
         let tmp = this.backUntilFind(component)
         for(let i = 0; i < this.depth; i++) {
             let child = tmp.child(0)
-            if(child != null) {
+            if(child) {
                 tmp = child
             }
         }
         if (tmp != null) {
             if(num !== -1){
-                tmp = tmp.child(num)
+                tmp = tmp.child(num) as any
             }
             if(this.preComponent.toString() !== component.toString()
                 || this.preNum !== num) {
-                randomClick(tmp.bounds(), {check: true})
+                randomClick(tmp.bounds())
             }
         }
         this.preComponent = component
         this.preNum = num
-        waitRandomTime(4)
+        // waitRandomTime(4)
     }
 
     /**
@@ -406,49 +432,43 @@ export abstract class Base {
      * @param func do方法
      * @param component 查找条件
      */
-    backUntilFind(component: UiSelector, times: number = 0): any{
-        if(times >= MAX_BACK_COUNTS) {
+    backUntilFind(component: UiSelector, times: number = 0): UiObject{
+        if(times > 4) {
             Record.debug("backUntilFind error")
             throw new ExceedMaxNumberOfAttempts("超过最大尝试次数")
         }
-        let tmp = component.findOnce()
-        if (tmp == null) {
-            if(times >= MAX_BACK_COUNTS - 2){
+        const tmp = search(component, {fixed:true})
+        if (tmp) {
+            return tmp
+        } else {
+            if(times > 2){
                 Record.warn("尝试矫正")
                 closeByImageMatching()
+                back()
             } else {
                 back()
-                waitRandomTime(4)
             }
-            closeDialogifExist()
+            if(this.dialogCheck){
+                waitRandomTime(2)
+                closeDialogifExist()
+            }
             //判断是否还在app内
             if (currentPackage() !== this.packageName) {
                 this.lauchApp()
             }
             return this.backUntilFind(component, ++times)
-        } else {
-            return tmp
         }
     }
 
     watchAdsForCoin(backSign: string, sign:string = ""){
         const str = "(观)?看.*(视频|内容|广告).*(得|领|赚|收取).*([0-9]+金币|更多|火苗)"+sign
         let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS
-            && (dialogClick(str, this.dialogBounds))){
+        while(++cycleCounts < MAX_CYCLES_COUNTS 
+            && dialogClick(str, this.dialogBounds)){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(textMatches(merge([backSign, str])))
         }
-        dialogClick(merge(["(开心|立即)收下", "(我)?知道了"]))
-    }
-
-    watchAdsForCoin2(backSign: string, sign:string = ""){
-        const str = "(观)?看.*(视频|内容|广告).*(得|领|赚|收取).*([0-9]+金币|更多|火苗)"+sign
-        let cycleCounts = 0
-        do{
-            this.watch(textMatches(merge([backSign, str])))
-        }while(++cycleCounts < MAX_CYCLES_COUNTS
-            && (dialogClick(str, this.dialogBounds)))
-        dialogClick(merge(["(开心|立即)收下", "(我)?知道了"]))
+        dialogClick(merge(["(开心|立即)收下", "(我)?知道了"]), this.dialogBounds)
     }
 
     /**
@@ -466,7 +486,6 @@ export abstract class Base {
         this.lowEff1Start = 0
         this.lowEff2Start = 0
         this.lowEff3Start = 0
-        this.enablewatchAds()
         //启动初始化
         this.reset()
         //前置操作
@@ -528,7 +547,6 @@ export abstract class Base {
     signIn() {}
     openTreasure() {}
     watchAds() {}
-    enablewatchAds(){}
     mealSupp() {}
     readBook(totalTime: number) { totalTime }
     swipeVideo(totalTime: number) { totalTime }

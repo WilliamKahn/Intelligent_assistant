@@ -1,3 +1,5 @@
+import { Point } from "images"
+
 export interface Bounds{
     left?: number
     top?: number
@@ -10,6 +12,15 @@ export interface ComponentBounds{
     top: number
     right :number
     bottom: number
+}
+
+export type FontCharacterMap = {
+    [correctCharacter: string]: string[];
+}
+
+export interface ClosePoint{
+    point: Point
+    grayScale: number
 }
 
 export interface FuncIncome{
@@ -27,29 +38,19 @@ export interface Component{
     text: string,
     bounds: ComponentBounds
 }
-export type ScrollAndClickOptions = {
-    method: (selector:UiSelector, range:Component) => void
-    searchOptions: SearchOptions
-    findAndClickOptions: FindAndClickOptions
-}
+export type FindByOcrAndClickOptions = SearchByOcrRecognizeOptions & RandomClickOptions
 
-export type FindAndClickOptions = ScrollToOptions & RandomClickOptions & {
-    //是否持续点击
-    clickUntilGone?: boolean
+export type FindAndClickOptions = ScrollToOptions & RandomClickOptions
+
+export type RandomClickOptions = NormalClickOptions & {
     //点击阈值(高于阈值不点击)
     selectedThreshold?:number
     //灰度判断比例
     grayscaleRatio?:number
-    disableCheckBeforeClick?:boolean
     disableGrayCheck?:boolean
 }
 
-export type RandomClickOptions = NormalClickOptions & {
-    //点击是否改变
-    check?: boolean,
-}
-
-export type ScrollToOptions = SearchOptions & CoverCheckOptions & {
+export type ScrollToOptions = SearchByUiSelectOptions & CoverCheckOptions & {
     disableCoverCheck?:boolean
 }
 
@@ -60,20 +61,16 @@ export interface CoverCheckOptions {
     threshold?: number
 }
 
-export type SearchOptions = SearchByUiSelectOptions & {
-    //是否启动ocr
-    ocrRecognize?: boolean
-}
-
 export type SearchByUiSelectOptions = SearchByOcrRecognizeOptions & {
     //是否需要滑动
     fixed?:boolean,
-    //延迟等待
-    waitFor?:boolean,
     method?:(selector:UiSelector) => void
 }
 
 export interface SearchByOcrRecognizeOptions{
+    //延迟等待
+    waitFor?:number,
+    throwErrIfNotExist?:boolean
     //相对位置
     index?:number
     //ocr识别边界
@@ -81,6 +78,7 @@ export interface SearchByOcrRecognizeOptions{
 }
 
 export interface NormalClickOptions{
+    tips?: string
     //点击后等待时间
     waitTimes?: number
     //点击反馈文字

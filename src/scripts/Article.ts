@@ -1,7 +1,8 @@
-import { dialogClick, fixedClick, findAndClick, normalClick } from "../common/click";
-import { search, searchByOcrRecognize } from "../common/search";
-import { randomExecute, getNumFromComponent, convertSecondsToMinutes, moveDown, resizeX, resizeY } from "../common/utils";
-import { MAX_CYCLES_COUNTS, MIN_RUN_THRESHOLD, NAME_READ_ARTICLE, PACKAGE_READ_ARTICLE } from "../global";
+import { dialogClick, fixedClick, findAndClick, normalClick, ocrClick } from "../common/click";
+import { searchByOcrRecognize } from "../common/ocr";
+import { search } from "../common/search";
+import { randomExecute, getNumFromComponent, convertSecondsToMinutes, moveDown, resizeX, resizeY, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, MIN_RUN_THRESHOLD, NAME_READ_ARTICLE, NORMAL_WAIT_TIME, PACKAGE_READ_ARTICLE } from "../global";
 import { measureExecutionTime, functionLog } from "../lib/decorators";
 import { CurrentAppBanned } from "../lib/exception";
 import { Record } from "../lib/logger";
@@ -62,7 +63,7 @@ export class Article extends AbstractArticle{
         this.goTo(this.tab, 2)
         if(this.scrollClick("现金收益")) {
             const component = searchByOcrRecognize(".*我的金币.*")
-            if(component !== undefined){
+            if(component){
                 const weight = getNumFromComponent(component.text)
                 Record.debug(`${this.constructor.name}:${weight}`)
                 this.store(BaseKey.Weight, weight)
@@ -111,6 +112,7 @@ export class Article extends AbstractArticle{
     watchAds(): boolean {
         this.goTo(this.tab, 2)
         if(this.scrollClick("领福利")){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(textMatches("每日凌晨.*"))
             return true
         }
@@ -129,11 +131,12 @@ export class Article extends AbstractArticle{
         this.goTo(this.tab, 2)
         let cycleCounts = 0
         this.scrollTo("现金收益")
-        while(++cycleCounts < MAX_CYCLES_COUNTS  && findAndClick("点击领取|点击抽奖", {
-            ocrRecognize:true,
+        while(++cycleCounts < MAX_CYCLES_COUNTS  
+            && ocrClick("点击领取|点击抽奖", {
+            // ocrRecognize:true,
             bounds:{
-                bottom:device.height/3,
-                left:device.width/2
+                bottom:device.height / 3,
+                left:device.width / 2
             }
         })){
             this.watchAdsForCoin("每日凌晨.*")
@@ -159,7 +162,7 @@ export class Article extends AbstractArticle{
     @functionLog("走路赚钱")
     walkEarn(): void{
         this.goTo(this.tab, 2)
-        if(this.scrollClick("走路.?钱")){
+        if(this.scrollClick("走路赚钱")){
             if(findAndClick("领取[0-9]+金币", {fixed:true, feedback:true})){
                 this.watchAdsForCoin("每日凌晨.*")
             }
@@ -169,7 +172,7 @@ export class Article extends AbstractArticle{
     @functionLog("睡觉赚钱")
     sleepEarn(): void{
         this.goTo(this.tab, 2)
-        if(this.scrollClick(".?觉.?钱")){
+        if(this.scrollClick("睡觉赚钱")){
             if(fixedClick("我睡醒了")){
                 if(fixedClick("领取[0-9]+金币")){
                     this.watchAdsForCoin("每日凌晨.*")
@@ -194,12 +197,12 @@ export class Article extends AbstractArticle{
             this.preNum = 0
             dialogClick("立即签到")
             const range = search(random(1,4).toString())
-            if(range !== undefined){
+            if(range){
                 if(findAndClick(className("com.lynx.tasm.behavior.ui.text.FlattenUIText"),{
                     bounds:{
-                        left:range.bounds.right,
-                        top:range.bounds.top,
-                        bottom:range.bounds.bottom,
+                        left:range.bounds().right,
+                        top:range.bounds().top,
+                        bottom:range.bounds().bottom,
                     }
                 })){
                     this.read(totalTime)
@@ -222,12 +225,12 @@ export class Article extends AbstractArticle{
         this.goTo(this.tab, 2)
         if(this.scrollClick("去完成")){
             const range = search(random(1,4).toString())
-            if(range !== undefined){
+            if(range){
                 if(findAndClick(className("android.widget.TextView"),{
                     bounds:{
-                        left:range.bounds.right,
-                        top:range.bounds.top,
-                        bottom:range.bounds.bottom,
+                        left:range.bounds().right,
+                        top:range.bounds().top,
+                        bottom:range.bounds().bottom,
                     }
                 })){
 

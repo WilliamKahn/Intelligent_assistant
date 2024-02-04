@@ -1,10 +1,10 @@
-import { Image, Point } from "images";
-import { DEVICE_HEIGHT, DEVICE_WIDTH, MAX_CYCLES_COUNTS, PACKAGE_HAMIBOT } from "../global";
+import { Point } from "images";
+import { DEVICE_HEIGHT, DEVICE_WIDTH, MAX_CYCLES_COUNTS, PACKAGE_HAMIBOT, characterMapping } from "../global";
 import { Record } from "../lib/logger";
-import { findAndClick, fixedClick, normalClick } from './click';
+import { findAndClick } from './click';
 import { Move } from "./enums";
-import { Bounds, ComponentBounds, Priority } from './interfaces';
-
+import { Bounds, ClosePoint, Priority } from './interfaces';
+import { closeByImageMatching } from "./ocr";
 
 //转化坐标
 export function resizeX(x: number): number {
@@ -13,7 +13,6 @@ export function resizeX(x: number): number {
 export function resizeY(y: number): number {
     return y * device.height/DEVICE_HEIGHT
 }
-
 
 /**
  * 
@@ -35,39 +34,8 @@ export function boundsScaling(bounds: Bounds, scaling: number){
     right = right - (width-newWidth)/2
     bottom = bottom - (height - newHeight)/2
     const result = {left:left, top:top, right:right, bottom:bottom}
-    boundsCorrection(result)
     return result
 }
-/**
- * @description 边界矫正
- * @param bounds 
- */
-export function boundsCorrection(bounds: ComponentBounds){
-    bounds.left = bounds.left < 0 ? 0 : bounds.left
-    bounds.top = bounds.top < 0 ? 0 : bounds.top
-    bounds.right = bounds.right > device.width ? device.width : bounds.right
-    bounds.bottom = bounds.bottom > device.height ? device.height : bounds.bottom
-}
-
-export function getScreenImage(bounds?: Bounds){
-    const x1 = bounds?.left || 0
-    const y1 = bounds?.top || 0
-    const x2 = bounds?.right || device.width
-    const y2 = bounds?.bottom || device.height
-    console.hide()
-    sleep(100)
-    const img = captureScreen()
-    console.show()
-    waitRandomTime(1)
-    const result = images.clip(img, x1, y1, x2-x1, y2-y1)
-    try {
-        return result    
-    } finally {
-        // @ts-ignore
-        img.recycle()
-    }
-}
-
 
 /**
  * @description 随机等待一定时间
@@ -90,11 +58,13 @@ export function clearBackground(){
             waitRandomTime(4)
             if(!findAndClick(idContains("clear"), {
                 fixed:true,
-                disableCheckBeforeClick:true
+                disableCoverCheck:true,
+                disableGrayCheck:true
             })){
                 findAndClick(descContains("清除"), {
                     fixed:true,
-                    disableCheckBeforeClick:true
+                    disableCoverCheck:true,
+                    disableGrayCheck:true
                 })
             }
             launchPackage(PACKAGE_HAMIBOT)
@@ -180,26 +150,32 @@ export function convertSecondsToMinutes(seconds: number) {
 export function close(){
     const times = random(0,1)
     if(!closeByImageMatching(true)){
-        if(!fixedClick(idContains("close"))){
+        if(!findAndClick(idContains("close"), {
+            disableCoverCheck:true,
+            bounds:{bottom:device.height/5},
+            fixed:true,
+            waitFor:-1})){
             switch(times){
-                case 0:
-                    if(!findAndClick(classNameMatches("android\.widget\.(ImageView|Button|FrameLayout)"),{
+                case 0://|FrameLayout
+                    if(!findAndClick(classNameMatches("android\.widget\.(ImageView|Button)"),{
+                        waitFor: -1,
                         fixed:true, 
                         bounds:{left:device.width * 3 / 5, bottom:device.height / 5},
-                        disableCheckBeforeClick:true
+                        disableCoverCheck:true,
+                        disableGrayCheck:true
                     })){
                         back()
-                        waitRandomTime(4)
                     }
                     break
                 case 1:
                     if(!findAndClick(className("android\.widget\.(Button|ImageView)"),{
+                        waitFor: -1,
                         fixed:true, 
                         bounds:{right:device.width * 2 / 5, bottom:device.height / 5},
-                        disableCheckBeforeClick:true
+                        disableCoverCheck:true,
+                        disableGrayCheck:true
                     })){
                         back()
-                        waitRandomTime(4)
                     }
                     break
             }
@@ -207,69 +183,9 @@ export function close(){
     }
 }
 
-/**
- * @description 关闭任意带有叉叉的弹窗,基于视觉处理
- * @returns true: 关闭成功, false: 未发现控件
- */
-export function closeByImageMatching(filter?: boolean, priority?:Priority): boolean {
-    const img = getScreenImage()
-    const threshold = 0.7
-    //需要从网络远程获取
-    const tmp = images.read('/sdcard/exit.png')
-    if(img != null && tmp != null) {
-        //灰度化
-        const grayImg = images.cvtColor(img, "BGR2GRAY")
-        img.recycle()
-        const grayTmp = images.cvtColor(tmp, "BGR2GRAY")
-        tmp.recycle()
-        //反转 黑色按钮
-        const grayWhiteTmp = images.adaptiveThreshold(grayTmp, 255, "GAUSSIAN_C", "BINARY", 9, 0)
-        const grayInvTmp = images.adaptiveThreshold(grayTmp, 255, "GAUSSIAN_C", "BINARY_INV", 9, 0)
-        grayTmp.recycle()
-        //阈值化
-        const adaptiveImg = images.adaptiveThreshold(grayImg, 255, "GAUSSIAN_C", "BINARY", 25, 0)
-        grayImg.recycle()
-        // adaptiveImg.saveTo("/sdcard/result.jpg")
-        // app.viewFile("/sdcard/result.jpg")
-        
-        //验证图片
-        let list:Point[] = []        
-        for(let i = 50; i>=20; i-=5){
-            const white = images.resize(grayWhiteTmp, i)
-            const black = images.resize(grayInvTmp, i)
-            const match1 = images.matchTemplate(adaptiveImg, white, {
-                threshold: threshold,
-            })
-            white.recycle()
-            const match2 = images.matchTemplate(adaptiveImg, black, {
-                threshold: threshold,
-            })
-            black.recycle()
-            const combine:Point[] = match1.points.concat(match2.points)
-            for(let point of combine){
-                point.x += i/2
-                point.y += i/2
-            }
-            list.push(...combine)
-        }
-        grayInvTmp.recycle()
-        grayWhiteTmp.recycle()
-        adaptiveImg.recycle()
-        if(list != null){
-            const point = findPreferredCloseButton(list, filter, priority)
-            if(point != null){
-                Record.debug(`close(${point.x},${point.y})`)
-                normalClick(point.x, point.y)
-                return true
-            }
-        }
-    }
-    img.recycle()
-    return false
-}
-export function findPreferredCloseButton(list:Point[], filter?:boolean, priority?:Priority){
+export function distincList(list:Point[], filter?:boolean){
     //距离原点排序
-    const sortedCoordinates = list.slice().sort((a, b) => {
+    list.slice().sort((a, b) => {
         const distanceA = calculateDistance(a, {x:0,y:0});
         const distanceB = calculateDistance(b, {x:0,y:0});
         return distanceA - distanceB;
@@ -278,32 +194,38 @@ export function findPreferredCloseButton(list:Point[], filter?:boolean, priority
     //     log(t)
     // }
     let firstCoordinate = {x:0, y:0}
-    for(let i = 0;i<sortedCoordinates.length; i++){
-        if(calculateDistance(firstCoordinate, sortedCoordinates[i]) > 3){
-            firstCoordinate = sortedCoordinates[i]
+    for(let i = 0;i<list.length; i++){
+        if(calculateDistance(firstCoordinate, list[i]) > 3){
+            firstCoordinate = list[i]
             if(filter){
                 const component = boundsInside(firstCoordinate.x - 100, firstCoordinate.y - 100, firstCoordinate.x + 100, firstCoordinate.y + 100).findOnce()
                 //筛选控件
                 if(firstCoordinate.y > device.height / 5
                 && !(component != null && component.text() === "")){
-                    sortedCoordinates.splice(i)
+                    list.splice(i)
                     i--
                 }
             }
         } else {
-            sortedCoordinates.splice(i)
+            list.splice(i)
             i--
         }
     }
-    sortedCoordinates.sort((a, b) => {
-        const {priority: priorityA, distance: distanceA} = calculatePriority(a, priority);
-        const {priority: priorityB, distance: distanceB} = calculatePriority(b, priority);
-        if (priorityA === priorityB) {
-            return distanceA - distanceB;
+}
+
+export function findPreferredCloseButton(list:ClosePoint[]){
+    list.sort((a, b) => {
+        if(Math.abs(a.grayScale - b.grayScale) < 0.01){
+            const {priority: priorityA, distance: distanceA} = calculatePriority(a.point);
+            const {priority: priorityB, distance: distanceB} = calculatePriority(b.point);
+            if (priorityA === priorityB) {
+                return distanceA - distanceB;
+            }
+            return priorityA - priorityB;
         }
-        return priorityA - priorityB;
+        return a.grayScale - b.grayScale
     })
-    return sortedCoordinates.length > 0 ? sortedCoordinates[0] : null;
+    return list.length > 0 ? list[0].point : null;
 }
 // 辅助函数，用于计算两点之间的距离
 export function calculateDistance(pointA: Point, pointB: Point): number {
@@ -312,12 +234,12 @@ export function calculateDistance(pointA: Point, pointB: Point): number {
     return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 }
 // 辅助函数，用于计算匹配项的优先级
-export function calculatePriority(point: Point, priority?:Priority) {
+export function calculatePriority(point: Point) {
     const centerX = device.width/2
     const centerY = device.height/2
-    const leftPriority = priority?priority.left:random(1,2)
-    const rightPriority = priority?priority.right:3 - leftPriority
-    const middlePriority = priority?priority.middle:3
+    const leftPriority = random(1,2)
+    const rightPriority = 3
+    const middlePriority = 3 - leftPriority
     if(point.x < centerX && point.y < centerY){
         return {priority:leftPriority, distance:calculateDistance(point, {x:0, y:0})}
     } else if(point.x > centerX && point.y < centerY){
@@ -383,28 +305,6 @@ export function matchAndJudge(str: string|undefined){
     return 1
 }
 
-/**
- * @description 基于视觉识别 判断方法前后页面是否变化
- * @returns true:图片不一致, 代表操作成功, false:图片一致代表操作失败
- */
-export function judgeFuncIsWorkByImg(func: ()=>void, bounds:Bounds){
-    const before = getScreenImage(bounds)
-    func()
-    const after = getScreenImage(bounds)
-    const compare = findImage(before, after, {
-        threshold: 1
-    })
-    before.recycle()
-    after.recycle()
-    if (compare) {
-        Record.debug("操作失效")
-        return false
-    } else {
-        Record.debug("操作生效")
-        return true
-    }
-}
-
 export function randomExecute(methods:(()=> void)[]){
     // 随机打乱数组顺序
     for (let i = methods.length - 1; i > 0; i--) {
@@ -416,25 +316,6 @@ export function randomExecute(methods:(()=> void)[]){
     methods.forEach((method) => {
         method();
     });
-}
-
-export function getGrayscaleHistogram(img:Image, rate:number = 4){
-    var grayHistogram:number[] = [];
-    for (var i = 0; i < 256; i++) {
-        grayHistogram[i] = 0;
-    }
-    for (var y = 0; y < img.getHeight(); y+=rate) {
-        for (var x = 0; x < img.getWidth(); x+=rate) {
-            // 获取当前像素的颜色值
-            var color = img.pixel(x, y);
-            // 计算灰度值
-            var grayValue = (colors.red(color) + colors.green(color) + colors.blue(color)) / 3;
-            // 更新灰度直方图
-            grayHistogram[Math.floor(grayValue)]++;
-        }
-    }
-    img.recycle()
-    return grayHistogram
 }
 
 export function findLargestIndexes(arr: number[], count: number): number[] {
@@ -533,15 +414,6 @@ export function levenshteinDistance(str1: string, str2: string): number {
     return 1 - dp[len1][len2] / maxLen; // Normalizing the distance to similarity
 }
 
-export function recognizeTextByLeftToRight(img: Image){
-    const res = ocr.recognize(img)
-    img.recycle()
-    const list = res.results.sort((a, b)=>
-        a.bounds.left - b.bounds.left
-    )
-    return list.map(obj => obj.text).join("")
-}
-
 export function getNumFromComponent(str:string){
     const match = str.match("[0-9]+")
     if(match){
@@ -565,62 +437,56 @@ export function executeDynamicLoop2(loopCondition: ()=>boolean, loopBody:()=>voi
     }
 }
 
-export function getGrayscale(img:Image, rate:number = 4){
-    let sum = 0
-    let gray = 0
-    for (var y = 0; y < img.getHeight(); y+=rate) {
-        for (var x = 0; x < img.getWidth(); x+=rate) {
-            // 获取当前像素的颜色值
-            var color = img.pixel(x, y);
-            if(isGray(colors.red(color), colors.green(color), colors.blue(color))){
-                gray++
-            }
-            sum++
-        }
-    }
-    img.recycle()
-    Record.debug(`灰度值${(gray/sum).toFixed(2)}`)
-    return gray/sum
-}
-
-function isGray(r: number, g: number, b: number): boolean {
-    
-    const brightnessThreshold = 150 // 亮度阈值，根据实际情况调整
-    const contrastThreshold = 150;  // 对比度阈值，根据实际情况调整
-
-    const brightness = (r + g + b) / 3;
-    const contrast = Math.max(r, g, b) - Math.min(r, g, b);
-
-    return brightness <= brightnessThreshold && contrast <= contrastThreshold;
-}
-
 export function padZero(num: number): string {
     return num < 10 ? `0${num}` : num.toString();
 }
 
-export function overDetection(detectionBounds:ComponentBounds, slideBounds:ComponentBounds, offset:number): void{
-    const scalBounds = boundsScaling(detectionBounds, 0.4)
-    const img = getScreenImage(scalBounds)
-    const bimg = getScreenImage({
-        left:detectionBounds.right,
-        top: detectionBounds.top,
-        bottom:detectionBounds.bottom,
-        right: device.width-detectionBounds.right
-    })
-    const p = findImage(bimg, img, {threshold:0.7})
-    img.recycle()
-    bimg.recycle()
-    if(p){
-        const index = detectionBounds.right - scalBounds.left + p.x
-        const centerX = (slideBounds.left+slideBounds.right)/2
-        const centerY = (slideBounds.top+slideBounds.bottom)/2
-        gesture(500, [centerX, centerY], [centerX + index - offset, centerY + random(-50, 50)])
-    } else {
-        throw "无法识别的验证码"
-    }
-}
-
 export function convertMinutesToSeconds(str:string){
     const time = str.split(":")
-    return parseInt(time[0])*60+parseInt(time[1])
+    let result:number
+    if(time.length === 3){
+        result = parseInt(time[0])*60*60+parseInt(time[1])*60+parseInt(time[2])
+    } else {
+        result = parseInt(time[0])*60+parseInt(time[1])
+    }
+    if(result > 3 * 60){
+        return 0
+    }
+    return result
+}
+
+export function replaceCharacters(input: string): string {
+    let result = input
+  
+    for (const correctCharacter in characterMapping) {
+      if (characterMapping.hasOwnProperty(correctCharacter)) {
+        const errorCharacters = characterMapping[correctCharacter].join('|');
+        const pattern = new RegExp(correctCharacter, 'g');
+        result = result.replace(pattern, `(${errorCharacters})`);
+      }
+    }
+    return result;
+}
+
+export function removeNonChineseCharsFromEdges(input: string): string {
+    // 匹配首尾非汉字字符的正则表达式
+    // const nonChineseEdgesRegex = /^([^\u4e00-\u9fa5]+)(.*?)([^\u4e00-\u9fa5]+)$/;
+  
+    // // 去除首尾非汉字字符
+    // const result = input.replace(nonChineseEdgesRegex, '$2');
+    // 进一步去除中文符号
+    const chineseSymbolRegex = /[，。、；‘’：“”【】『』《》（）！？]/g;
+    return input.replace(chineseSymbolRegex, '');
+}
+
+export function boundsScreenInsideCheck(bounds:Rect){
+    if(bounds.height() > 1 && bounds.width() > 1 
+    && bounds.left >= 0 && bounds.left <= device.width
+    && bounds.right >= 0 && bounds.right <= device.width
+    && bounds.top >= 0 && bounds.top <= device.height
+    && bounds.bottom >= 0 && bounds.bottom <= device.height
+    ){
+        return true
+    }
+    return false
 }

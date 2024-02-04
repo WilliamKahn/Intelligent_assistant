@@ -1,12 +1,11 @@
 import { FuncIncome } from "../../common/interfaces"
 import { sendIncomeMessageToWxPuher, toShowString } from "../../common/report"
 import { clearBackground } from "../../common/utils"
-import { ORDER, STORAGE, STORAGE_APP, STORAGE_DATE, article, articleLite, baidu, baiduBig, baiduLite, changReadFree, deJian, eggFlower, eggplantFree, kuaiShou, kuaiShouFree, kuaiShouLite, lightningSearch, marvelFree, pandaBrain, redFruits, sevenCatsFree, shengRead, shuQi, speedFree, starrySky, tikTokLite, tikTokVolcano, tomato, tomatoFree, tomatoLite, watermelon, ximalayaLite, xinyaFree, youShi } from "../../global"
+import { INCOME_RECOVER, INCOME_THRESHOLD, ORDER, STORAGE, STORAGE_APP, STORAGE_DATE, article, articleLite, baidu, baiduBig, baiduLite, changReadFree, deJian, eggFlower, eggplantFree, kuaiShou, kuaiShouFree, kuaiShouLite, lightningSearch, marvelFree, pandaBrain, redFruits, sevenCatsFree, shengRead, shuQi, speedFree, starrySky, tikTokLite, tikTokVolcano, tomato, tomatoFree, tomatoLite, watermelon, ximalayaLite, xinyaFree, youShi } from "../../global"
 import { BaseKey } from "../../scripts/abstract/Base"
 
 //阈值10元标准0.007  视频70金币（10000）  230（33000）
-const threshold:number = 0.0035
-const recover:number = 0.0005
+
 main()
 export function main(){
     const map:Record<string, any> = {
@@ -70,7 +69,6 @@ export function main(){
         app.canSign = true
     }
     // exit()
-    let first = true
     while(true){
         let indexList = list
         indexList = indexList.filter(app=>{
@@ -102,13 +100,13 @@ export function main(){
             funcIncomeList.sort((a, b)=>{
                 const incomeComparison = b.income - a.income
                 if(b.income === 0){
-                    if(a.income >= threshold){
+                    if(a.income >= INCOME_THRESHOLD){
                         return -1
                     } else if(a.income > 0) {
                         return 1
                     }
                 } else if(a.income === 0){
-                    if(b.income >= threshold){
+                    if(b.income >= INCOME_THRESHOLD){
                         return 1
                     } else if(b.income > 0){
                         return -1
@@ -118,46 +116,47 @@ export function main(){
             })
         }
         // for(const item of funcIncomeList){
-        //     log(`${indexList[item.index].appName},${item.funcName},${item.income}`)
+        //     if(item.income > INCOME_THRESHOLD)
+        //         log(`${indexList[item.index].appName},${item.funcName},${item.income}`)
         // }
         // exit()
         //funcList.includes(element.funcName)
-        const lowEffList = funcIncomeList.filter(element => {
-            const str = element.funcName
-            return str === "medEff" || str === "lowEff1" || str === "lowEff2" || str === "lowEff3"
-        })
-        lowEffList.sort((a, b) => b.income - a.income)
 
-        let runList:any[] = []
-        
+        const runList:any[] = []
+        const startTime = new Date()
+        const date = startTime.getMonth().toString()+"/"+startTime.getDate().toString()
+
         for (let i = 0; i < funcIncomeList.length; i++) {
             const item = funcIncomeList[i]
             const app = indexList[item.index]
-            app[`${item.funcName}Flag`] = true
-            runList.push(app)
-            for (let j = i + 1; j < funcIncomeList.length; j++) {
-                const next = funcIncomeList[j]
-                if (next.index === item.index) {
-                    if(next.income > threshold || next.income === 0){
-                        app[`${next.funcName}Flag`] = true
+            if(item.income > INCOME_THRESHOLD || item.income === 0){
+                app[`${item.funcName}Flag`] = true
+                runList.push(app)
+                for (let j = i + 1; j < funcIncomeList.length; j++) {
+                    const next = funcIncomeList[j]
+                    if (next.index === item.index) {
+                        if(next.income > INCOME_THRESHOLD || next.income === 0){
+                            app[`${next.funcName}Flag`] = true
+                        }
+                        funcIncomeList.splice(j, 1)
+                        j-- // 调整索引，因为删除了一个元素
                     }
-                    funcIncomeList.splice(j, 1);
-                    j--; // 调整索引，因为删除了一个元素
                 }
+            } else if (date !== STORAGE.get(STORAGE_DATE)) {
+                app[`${item.funcName}IncomePerMinute`] += INCOME_RECOVER
             }
         }
-        const startTime = new Date()
-        const date = startTime.getMonth().toString()+"/"+startTime.getDate().toString()
-        if(first && date === STORAGE.get(STORAGE_DATE) &&STORAGE.get(STORAGE_APP) !== undefined){
-            first = false
-            let index = -1
+        let realList = runList
+        if(date === STORAGE.get(STORAGE_DATE)
+            && STORAGE.get(STORAGE_APP) !== undefined){
+            let index = runList.length
             for(let i = 0;i < runList.length; i++){
                 if(runList[i].constructor.name === STORAGE.get(STORAGE_APP)){
                     index = i
                     break
                 }
             }
-            runList = runList.slice(index)
+            realList = runList.slice(index)
         }
         STORAGE.put(STORAGE_DATE, date)
         // for(const app of runList){
@@ -166,7 +165,7 @@ export function main(){
         // exit()
         clearBackground()
         let execute = true
-        for(const app of runList){
+        for(const app of realList){
             if(execute){
                 STORAGE.put(STORAGE_APP, app.constructor.name)
                 app.store(BaseKey.Weight, 0)
@@ -176,18 +175,30 @@ export function main(){
                 if(startTime.getDay() !== endTime.getDay()){
                     execute = false
                 }
-            } else {
-                app.highEffIncomePerMinute += recover
+            }
+        }
+        STORAGE.put(STORAGE_APP, "finish")
+        if(execute){
+            const lowFuncIncomeList:FuncIncome[] = []
+            for(const index in runList){
+                const app = runList[index]
                 for(const funcName of funcList){
-                    if(app[`${funcName}Inheritance`]){
-                        app[`${funcName}IncomePerMinute`] += recover
+                    if(funcName !== "medEff" && app[`${funcName}Inheritance`]){
+                        lowFuncIncomeList.push({
+                            index: index,
+                            funcName: funcName,
+                            income: app[`${funcName}IncomePerMinute`]
+                        })
                     }
                 }
             }
-        }
-        if(execute){
-            for(const item of lowEffList){
-                const app = indexList[item.index]
+            lowFuncIncomeList.sort((a, b) => b.income - a.income)
+            // for(const item of lowFuncIncomeList){
+            //     log(`${runList[item.index].appName},${item.funcName},${item.income}`)
+            // }
+            // exit()
+            for(const item of lowFuncIncomeList){
+                const app = runList[item.index]
                 app.startContinue(item.funcName)
                 clearBackground()
                 const endTime = new Date()

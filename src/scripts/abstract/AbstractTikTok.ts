@@ -1,9 +1,8 @@
-import { findAndClick, randomClick } from "../../common/click";
-import { searchByOcrRecognize } from "../../common/search";
-import { doFuncAtGivenTime, randomExecute } from "../../common/utils";
-import { MAX_CYCLES_COUNTS } from "../../global";
+import { randomClick } from "../../common/click";
+import { searchByOcrRecognize } from "../../common/ocr";
+import { randomExecute } from "../../common/utils";
 import { measureExecutionTime } from "../../lib/decorators";
-import { Base, BaseKey } from "./Base";
+import { Base } from "./Base";
 
 export abstract class AbstractTikTok extends Base{
 
@@ -43,33 +42,39 @@ export abstract class AbstractTikTok extends Base{
 
     scrollOcrClick(str:string, left:string): boolean{
         let cycleCounts = 0
-        while(++cycleCounts < 10
-            && searchByOcrRecognize(left) === undefined){
+        let component = searchByOcrRecognize(left)
+        while(++cycleCounts < 12
+            &&  component === undefined){
             this.move()
+            component = searchByOcrRecognize(left, {waitFor:0})
         }
-        if(cycleCounts >= 10){
+        if(cycleCounts >= 12){
             return false
-        }
-        const component = searchByOcrRecognize(left)
-        if(component !== undefined){
-            const com = searchByOcrRecognize(str, {
-                bounds:{top: component.bounds.top, bottom: component.bounds.bottom + 200}
-            })
-            if(component.bounds.bottom > device.height/3){    
-                if(com !== undefined){
-                    randomClick(com.bounds)
+        } else {
+            if(component){
+                const com = searchByOcrRecognize(str, {
+                    waitFor:0,
+                    bounds:{top: 
+                        component.bounds.top, bottom: 
+                        component.bounds.bottom + 200
+                    }
+                })
+                if(component.bounds.bottom < device.height*2/3){
+                    if(com){
+                        randomClick(com.bounds)
+                    } else {
+                        return false
+                    }
                 } else {
-                    return false
-                }
-            } else {
-                if(com !== undefined){
-                    randomClick(com.bounds)
-                } else {
-                    this.move()
-                    return this.scrollOcrClick(str, left)
+                    if(com){
+                        randomClick(com.bounds)
+                    } else {
+                        this.move()
+                        return this.scrollOcrClick(str, left)
+                    }
                 }
             }
+            return true
         }
-        return true
     }
 }

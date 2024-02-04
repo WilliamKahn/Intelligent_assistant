@@ -1,7 +1,8 @@
-import { dialogClick, findAndClick, fixedClick, scrollClick } from "../common/click";
+import { findAndClick, fixedClick, scrollClick } from "../common/click";
+import { closeByImageMatching } from "../common/ocr";
 import { scrollTo } from "../common/search";
-import { closeByImageMatching, doFuncAtGivenTime, padZero } from "../common/utils";
-import { MAX_CYCLES_COUNTS, NAME_READ_KUAISHOU_FREE, PACKAGE_READ_KUAISHOU_FREE } from "../global";
+import { padZero, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_READ_KUAISHOU_FREE, NORMAL_WAIT_TIME, PACKAGE_READ_KUAISHOU_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { CurrentAppBanned } from "../lib/exception";
 import { Record } from "../lib/logger";
@@ -69,10 +70,11 @@ export class KuaiShouFree extends Base{
         }
     }
 
-    @functionLog("看视频")
+    @functionLog("看广告")
     watchAds(): boolean {
         this.goTo(this.tab, 2)
         if(scrollClick("去赚钱", "看视频赚[0-9]+金币")){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(text("日常任务"))
             return true
         }
@@ -91,14 +93,16 @@ export class KuaiShouFree extends Base{
     readBook(totalTime: number): void {
         this.goTo(this.tab, 1)
         fixedClick("领[0-9]+金币")
-        const component = scrollTo(random(1,4).toString(),{waitFor:true})
-        if(component !== undefined){
+        const component = scrollTo(random(1,4).toString(),{
+            throwErrIfNotExist:true
+        })
+        if(component){
             if(findAndClick(className("android.widget.TextView"), {
                 fixed:true,
                 bounds:{
-                    left:component.bounds.right, 
-                    top:component.bounds.top,
-                    bottom:component.bounds.bottom + 100
+                    left:component.bounds().right,
+                    top:component.bounds().top,
+                    bottom:component.bounds().bottom + 100
                 }
             })){
                 this.read(totalTime)

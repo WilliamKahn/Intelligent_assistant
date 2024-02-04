@@ -1,7 +1,8 @@
-import { dialogClick, findAndClick, fixedClick, readClick, scrollClick } from "../common/click";
-import { scrollTo } from "../common/search";
-import { closeByImageMatching, doFuncAtGivenTime, randomExecute } from "../common/utils";
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_DEJIAN, PACKAGE_READ_DEJIAN } from "../global";
+import { dialogClick, findAndClick, findByOcrAndClick, fixedClick, readClick, scrollClick } from "../common/click";
+import { closeByImageMatching } from "../common/ocr";
+import { scrollTo, search } from "../common/search";
+import { randomExecute, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_READ_DEJIAN, NORMAL_WAIT_TIME, PACKAGE_READ_DEJIAN } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { Base, BaseKey } from "./abstract/Base";
@@ -32,7 +33,8 @@ export class DeJian extends Base {
     medEff(): void {
         //0.005
         let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS && this.watchAds()){
+        while(++cycleCounts < MAX_CYCLES_COUNTS 
+            && this.watchAds()){
             this.readBook(3 * 60)
         }
         this.readReward()
@@ -47,11 +49,10 @@ export class DeJian extends Base {
 
     @measureExecutionTime
     weight(): void {
-
         this.goTo(desc("discovery_button"), -1)
         scrollTo("金币收益")
-        let tmp = textEndsWith("币").findOnce()
-        if(tmp != null) {
+        let tmp = search(".*币")
+        if(tmp) {
             const weight = parseInt(tmp.text())
             this.store(BaseKey.Weight, weight)
         }
@@ -60,9 +61,11 @@ export class DeJian extends Base {
     @functionLog("阅读")
     readBook(totalTime: number): void {
         this.goTo(desc("bookstore_button"), -1)
-        let tmp = id(this.packageName+":id/channel_tab").findOnce()
-        if(tmp != null && findAndClick("推荐", 
-        {fixed:true, ocrRecognize:true, bounds: tmp.bounds(), selectedThreshold:100})){
+        const tmp = search(id(this.packageName+":id/channel_tab"))
+        if(tmp && findByOcrAndClick("推荐", {
+            bounds: tmp.bounds(), 
+            selectedThreshold:100}))
+        {
             if(readClick(id("com.zhangyue.iReader.bookStore:id/id_tv_book_name"), random(0, 5))){
                 this.read(totalTime)
             }
@@ -74,7 +77,7 @@ export class DeJian extends Base {
         this.goTo(desc("discovery_button"), -1)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && scrollClick("领取", "每日阅读福利", {clickUntilGone:false})) {
+            && scrollClick("领取", "每日阅读福利")) {
             this.watchAdsForCoin("金币收益")
             if (text("恭喜获得").exists()) {
                 closeByImageMatching()
@@ -85,7 +88,7 @@ export class DeJian extends Base {
     @functionLog("签到")
     signIn(): void {
         this.goTo(desc("discovery_button"), -1)
-        if(textStartsWith("成功签到").exists()) {
+        if(search("明日签到可得|成功签到.+")) {
             closeByImageMatching()
         } else {
             if(findAndClick("点击签到.+")){
@@ -109,8 +112,9 @@ export class DeJian extends Base {
     watchAds(): boolean {
         this.goTo(desc("discovery_button"), -1)
         if(scrollClick("去观看", "看视频赚金币与声望")){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(text("金币收益"))
-            if(!dialogClick("知道了")){    
+            if(!dialogClick("知道了")){
                 closeByImageMatching()
             }
             return true
@@ -128,15 +132,20 @@ export class DeJian extends Base {
     }
 
     activity():void{
-        let title = id("com.zhangyue.module.ad:id/tv_reward_video_title").findOnce()
-        if(title != null){
+        const title = search(id("com.zhangyue.module.ad:id/tv_reward_video_title"))
+        if(title){
             const regex = /\((\d+)\/(\d+)\)/;
             const match = title.text().match(regex)
             if(match) {
                 for(let i = parseInt(match[1]); i < parseInt(match[2]); i++){
-                    findAndClick("看视频赚金币", {fixed:true, clickUntilGone: true})
-                    Record.log(`参与活动, 正在观看${i+1}/${match[2]}个广告`)
-                    this.watch(text("金币收益"))
+                    if(findAndClick("看视频赚金币", {
+                        waitFor:6,
+                        fixed:true, 
+                    })){
+                            Record.log(`参与活动, 正在观看${i+1}/${match[2]}个广告`)
+                            waitRandomTime(NORMAL_WAIT_TIME)
+                            this.watch(text("金币收益"))
+                    }
                 }
                 this.activity()
             } else {

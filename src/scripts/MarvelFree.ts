@@ -1,7 +1,8 @@
 import { fixedClick, readClick, scrollClick, selectedClick } from "../common/click";
-import { scrollTo } from "../common/search";
-import { closeByImageMatching, doFuncAtGivenTime, resizeX, resizeY } from "../common/utils";
-import { MAX_CYCLES_COUNTS, NAME_READ_MARVEL_FREE, PACKAGE_READ_MARVEL_FREE } from "../global";
+import { closeByImageMatching } from "../common/ocr";
+import { scrollTo, search } from "../common/search";
+import { resizeX, resizeY, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_READ_MARVEL_FREE, NORMAL_WAIT_TIME, PACKAGE_READ_MARVEL_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Base, BaseKey } from "./abstract/Base";
 
@@ -40,8 +41,8 @@ export class MarvelFree extends Base{
     weight(): void {
         this.goTo(this.tab, 2)
         scrollTo("金币收益")
-        let tmp = textMatches("[0-9]+").boundsInside(0,0,resizeX(582), resizeY(735)).findOnce()
-        if(tmp != null) {
+        const tmp = search(textMatches("[0-9]+").boundsInside(0,0,resizeX(582), resizeY(735)))
+        if(tmp) {
             const weight = parseInt(tmp.text())
             this.store(BaseKey.Weight, weight)
         }
@@ -63,11 +64,12 @@ export class MarvelFree extends Base{
         }
     }
 
-    @functionLog("看视频")
+    @functionLog("看广告")
     watchAds(): boolean {
         this.goTo(this.tab, 2)
         if(textMatches("看视频领金币.+").exists()){
             if(scrollClick("去领取", "看视频领金币.+")){
+                waitRandomTime(NORMAL_WAIT_TIME)
                 this.watch(text("日常福利"))
             }
             return true
@@ -90,7 +92,7 @@ export class MarvelFree extends Base{
         this.goTo(this.tab, 2)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && scrollClick("领金币", "阅读领金币", {clickUntilGone:false})) {
+            && scrollClick("领金币", "阅读领金币")) {
                 this.watchAdsForCoin("日常福利")
         }
     }

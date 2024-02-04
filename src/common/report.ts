@@ -1,7 +1,7 @@
 import { APP_TOKEN, WX_PUSHER_URL, _TOKEN } from "../global";
 import { LOG_STACK, Record } from "../lib/logger";
 import { BaseKey } from "../scripts/abstract/Base";
-import { getScreenImage } from "./utils";
+import { getScreenImage } from "./ocr";
 
 export function sendIncomeMessageToWxPuher(str: string){
     if (_TOKEN && _TOKEN !== "") {

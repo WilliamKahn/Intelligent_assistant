@@ -1,7 +1,8 @@
 import { dialogClick, findAndClick, readClick, scrollClick, selectedClick } from "../common/click";
+import { closeByImageMatching } from "../common/ocr";
 import { search } from "../common/search";
-import { closeByImageMatching } from "../common/utils";
-import { MAX_CYCLES_COUNTS, NAME_READ_SHUQI, PACKAGE_READ_SHUQI } from "../global";
+import { waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_READ_SHUQI, NORMAL_WAIT_TIME, PACKAGE_READ_SHUQI } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Base, BaseKey } from "./abstract/Base";
 
@@ -36,9 +37,11 @@ export class ShuQi extends Base{
     @measureExecutionTime
     weight(): void {
         this.goTo(this.tab, 4)
-        const component = search(id(this.packageName+":id/account_worth_money"),{waitFor:true})
-        if(component !== undefined){
-            const weight = parseInt(component.text)
+        const component = search(id(this.packageName+":id/account_worth_money"),{
+            throwErrIfNotExist:true
+        })
+        if(component){
+            const weight = parseInt(component.text())
             this.store(BaseKey.Weight, weight)
         }
     }
@@ -59,10 +62,11 @@ export class ShuQi extends Base{
         }
     }
 
-    @functionLog("看视频")
+    @functionLog("看广告")
     watchAds(): boolean {
         this.goTo(this.tab, 2)
         if(scrollClick("去观看", "看视频赚[0-9]+金币")){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(text("做任务 赚金币"))
             return true
         }

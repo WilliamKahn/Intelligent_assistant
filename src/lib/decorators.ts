@@ -1,7 +1,6 @@
 import { sendErrorMessage } from "../common/report";
 import { clearBackground, convertSecondsToMinutes, waitRandomTime } from "../common/utils";
-import { MAX_RETRY_COUNTS, STORAGE, STORAGE_APP} from "../global";
-import { BaseKey } from "../scripts/abstract/Base";
+import { APP_ENV, INCOME_RECOVER, MAX_RETRY_COUNTS } from "../global";
 import { ExceedMaxNumberOfAttempts, isCurrentAppBanned } from "./exception";
 import { LOG_STACK, Record } from "./logger";
 
@@ -11,15 +10,13 @@ import { LOG_STACK, Record } from "./logger";
  * @returns 
  */
 export function functionLog(message: string) {
-    return function (target: any, key: string, descriptor: PropertyDescriptor) {
+    return function (_: any, key: string, descriptor: PropertyDescriptor) {
       const originalMethod = descriptor.value;
-      let isEnabled = true
       
       descriptor.value = function (...args: any[]) {
         const instance = this as any
         let startTime = new Date()
         try {
-          if(isEnabled){
             if(key === "signIn"){
               instance.lastSignInTime = new Date()
               instance.canSign = true
@@ -32,19 +29,15 @@ export function functionLog(message: string) {
                 return descriptor
               }
             }
-            waitRandomTime(4)
             Record.info(`执行下一步任务：${message}`)
-            const result = originalMethod.apply(this, args)
-            if(result === false){
-              isEnabled = false
-            }
-            return result
-          }
+            return originalMethod.apply(this, args)
         } catch (error:any) {
           if(isCurrentAppBanned(error)){
             throw error
           } else {
-            Record.debug(`${error.message}`)
+            if(APP_ENV === "development"){
+              Record.error(error)
+            }
           }
           let retries = 1;
           while (retries < MAX_RETRY_COUNTS) {
@@ -60,31 +53,25 @@ export function functionLog(message: string) {
               startTime = new Date()
               clearBackground()
               if(instance.lauchApp()){
-                waitRandomTime(4)
                 Record.info(`执行下一步任务：${message}`)
                 instance.reset()
                 instance.beforeDoTask()
-                const result = originalMethod.apply(this, args)
-                if(result === false){
-                  isEnabled = false
-                }
-                return result
+                return originalMethod.apply(this, args)
               }
               break
             } catch (error:any) {
-              Record.debug(`${error.message}`)
-              sendErrorMessage(error.message)
-              retries++
+              if(isCurrentAppBanned(error)){
+                throw error
+              } else {
+                Record.debug(`${error.message}`)
+                sendErrorMessage(error.message)
+                retries++
+              }
             }
           }
           if(retries >= MAX_RETRY_COUNTS) {
             throw new ExceedMaxNumberOfAttempts("超过最大尝试次数")
           }
-        }
-      }
-      if(key === "watchAds") {
-        target[`enable${key}`] = function () {
-          isEnabled = true
         }
       }
       return descriptor
@@ -129,11 +116,11 @@ export function startDecorator(_: any, __: string, descriptor: PropertyDescripto
       }catch(error:any) {
         if(isCurrentAppBanned(error)){
           Record.error(`账号异常`)
-          instance.highEffIncomePerMinute = 0.0005
+          instance.highEffIncomePerMinute = INCOME_RECOVER
           const funcList = ["medEff", "lowEff1","lowEff2","lowEff3"]
           for(const funcName of funcList){
             if(instance[`${funcName}Inheritance`]){
-              instance[`${funcName}IncomePerMinute`] = 0.0005
+              instance[`${funcName}IncomePerMinute`] = INCOME_RECOVER
             }
           }
         } else {
@@ -151,5 +138,5 @@ export function startDecorator(_: any, __: string, descriptor: PropertyDescripto
       return executionTime
     }
 
-    return descriptor; 
+    return descriptor
 }

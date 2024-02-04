@@ -1,4 +1,6 @@
-import { lightningSearch, ximalayaLite } from "./global"
+import { findAndClick, scrollClick } from "./common/click"
+import { speedFree, tikTokLite } from "./global"
+import { main } from "./main/first/main"
 
 
 /*
@@ -20,5 +22,6 @@ function test() {
     //     // log(`${app.appName}:${app.fetch(BaseKey.LowEff2IncomePerMinute)}`)
     //     // log(`${app.appName}:${app.fetch(BaseKey.LowEff3IncomePerMinute)}`)
     // }
-    ximalayaLite.weight()
+    speedFree.medEffFlag = true
+    speedFree.start1()
 }

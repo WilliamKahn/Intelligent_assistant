@@ -1,10 +1,10 @@
-import { OcrResultDetail } from "ocr"
 import { ExceedMaxNumberOfAttempts } from "../lib/exception"
 import { Record } from "../lib/logger"
-import { Move } from "./enums"
-import { Bounds, Component, CoverCheckOptions, ScrollToOptions, SearchByOcrRecognizeOptions, SearchByUiSelectOptions, SearchOptions } from "./interfaces"
-import { boundsScaling, closeByImageMatching, getScreenImage, levenshteinDistance, myBoundsContains, recognizeTextByLeftToRight, swipeDown, swipeLeft, swipeRight, swipeUp, waitRandomTime } from "./utils"
 import { closeDialogifExist } from "./click"
+import { Move } from "./enums"
+import { Bounds, ScrollToOptions, SearchByUiSelectOptions } from "./interfaces"
+import { closeByImageMatching, coverCheck } from "./ocr"
+import { boundsScreenInsideCheck, myBoundsContains, swipeDown, swipeLeft, swipeRight, swipeUp, waitRandomTime } from "./utils"
 
 /**
  * todo 躲避遮挡目标时会触发关闭按钮
@@ -15,7 +15,8 @@ import { closeDialogifExist } from "./click"
  * @param times 自身递归所用，当无法移动时且尝试三次返回无效后则退出当前app
  * @returns void
 */
-export function scrollTo(selector: string|UiSelector, options?: ScrollToOptions, range?: Bounds, prePx?:number, prePy?: number, scrollTimes: number = 0, avoidTimes: number = 0) :Component|undefined {
+export function scrollTo(selector: string|UiSelector, 
+    options?: ScrollToOptions, range?: Bounds, prePx?:number, prePy?: number, scrollTimes: number = 0, avoidTimes: number = 0) :UiObject|null {
     const top = options?.fixed? 0: range?.top || 0
     const bottom = options?.fixed? device.height: range?.bottom || device.height
     const left = options?.fixed? 0: range?.left || 0
@@ -29,10 +30,10 @@ export function scrollTo(selector: string|UiSelector, options?: ScrollToOptions,
     // Record.debug(`${component?.bounds}`)
     if(component && !options?.fixed) {
         // Record.debug("scrollTo")
-        let tmpTop = component.bounds.top
-        let tmpBottom = component.bounds.bottom
-        let tmpRight = component.bounds.right
-        let tmpLeft = component.bounds.left
+        let tmpTop = component.bounds().top
+        let tmpBottom = component.bounds().bottom
+        let tmpRight = component.bounds().right
+        let tmpLeft = component.bounds().left
         const pointY = (tmpTop+tmpBottom)/2
         const pointX = (tmpRight+tmpLeft)/2
         if(tmpBottom <= tmpTop){
@@ -125,106 +126,35 @@ export function scrollTo(selector: string|UiSelector, options?: ScrollToOptions,
     return component
 }
 
-export function coverCheck(component:Component, options?:CoverCheckOptions){
-    Record.debug("遮挡校验")
-    if(component.text === ""){
-        return false
-    }
-    const scale = options?.coverBoundsScaling || 1.3
-    const threshold = options?.threshold || 0.6
-    Record.debug(`text :${component.text}`)
-    const img = getScreenImage(boundsScaling(component.bounds, scale))
-    const textHeight = component.bounds.bottom - component.bounds.top
-    const bigScale = textHeight > 50 ? 1 : 50 / textHeight
-    const bigImg = images.scale(img, bigScale, bigScale)
-    img.recycle()
-    const grayImg = images.cvtColor(bigImg, "BGR2GRAY")
-    bigImg.recycle()
-    const adaptiveImg = images.adaptiveThreshold(grayImg, 255, "GAUSSIAN_C", "BINARY", 25, 0)
-    grayImg.recycle()
-    const str = options?.leftToRight?
-        recognizeTextByLeftToRight(adaptiveImg)
-        :ocr.recognizeText(adaptiveImg)
-    // grayImg.saveTo("/sdcard/result.jpg")
-    // app.viewFile("/sdcard/result.jpg")
-    adaptiveImg.recycle()
-    Record.debug(`ocr str:${str}`)
-    return str.search(component.text) == -1 && levenshteinDistance(component.text, str) < threshold
-}
-
-export function search(selector:string|UiSelector, options?:SearchOptions):Component|undefined{
-    let result: Component|undefined = undefined
+export function search(selector:string|UiSelector, options?:SearchByUiSelectOptions):UiObject|null{
+    let result: UiObject|null = null
 
     if(typeof selector === "string"){
         result = searchByUiSelect(textMatches(selector), options)
             ||searchByUiSelect(descMatches(selector), options)
-        if(result === undefined && options?.ocrRecognize){
-            result = searchByOcrRecognize(selector, options)
-        }
     } else {
         result = searchByUiSelect(selector, options)
     }
-    if(result === undefined && options?.waitFor){
-        Record.debug(selector.toString())
-        throw "控件不存在"
-    }
     return result
 }
 
-export function searchByOcrRecognize(str: string, options?:SearchByOcrRecognizeOptions):Component|undefined{
-    const img = getScreenImage(options?.bounds)
-    const grayImg = images.cvtColor(img, "BGR2GRAY")
-    img.recycle()
-    const adaptiveImg = images.adaptiveThreshold(grayImg, 255, "GAUSSIAN_C", "BINARY", 25, 0)
-    grayImg.recycle()
-    const res = ocr.recognize(adaptiveImg)
-    // adaptiveImg.saveTo("/sdcard/exit-big.png")
-    // app.viewFile("/sdcard/exit-big.png")
-    adaptiveImg.recycle()
-    let list:OcrResultDetail[] = []
-    // log(res)
-    for(let item of res.results){
-        // log(item.text)
-        if(RegExp("^"+str+"$").test(item.text)){
-            list.push(item)
-        }
-    }
-    Record.debug(`list length: ${list.length}`)
-    let result: Component|undefined = undefined
-    if(list.length > 0){
-        const index = options?.index? options.index:0
-        // log(index)
-        const tmp = list[index]
-        if(tmp){
-            if(options?.bounds){
-                const x = options.bounds.left||0
-                const y = options.bounds.top||0
-                tmp.bounds.left += x
-                tmp.bounds.right += x
-                tmp.bounds.top += y
-                tmp.bounds.bottom += y
-            }
-            result = {text: tmp.text,
-                bounds: tmp.bounds
-            }
-        }
-    }
-    return result
-}
-
-
-export function searchByUiSelect(selector:UiSelector, options?:SearchByUiSelectOptions):Component|undefined{
-    let result: Component|undefined = undefined
-    if(options?.waitFor){
-        if(!selector.findOne(10 * 1000)){
+export function searchByUiSelect(selector:UiSelector, options?:SearchByUiSelectOptions):UiObject|null{
+    let result: UiObject|null = null
+    const waitTime = options?.waitFor || 6
+    if(waitTime !== -1 && !selector.findOne(waitTime * 1000)){
+        if(options?.throwErrIfNotExist){
+            let find = false
             for(let i = 0; i < 3; i++){
-                if(!closeByImageMatching() && !closeDialogifExist()){
-                    back()
-                    waitRandomTime(4)
-                }
+                closeByImageMatching()
+                closeDialogifExist()
                 if(selector.findOne(5 * 1000)){
+                    find = true
                     break
                 }
+            }
+            if(!find){
+                Record.debug(selector.toString())
+                throw "控件不存在"
             }
         }
     }
@@ -234,12 +164,8 @@ export function searchByUiSelect(selector:UiSelector, options?:SearchByUiSelectO
     let list:any = selector.find()
     if(list.nonEmpty()){
         if(options?.fixed){
-            list = list.filter(element => {
-                const bounds = element.bounds()
-                return bounds.height() > 0 
-                    && bounds.width() > 0 
-                    && myBoundsContains({},bounds)
-            })
+            list = list.filter(
+                element => boundsScreenInsideCheck(element.bounds()))
         }
         if(options?.bounds){
             list = list.filter(element => {
@@ -248,29 +174,21 @@ export function searchByUiSelect(selector:UiSelector, options?:SearchByUiSelectO
                 return myBoundsContains(options.bounds, bounds)
             })
         }
-        list.sort(function(elementA:any, elementB:any){
-            const boundsA = elementA.bounds()
-            const boundsB = elementB.bounds()
-            const validA = boundsA.width() > 0 && boundsA.height() > 0
-            const validB = boundsB.width() > 0 && boundsB.height() > 0
-            if(validA && !validB){
-                return -1
-            } else if (!validA && validB){
-                return 1
-            } else {
-                return boundsA.centerY() - boundsB.centerY()
+        let first = 0
+        for(let i=0;i<list.length;i++){
+            const item = list[i]
+            if(boundsScreenInsideCheck(item.bounds())){
+                first = i
+                break
             }
-        })
+        }
         // for(const tmp of list){
         //     log(tmp.bounds())
         // }
-        const index = options?.index ? options.index:0
+        const index = options?.index ? options.index:first
         const tmp = list[index]
-        if(tmp !== undefined){
-            result = {
-                text: tmp.text(), 
-                bounds: tmp.bounds()
-            }
+        if(tmp){
+            result = tmp
         }
     }
     return result

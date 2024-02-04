@@ -1,7 +1,8 @@
 import { dialogClick, findAndClick, fixedClick, randomClick, scrollClick } from "../common/click";
+import { closeByImageMatching } from "../common/ocr";
 import { search } from "../common/search";
-import { closeByImageMatching, convertSecondsToMinutes, moveDown } from "../common/utils";
-import { MAX_CYCLES_COUNTS, NAME_VEDIO_WATERMELON, PACKAGE_VEDIO_WATERMELON } from "../global";
+import { convertSecondsToMinutes, moveDown, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_VEDIO_WATERMELON, NORMAL_WAIT_TIME, PACKAGE_VEDIO_WATERMELON } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { Base, BaseKey } from "./abstract/Base";
@@ -20,13 +21,16 @@ export class Watermelon extends Base {
     }
 
     reSearchTab(): void {
-        const component = search("我的", {waitFor:true,fixed:true})
-        if(component !== undefined){
-            const tmp:any = className("android.widget.LinearLayout")
-            .clickable(false)
-            .boundsInside(0, device.height*2/3, device.width, device.height)
-            .boundsContains(0, component.bounds.top,device.width, component.bounds.top).findOnce()
-            if(tmp !== null){
+        const component = search("我的", {
+            throwErrIfNotExist:true,fixed:true
+        })
+        if(component){
+            const tmp:any = search(
+                className("android.widget.LinearLayout")
+                .clickable(false)
+                .boundsInside(0, device.height*2/3, device.width, device.height)
+                .boundsContains(0, component.bounds().top,device.width, component.bounds().top))
+            if(tmp){
                 this.tab = id(tmp.id())
                 this.initialComponent = this.tab
                 Record.debug(`${this.tab}`)
@@ -65,15 +69,17 @@ export class Watermelon extends Base {
     @measureExecutionTime
     weight(): void {
         this.goto(-1)
-        const component = search("我的金币:",{waitFor:true})
-        if(component !== undefined){
+        const component = search("我的金币:",{
+            throwErrIfNotExist:true
+        })
+        if(component){
             const component1 = search("[0-9]+",{
                 bounds:{
-                    left:component.bounds.right,
-                    top:component.bounds.top,
-                    bottom:component.bounds.bottom}})
-            if(component1!==undefined){
-                const weight = parseInt(component1.text)
+                    left:component.bounds().right,
+                    top:component.bounds().top,
+                    bottom:component.bounds().bottom}})
+            if(component1){
+                const weight = parseInt(component1.text())
                 Record.debug(`${this.constructor.name}:${weight}`)
                 this.store(BaseKey.Weight, weight)
             }
@@ -86,7 +92,7 @@ export class Watermelon extends Base {
         if(findAndClick("立即签到.+",{fixed:true,feedback:true})){
             this.watchAdsForCoin("每日任务")
         } else {
-            if(scrollClick("签到","签到领金币")){
+            if(scrollClick("签到","签到领金币|明日签到")){
                 if(findAndClick("立即签到.+",{fixed:true,feedback:true})){
                     this.watchAdsForCoin("每日任务")
                 }
@@ -106,6 +112,7 @@ export class Watermelon extends Base {
     watchAds(): boolean {
         this.goto(-1)
         if(scrollClick("领取", "看广告赚金币")){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(text("每日任务"))
             return true
         }
@@ -116,22 +123,24 @@ export class Watermelon extends Base {
     watchLive(): void {
         this.goto(-1)
         if(scrollClick("领取", "看直播赚金币")){
-            if(findAndClick("直播宝箱",{disableCheckBeforeClick:true, fixed:true})){
-                while(text("再等一下").exists()){
-                    let tmp = text("开宝箱").findOne(35 * 1000)
-                    if(tmp != null){
+            if(findAndClick("直播宝箱",{
+                disableCoverCheck:true,
+                disableGrayCheck:true, 
+                fixed:true
+            })){
+                while(search("再等一下")){
+                    const tmp = search("开宝箱", {waitFor:40, fixed:true})
+                    if(tmp){
                         randomClick(tmp.bounds())
+                        waitRandomTime(2)
                         //会点击右上角的关闭
-                        closeByImageMatching(undefined, {
-                            middle: 1,
-                            left:2,
-                            right:3
-                        })
+                        closeByImageMatching()
                     } else {
                         break
                     }
                 }
             }
+            this.backUntilFind(text("每日任务"))
         }
     }
     @functionLog("吃饭打卡")
@@ -143,9 +152,11 @@ export class Watermelon extends Base {
             while(++cycleCounts < MAX_CYCLES_COUNTS 
                 && fixedClick("点击补卡")){
                 if(fixedClick("去补卡")){
+                    waitRandomTime(NORMAL_WAIT_TIME)
                     this.watch(text("已打卡"))
                 }
             }
+            this.backUntilFind(text("每日任务"))
         }
     }
 
@@ -163,12 +174,13 @@ export class Watermelon extends Base {
         Record.log(`预计刷视频${convertSecondsToMinutes(totalTime)}分钟`)
         moveDown(totalTime, 30)
     }
+
     @functionLog("看视频奖励领取")
     swipeReward():void{
         this.goto(-1)
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && findAndClick("可领取",{clickUntilGone:false})){
+            && findAndClick("可领取")){
             this.watchAdsForCoin("每日任务")
         }
     }
@@ -176,9 +188,9 @@ export class Watermelon extends Base {
     goto(num: number):void{
         if(num === -1){
             if(this.first){
-                fixedClick(id("com.ixigua.plugin.uglucky:id/root_view_duration_view_use_as_tag"))
-            } else {
-                this.backUntilFind(text("每日任务"))
+                if(fixedClick(id("com.ixigua.plugin.uglucky:id/root_view_duration_view_use_as_tag"))){
+                    this.first = false
+                }
             }
         } else {
             this.first = true

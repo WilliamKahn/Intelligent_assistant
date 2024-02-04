@@ -1,4 +1,5 @@
 import { dialogClick } from "../common/click";
+import { search } from "../common/search";
 import { NAME_READ_SEVEN_CATS_FREE, PACKAGE_READ_SEVEN_CATS_FREE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { AbstractFreeNovel } from "./abstract/AbstractFreeNovel";
@@ -15,8 +16,8 @@ export class SevenCatsFree extends AbstractFreeNovel{
     @measureExecutionTime
     weight(): void {
         this.goTo(this.tab, 2)
-        let tmp = textMatches(".*今日金币.*").findOnce()
-        if(tmp != null){
+        const tmp = search(".*今日金币.*")
+        if(tmp){
             const match = tmp.text().match(/[0-9]+今日金币/)
             if(match){
                 const weight = parseInt(match[0])

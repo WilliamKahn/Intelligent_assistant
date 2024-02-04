@@ -1,7 +1,8 @@
-import { dialogClick, findAndClick, fixedClick, normalClick, randomClick } from "../common/click";
-import { coverCheck, scrollTo, search, searchByOcrRecognize, searchByUiSelect } from "../common/search";
-import { getNumFromComponent, randomExecute, resizeX, resizeY } from "../common/utils";
-import { MAX_CYCLES_COUNTS, NAME_VEDIO_YOUSHI, PACKAGE_VEDIO_YOUSHI } from "../global";
+import { dialogClick, findAndClick, fixedClick, normalClick } from "../common/click";
+import { searchByOcrRecognize } from "../common/ocr";
+import { scrollTo, search } from "../common/search";
+import { convertSecondsToMinutes, getNumFromComponent, moveDown, randomExecute, resizeX, resizeY, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_VEDIO_YOUSHI, NORMAL_WAIT_TIME, PACKAGE_VEDIO_YOUSHI } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { AbstractArticle } from "./abstract/AbstractArticle";
@@ -18,9 +19,10 @@ export class YouShi extends AbstractArticle{
 
     getCoinStr(): string {
         const component = search("恭喜获得宝箱奖励")
-        const component2 = search("\\+[0-9]+金币", {bounds: {top: component?.bounds.bottom}})
-        if(component2 !== undefined){
-            return component2.text
+        const component2 = search("\\+[0-9]+金币", {
+            bounds: {top: component?.bounds().bottom}})
+        if(component2){
+            return component2.text()
         }
         return ""
     }
@@ -36,7 +38,6 @@ export class YouShi extends AbstractArticle{
         ])
         this.reward()
     }
-
     
     @measureExecutionTime
     medEff(): void {
@@ -57,7 +58,7 @@ export class YouShi extends AbstractArticle{
 
     @measureExecutionTime
     weight(): void {
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         if(this.scrollClick("现金收益")) {
             const component = searchByOcrRecognize(".*我的金币.*")
             if(component !== undefined){
@@ -70,7 +71,7 @@ export class YouShi extends AbstractArticle{
 
     @functionLog("签到")
     signIn(): void{
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         if(dialogClick("签到领金币")){
             this.watchAdsForCoin("日常任务")
         } else {//"签到失败"
@@ -82,8 +83,9 @@ export class YouShi extends AbstractArticle{
 
     @functionLog("看广告")
     watchAds(): boolean {
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         if(findAndClick("领福利")){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(text("日常任务"))
             return true
         }
@@ -92,7 +94,7 @@ export class YouShi extends AbstractArticle{
 
     @functionLog("吃饭补贴")
     mealSupp(): void {
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         if(findAndClick("吃饭补贴")){
             if(findAndClick("领取.*补贴[0-9]+金币", {fixed:true})){
                 this.watchAdsForCoin("日常任务")
@@ -102,7 +104,7 @@ export class YouShi extends AbstractArticle{
 
     @functionLog("走路赚钱")
     walkEarn(): void{
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         if(findAndClick("走路赚钱")){
             if(findAndClick("领取[0-9]+金币", {fixed:true, feedback:true})){
                 this.watchAdsForCoin("日常任务")
@@ -112,7 +114,7 @@ export class YouShi extends AbstractArticle{
 
     @functionLog("睡觉赚钱")
     sleepEarn(): void{
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         if(findAndClick("睡觉赚钱")){
             if(fixedClick("我睡醒了")){
                 if(fixedClick("领取[0-9]+金币")){
@@ -126,15 +128,22 @@ export class YouShi extends AbstractArticle{
     
     @functionLog("开启翻倍")
     doubleEarn(): void{
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         if(findAndClick("去翻倍|点击翻倍")){
             dialogClick("我知道了")
         }
     }
 
+    @functionLog("刷视频")
+    swipeVideo(totalTime: number): void {
+        this.goTo(this.tab, 1)
+        Record.log(`预计刷视频${convertSecondsToMinutes(totalTime)}分钟`)
+        moveDown(totalTime, 15)
+    }
+
     @functionLog("领取奖励")
     reward(): void {
-        this.goTo(this.tab, 2)
+        this.goTo(this.tab, 3)
         let cycleCounts = 0
         scrollTo("现金收益")
         while(++cycleCounts < MAX_CYCLES_COUNTS  && this.ocrClick("点击领取|点击抽奖")){

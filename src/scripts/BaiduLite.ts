@@ -1,10 +1,12 @@
 import { dialogClick, findAndClick, fixedClick, normalClick, randomClick, scrollClick, selectedClick } from "../common/click";
+import { closeByImageMatching } from "../common/ocr";
 import { search } from "../common/search";
-import { closeByImageMatching, doFuncAtGivenTime, moveDown, randomExecute, randomMoveDown, waitRandomTime } from "../common/utils";
-import { MAX_CYCLES_COUNTS, NAME_VEDIO_BAIDU_LITE, PACKAGE_VEDIO_BAIDU_LITE } from "../global";
+import { convertSecondsToMinutes, moveDown, randomMoveDown, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_VEDIO_BAIDU_LITE, NORMAL_WAIT_TIME, PACKAGE_VEDIO_BAIDU_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
+import { Record } from "../lib/logger";
 import { AbstractBaidu } from "./abstract/AbstractBaidu";
-import { Base, BaseKey } from "./abstract/Base";
+import { BaseKey } from "./abstract/Base";
 
 export class BaiduLite extends AbstractBaidu {
 
@@ -44,9 +46,15 @@ export class BaiduLite extends AbstractBaidu {
     @measureExecutionTime
     weight(): void {
         this.goto(4)
-        const component = search("[0-9]+", {index:2})
-        if(component != undefined){
-            this.store(BaseKey.Weight, component.text)
+        const coin = search("金币")
+        if(coin){
+            const parent = coin.parent()
+            if(parent){
+                const weight = parent.child(0)
+                if(weight){
+                    this.store(BaseKey.Weight, parseInt(weight.text()))
+                }
+            }
         }
     }
 
@@ -64,7 +72,6 @@ export class BaiduLite extends AbstractBaidu {
             scrollClick("随心搜", "搜索赚金币.*")){
             waitRandomTime(15)
             this.backUntilFind(text("每日任务"))
-            waitRandomTime(4)
             this.watchAdsForCoin("每日任务")
         }
     }
@@ -84,6 +91,7 @@ export class BaiduLite extends AbstractBaidu {
         this.goto(2)
         if(scrollClick("去领取", "吃饭补贴")){
             if(fixedClick("(补签)?领取.*补贴")){
+                waitRandomTime(NORMAL_WAIT_TIME)
                 this.watch(textMatches(".*时间.*"))
             }
         }
@@ -92,16 +100,15 @@ export class BaiduLite extends AbstractBaidu {
     @functionLog("刷视频")
     swipeVideo(totalTime: number): void {
         this.goto(0)
-        if(selectedClick("推荐", 170)){
-            while(totalTime > 0){
-                const slideTime = random(10, 30)
-                const waitTime = random(10, 30)
-                moveDown(slideTime, 4)
-                normalClick(device.width/2, device.height/2)
-                randomMoveDown(waitTime, 5, 20)
-                totalTime -= slideTime
-                totalTime -= waitTime
-                this.backUntilFind(text("推荐"))
+        if(selectedClick("发现", 170)){
+            const parent = search(className("androidx.recyclerview.widget.RecyclerView").depth(15))
+            if(parent){
+                const child = parent.child(1)
+                if(child){
+                    randomClick(child.bounds())
+                    Record.log(`预计刷视频${convertSecondsToMinutes(totalTime)}分钟`)
+                    moveDown(totalTime, 30)
+                }
             }
         }
     }

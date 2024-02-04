@@ -1,6 +1,8 @@
-import { findAndClick, fixedClick } from "../common/click";
-import { getScreenImage, resizeX, resizeY, waitRandomTime } from "../common/utils";
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, NAME_READ_WANCHAO, PACKAGE_READ_WANCHAO } from "../global";
+import { findAndClick, fixedClick, ocrClick } from "../common/click";
+import { getScreenImage } from "../common/ocr";
+import { search } from "../common/search";
+import { resizeX, resizeY, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_READ_WANCHAO, PACKAGE_READ_SEVEN_CATS_FREE, PACKAGE_READ_TOMATO, PACKAGE_READ_WANCHAO, sevenCatsFree, tomato } from "../global";
 import { measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { Base, BaseKey } from "./abstract/Base";
@@ -33,7 +35,9 @@ export class WanChao extends Base {
             while(++cycleCounts < MAX_CYCLES_COUNTS 
                 && findAndClick("待完成", {
                     waitTimes:10, 
-                    disableCheckBeforeClick:true})) {
+                    disableCoverCheck:true,
+                    disableGrayCheck:true
+                })) {
                 back()
                 waitRandomTime(4)
             }
@@ -43,7 +47,7 @@ export class WanChao extends Base {
                     swipe(box.bounds().centerX(), box.bounds().centerY(), device.width,box.bounds().centerY()+random(-25,0), 100)
                     waitRandomTime(3)
                 }
-                if(findAndClick("抽奖", {ocrRecognize:true, bounds:{top:200}})){
+                if(ocrClick("抽奖", {bounds:{top:200}})){
                     let money = textMatches("[0-9]+\.[0-9]+元")
                     .boundsInside(resizeX(108),resizeY(1140),resizeX(972),resizeY(1323)).findOnce()
                     if(money != null) {
@@ -99,11 +103,11 @@ export class WanChao extends Base {
 
     
     isGrayColor(red:number, green:number, blue:number): number {
-    // 计算RGB通道值的标准差
-    if((red+green+blue)>200 && (red+green+blue)< 500) {
-        return Math.sqrt((Math.pow(red - green, 2) + Math.pow(red - blue, 2) + Math.pow(green - blue, 2)) / 3);
-    } else {
-        return 100
+        // 计算RGB通道值的标准差
+        if((red+green+blue)>200 && (red+green+blue)< 500) {
+            return Math.sqrt((Math.pow(red - green, 2) + Math.pow(red - blue, 2) + Math.pow(green - blue, 2)) / 3);
+        } else {
+            return 100
+        }
     }
-}
 }

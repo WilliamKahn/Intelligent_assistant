@@ -1,8 +1,9 @@
 import { dialogClick, findAndClick, fixedClick, scrollClick } from "../common/click";
 import { Move } from "../common/enums";
-import { scrollTo, search } from "../common/search";
-import { closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, doFuncAtGivenTimeByEstimate, moveDown, randomExecute, resizeX, resizeY, swipeDown, waitRandomTime } from "../common/utils";
-import { MAX_CYCLES_COUNTS, NAME_VEDIO_KUAISHOU, PACKAGE_VEDIO_KUAISHOU } from "../global";
+import { closeByImageMatching } from "../common/ocr";
+import { search } from "../common/search";
+import { convertSecondsToMinutes, doFuncAtGivenTimeByEstimate, moveDown, randomExecute, swipeDown, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_VEDIO_KUAISHOU, NORMAL_WAIT_TIME, PACKAGE_VEDIO_KUAISHOU } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { Base, BaseKey } from "./abstract/Base";
@@ -15,6 +16,7 @@ export class KuaiShou extends Base{
         this.packageName = PACKAGE_VEDIO_KUAISHOU
         this.tab = id(this.packageName+":id/tab_layout")
         this.initialComponent = this.tab
+        this.dialogCheck = false
         this.depth = 1
         this.lowEff1Inheritance = true
         this.lowEff2Inheritance = true
@@ -53,17 +55,18 @@ export class KuaiShou extends Base{
     @measureExecutionTime
     weight(): void {
         this.goto(-1)
-        if(findAndClick("金币收益", {clickUntilGone:false})){
+        if(findAndClick("金币收益")){
             const component = search("[0-9]+金币")
-            if(component !== undefined){
-                const weight = parseInt(component.text)
+            if(component){
+                const weight = parseInt(component.text())
                 this.store(BaseKey.Weight, weight)
             }
+            this.backUntilFind(text("日常任务"))
         }
     }
 
     beforeDoTask(): void {
-        if(findAndClick("首页",{fixed:true})){
+        if(fixedClick("首页")){
             this.initialNum = 0
         }
     }
@@ -96,9 +99,9 @@ export class KuaiShou extends Base{
     watchAds(): boolean {
         this.goto(-1)
         if(scrollClick("领福利 赚更多", "看广告得.*金币", {
-            clickUntilGone: true,
             leftToRight: true
         })){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(text("日常任务"))
             return true
         }
@@ -110,7 +113,6 @@ export class KuaiShou extends Base{
         this.goto(-1)
         if(scrollClick("去观看 限时领", "看直播得.*金币", {
             coverBoundsScaling:1.2,
-            clickUntilGone:true,
             leftToRight: true
         })){
             for(let i = 0;i < 6;i++){
@@ -126,7 +128,6 @@ export class KuaiShou extends Base{
             this.backUntilFind(text("日常任务"))
             if(scrollClick("领金币 限时领", "看直播得.*金币", {
                 coverBoundsScaling: 1.2,
-                clickUntilGone:true,
                 leftToRight: true
             })){
                 dialogClick("知道了")
@@ -143,8 +144,10 @@ export class KuaiShou extends Base{
                 this.watchAdsForCoin("看直播")
             }
             while(++cycleCounts < MAX_CYCLES_COUNTS && fixedClick(".*待补签")){
+                waitRandomTime(NORMAL_WAIT_TIME)
                 this.watch(text("已补签"))
             }
+            this.backUntilFind(text("日常任务"))
         }
     }
 
@@ -183,8 +186,8 @@ export class KuaiShou extends Base{
                 && findAndClick(id(this.packageName+":id/editor_holder_text"), {
                     fixed:true, 
                     threshold:0.5})){
-                let tmp = id(this.packageName+":id/editor").findOnce()
-                if(tmp != null){
+                const tmp = search(id(this.packageName+":id/editor"))
+                if(tmp){
                     tmp.setText("打卡")
                     waitRandomTime(3)
                     if(fixedClick(id(this.packageName+":id/finish_button"))){
@@ -233,11 +236,10 @@ export class KuaiShou extends Base{
                         this.first = false
                     }
                 }
-            } else {
-                this.backUntilFind(text("日常任务"))
             }
         } else {
             this.goTo(this.tab, num)
+            this.first = true
         }
     }
 }

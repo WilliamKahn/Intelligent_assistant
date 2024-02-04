@@ -36,9 +36,11 @@ export function init() {
         Record.debug("子线程启动")
         // @ts-ignore
         findAndClick(className("android.widget.Button").textMatches(".?立即开始.?|.?允许.?"),{
-            waitFor:true,
-            clickUntilGone:true,
-            disableCheckBeforeClick:true,
+            waitFor:10,
+            waitTimes:2.5,
+            throwErrIfNotExist:true,
+            disableCoverCheck:true,
+            disableGrayCheck:true,
             fixed:true
         })
     })

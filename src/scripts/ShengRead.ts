@@ -1,7 +1,8 @@
-import { dialogClick, findAndClick, fixedClick, readClick, scrollClick } from "../common/click"
-import { scrollTo } from "../common/search"
-import { randomExecute, closeByImageMatching, padZero, getNumFromComponent } from "../common/utils"
-import { MAX_CYCLES_COUNTS, NAME_READ_SHENGREAD, PACKAGE_READ_SHENGREAD } from "../global"
+import { dialogClick, findAndClick, findByOcrAndClick, fixedClick, ocrClick, readClick, scrollClick } from "../common/click"
+import { closeByImageMatching } from "../common/ocr"
+import { scrollTo, search } from "../common/search"
+import { randomExecute, padZero, getNumFromComponent, waitRandomTime } from "../common/utils"
+import { MAX_CYCLES_COUNTS, NAME_READ_SHENGREAD, NORMAL_WAIT_TIME, PACKAGE_READ_SHENGREAD } from "../global"
 import { measureExecutionTime, functionLog } from "../lib/decorators"
 import { Record } from "../lib/logger"
 import { Base, BaseKey } from "./abstract/Base"
@@ -46,8 +47,9 @@ export class ShengRead extends Base {
     @measureExecutionTime
     weight(): void {
         this.goTo(desc("discovery_button"), -1)
-        if(findAndClick("金币[0-9]+", {clickUntilGone:false})){
+        if(findAndClick("金币[0-9]+")){
             if(fixedClick("金币明细")){
+                waitRandomTime(4)
                 const year = this.startTime.getFullYear()
                 const month = padZero(this.startTime.getMonth() + 1)
                 const day = padZero(this.startTime.getDate())
@@ -64,7 +66,10 @@ export class ShengRead extends Base {
                 }
                 Record.debug(`weight: ${weight}`)
                 this.store(BaseKey.Weight, weight)
+                back()
             }
+            waitRandomTime(4)
+            back()
         }
     }
 
@@ -75,13 +80,12 @@ export class ShengRead extends Base {
     @functionLog("阅读")
     readBook(totalTime: number): void {
         this.goTo(desc("bookstore_button"), -1)
-        let tmp = id(this.packageName+":id/channel_tab").findOnce()
-        if(tmp != null && findAndClick("推荐", 
-        {fixed:true, ocrRecognize:true, bounds: tmp.bounds(), selectedThreshold:100})){
+        const tmp = search(id(this.packageName+":id/channel_tab"))
+        if(tmp && findByOcrAndClick("推荐",
+        {bounds: tmp.bounds(), selectedThreshold:100})){
             if(findAndClick(id("com.zhangyue.iReader.bookStore:id/id_tv_book_name"), {
                 index:random(0, 5),
-                waitFor:true,
-                clickUntilGone:true,
+                throwErrIfNotExist:true,
                 disableCoverCheck:true
             })){
                 this.read(totalTime)
@@ -93,8 +97,15 @@ export class ShengRead extends Base {
     readReward(): void {
         this.goTo(desc("discovery_button"), -1)
         let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS 
-            && scrollClick("领取", "每日阅读福利", {clickUntilGone:false})) {
+        const component = scrollTo("每日阅读福利", {
+            throwErrIfNotExist:true
+        }, {bottom:device.height*2/3})
+        while(++cycleCounts < MAX_CYCLES_COUNTS && component
+            && ocrClick("领取", {
+                bounds:{
+                    top: component.bounds().top - 20,
+                    bottom: component.bounds().bottom + 200
+                }})) {
             this.watchAdsForCoin("去提现")
             if (text("恭喜获得").exists()) {
                 closeByImageMatching()
@@ -129,6 +140,7 @@ export class ShengRead extends Base {
     watchAds(): boolean {
         this.goTo(desc("discovery_button"), -1)
         if(scrollClick("去观看", "看视频赚金币与声望")){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(text("去提现"))
             if(!dialogClick("知道了")){
                 closeByImageMatching()

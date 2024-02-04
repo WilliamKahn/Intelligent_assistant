@@ -1,8 +1,9 @@
-import { dialogClick, findAndClick, fixedClick, normalClick, scrollClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, normalClick, ocrClick, scrollClick } from "../common/click";
 import { Move } from "../common/enums";
-import { scrollTo, search, searchByOcrRecognize } from "../common/search";
-import { closeByImageMatching, convertSecondsToMinutes, getNumFromComponent, getScreenImage, moveDown, randomExecute, resizeX, resizeY, swipeDown, swipeUp, waitRandomTime } from "../common/utils";
-import { MAX_CYCLES_COUNTS, MIN_RUN_THRESHOLD, NAME_READ_ARTICLE_LITE, PACKAGE_READ_ARTICLE_LITE } from "../global";
+import { closeByImageMatching, getScreenImage, searchByOcrRecognize } from "../common/ocr";
+import { scrollTo, search } from "../common/search";
+import { convertSecondsToMinutes, getNumFromComponent, moveDown, randomExecute, replaceCharacters, resizeX, resizeY, swipeDown, swipeUp, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, MIN_RUN_THRESHOLD, NAME_READ_ARTICLE_LITE, NORMAL_WAIT_TIME, PACKAGE_READ_ARTICLE_LITE } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { CurrentAppBanned } from "../lib/exception";
 import { Record } from "../lib/logger";
@@ -53,8 +54,8 @@ export class ArticleLite extends AbstractArticle{
         this.goTo(this.tab, 2)
         scrollTo("现金收益")
         const component = search("[0-9]+金币")
-        if(component !== undefined){
-            const weight = parseInt(component.text)
+        if(component){
+            const weight = parseInt(component.text())
             Record.debug(`${weight}`)
             this.store(BaseKey.Weight, weight)
         }
@@ -64,6 +65,7 @@ export class ArticleLite extends AbstractArticle{
     signIn(): void {
         this.goTo(this.tab, 2)
         if(dialogClick("额外再领|翻倍领取")){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(text("任务"))
             closeByImageMatching()
         }
@@ -98,6 +100,7 @@ export class ArticleLite extends AbstractArticle{
     watchAds(): boolean {
         this.goTo(this.tab, 2)
         if(this.scrollClick("领福利")){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(textMatches("任务"))
             return true
         }
@@ -148,12 +151,7 @@ export class ArticleLite extends AbstractArticle{
         let cycleCounts = 0
         this.scrollTo("现金收益")
         while(++cycleCounts < MAX_CYCLES_COUNTS  
-            && findAndClick("点击领取|点击抽奖", {
-            ocrRecognize:true,
-            // bounds:{
-            //     bottom:device.height/3,
-            //     left:device.width/2
-            // }
+            && ocrClick("点击领取|点击抽奖", {
         })){
             this.watchAdsForCoin("任务")
             if(dialogClick("开始抽奖")){
@@ -180,12 +178,13 @@ export class ArticleLite extends AbstractArticle{
         } else {
             swipeUp(Move.Normal, 1000)
         }
-        waitRandomTime(2)
-        if(searchByOcrRecognize("现金收益.?") !== undefined){
-            this.moveFlag = true
-        }
-        if(searchByOcrRecognize("更多任务.?") !== undefined){
-            this.moveFlag = false
+        const sign = searchByOcrRecognize("现金收益.?|如有疑问请参考活动规则", {waitFor:2})
+        if(sign){
+            if(RegExp("^"+replaceCharacters("如有疑问请参考活动规则")+"$").test(sign.text)){
+                this.moveFlag = false
+            } else {
+                this.moveFlag = true
+            }   
         }
     }
 

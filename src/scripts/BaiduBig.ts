@@ -1,11 +1,12 @@
-import { findAndClick, fixedClick, ocrClick, randomClick, scrollClick, selectedClick } from "../common/click";
-import { scrollTo, searchByOcrRecognize } from "../common/search";
-import { closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, moveDown, waitRandomTime } from "../common/utils";
-import { MAX_CYCLES_COUNTS, NAME_VEDIO_BAIDU_BIG, PACKAGE_VEDIO_BAIDU_BIG } from "../global";
+import { findAndClick, fixedClick, randomClick, selectedClick } from "../common/click";
+import { searchByOcrRecognize } from "../common/ocr";
+import { scrollTo, search } from "../common/search";
+import { convertSecondsToMinutes, moveDown, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_VEDIO_BAIDU_BIG, NORMAL_WAIT_TIME, PACKAGE_VEDIO_BAIDU_BIG } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { AbstractBaidu } from "./abstract/AbstractBaidu";
-import { Base, BaseKey } from "./abstract/Base";
+import { BaseKey } from "./abstract/Base";
 
 export class BaiduBig extends AbstractBaidu {
 
@@ -43,24 +44,27 @@ export class BaiduBig extends AbstractBaidu {
     @measureExecutionTime
     weight(): void {
         this.goto(-1)
-        scrollTo("现金收益")
-        const component = searchByOcrRecognize("[0-9]+", {bounds:{bottom:device.height/5}})
-        if(component !== undefined){
-            const weight = parseInt(component.text)
-            this.store(BaseKey.Weight, weight)
+        const coin = scrollTo("现金收益")
+        if(coin){
+            const component = searchByOcrRecognize("[0-9]+", {bounds:{bottom:device.height/5}})
+            if(component){
+                const weight = parseInt(component.text)
+                this.store(BaseKey.Weight, weight)
+            }
         }
     }
 
     @functionLog("听书")
     listenBook(): void {
         this.goto(1)
-        const tmp = text(random(1,4).toString()).findOnce()
-        if(tmp !== null){
+        const tmp = search(random(1,4).toString())
+        if(tmp){
             const parent = tmp.parent()
-            if(parent !== null){
+            if(parent){
                 randomClick(parent.bounds())
                 if(fixedClick("开始听书|续播")){
                     if(fixedClick("立即看视频领[0-9]+分钟")){
+                        waitRandomTime(NORMAL_WAIT_TIME)
                         this.watch(text("看视频领免费时长"))
                     }
                 }

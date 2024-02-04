@@ -43,6 +43,7 @@ import { Watermelon } from "./scripts/Watermelon";
 import { XinyaFree } from "./scripts/XinyaFree";
 import { YouShi } from "./scripts/YouShi";
 import { BaseKey } from "./scripts/abstract/Base";
+import { FontCharacterMap } from "./common/interfaces";
 
 
 //*******************全局常量****************************/
@@ -59,6 +60,8 @@ export const VERSION = "0.7.3";
 export const WX_PUSHER_URL = "https://wxpusher.zjiecode.com/api/send/message"
 //微信推送应用token
 export const APP_TOKEN = "AT_2vEaUfXFmwMKybX7YeX3yCJFrmc7TFlD"
+export const INCOME_THRESHOLD:number = 0.0035
+export const INCOME_RECOVER:number = 0.0005
 //最大返回次数
 export const MAX_BACK_COUNTS = 10
 //最大点击次数
@@ -66,7 +69,9 @@ export const MAX_CLICK_COUNTS = 8
 //最大重启app次数
 export const MAX_RETRY_COUNTS = 3
 //点击后等待时间，单位s
-export const WAIT_TIME_AFTER_CLICK = 6
+export const WAIT_TIME_UNTIL_CLICK = 1
+//等待查找时间
+export const NORMAL_WAIT_TIME = 6
 //最大循环次数
 export const MAX_CYCLES_COUNTS = 25
 //基础脚本执行时间(s)
@@ -90,6 +95,18 @@ export const STORAGE = storages.create(STORAGE_WEIGHT_CONTAINER);
 //基于设备分辨率
 export const DEVICE_WIDTH = 1080
 export const DEVICE_HEIGHT = 2340
+//ocr错误字体集
+export const characterMapping: FontCharacterMap = {
+    "逛": ["逛", "进", "连", "证"],
+    "币": ["币", "市"],
+    "走": ["走", "定"],
+    "睡": ["睡", ""],
+    "赚": ["赚", "兼"],
+    "一": ["一",""],
+    "剧": ["剧", "刷"],
+    "首页": ["首页", "锁"]
+    // 其他字符的映射
+}
 
 export const PACKAGE_HAMIBOT = "com.hamibot.hamibot"
 //脚本包名

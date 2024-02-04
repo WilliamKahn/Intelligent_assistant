@@ -1,7 +1,8 @@
 import { dialogClick, findAndClick, fixedClick, readClick, scrollClick, selectedClick } from "../common/click"
+import { closeByImageMatching } from "../common/ocr"
 import { search } from "../common/search"
-import { closeByImageMatching } from "../common/utils"
-import { MAX_CYCLES_COUNTS, NAME_READ_XIMALAYA_LITE, PACKAGE_READ_XIMALAYA_LITE } from "../global"
+import { waitRandomTime } from "../common/utils"
+import { MAX_CYCLES_COUNTS, NAME_READ_XIMALAYA_LITE, NORMAL_WAIT_TIME, PACKAGE_READ_XIMALAYA_LITE } from "../global"
 import { functionLog, measureExecutionTime } from "../lib/decorators"
 import { Base, BaseKey } from "./abstract/Base"
 
@@ -32,14 +33,14 @@ export class XimalayaLite extends Base {
         this.goTo(this.tab, 3)
         if(findAndClick("我的金币")){
             const component = search("今日金币")
-            if(component !== undefined){
+            if(component){
                 const component1 = search("[0-9]+", {bounds:{
-                    top:component.bounds.top,
-                    left:component.bounds.left,
-                    right:component.bounds.right
+                    top:component.bounds().top,
+                    left:component.bounds().left,
+                    right:component.bounds().right
                 }})
-                if(component1 !== undefined){
-                    const weight = parseInt(component1.text)
+                if(component1){
+                    const weight = parseInt(component1.text())
                     this.store(BaseKey.Weight, weight)
                 }
             }
@@ -51,11 +52,9 @@ export class XimalayaLite extends Base {
     signIn(): void{
         //每日签到 签到
         this.goTo(this.tab, 3)
-        if(fixedClick("立即领取")){
-            closeByImageMatching()
-        }
-        if (dialogClick("立即签到.+")) {
-            this.watchAdsForCoin("日常福利")
+        if(fixedClick("去芭芭农场再领[0-9]+金币")){
+            waitRandomTime(NORMAL_WAIT_TIME)
+            this.watch(text("日常福利"))
         }
     }
 
@@ -71,6 +70,7 @@ export class XimalayaLite extends Base {
     watchAds(): boolean {
         this.goTo(this.tab, 3)
         if(findAndClick("看视频")){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(text("日常福利"))
             closeByImageMatching()
             return true
@@ -81,9 +81,10 @@ export class XimalayaLite extends Base {
     @functionLog("听书")
     listenBook(): void {
         this.goTo(this.tab, 0)
-        if(selectedClick("推荐", 170)){
-            if(readClick(id(this.packageName+":id/main_tv_album_title"), random(0,7))){
-                fixedClick("继续播放|立即播放")
+        if(readClick(id(this.packageName+":id/main_tv_album_title"), random(0,7))){
+            if(fixedClick("继续播放|立即播放")){
+                this.backUntilFind(text("目录"))
+                back()
             }
         }
     }
@@ -91,7 +92,9 @@ export class XimalayaLite extends Base {
     @functionLog("领取听书奖励")
     listenReward():void{
         this.goTo(this.tab, 3)
-        if(scrollClick("领金币", "听书领金币",{clickUntilGone:false})){
+        let cycleCounts = 0
+        while(++cycleCounts < MAX_CYCLES_COUNTS
+            && scrollClick("领金币", "听书领金币")){
             this.watchAdsForCoin("日常福利")
             closeByImageMatching()
         }

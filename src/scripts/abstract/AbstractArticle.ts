@@ -1,13 +1,10 @@
-import { dialogClick, findAndClick, fixedClick, normalClick, ocrClick, randomClick, scrollClick, selectedClick } from "../../common/click";
+import { randomClick } from "../../common/click";
 import { Move } from "../../common/enums";
 import { SearchByOcrRecognizeOptions } from "../../common/interfaces";
-import { coverCheck, scrollTo, search, searchByOcrRecognize, searchByUiSelect } from "../../common/search";
-import { closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, getNumFromComponent, moveDown, randomExecute, resizeX, resizeY, swipeDown, swipeUp, waitRandomTime } from "../../common/utils";
-import { BASE_ASSIMT_TIME, MAX_CYCLES_COUNTS, MIN_RUN_THRESHOLD } from "../../global";
-import { functionLog, measureExecutionTime } from "../../lib/decorators";
-import { CurrentAppBanned } from "../../lib/exception";
-import { Record } from "../../lib/logger";
-import { Base, BaseKey } from "./Base";
+import { closeByImageMatching, coverCheck, searchByOcrRecognize } from "../../common/ocr";
+import { scrollTo, search } from "../../common/search";
+import { swipeDown, swipeUp, waitRandomTime } from "../../common/utils";
+import { Base } from "./Base";
 
 export abstract class AbstractArticle extends Base {
 
@@ -23,9 +20,10 @@ export abstract class AbstractArticle extends Base {
         this.exchangeRate = 33000
     }
 
-    scrollClick(text:string, options?:SearchByOcrRecognizeOptions): boolean{
+    scrollClick(text:string, options:SearchByOcrRecognizeOptions = {}): boolean{
         let cycleCounts = 0
-        let component = searchByOcrRecognize(text)
+        let component = searchByOcrRecognize(text, options)
+        options.waitFor = 0
         while(++cycleCounts < this.moveTimes
              && component === undefined){
             this.move()
@@ -34,7 +32,7 @@ export abstract class AbstractArticle extends Base {
         if(cycleCounts >= this.moveTimes){
             return false
         } else {
-            if(component !== undefined){
+            if(component){
                 randomClick(component.bounds)
                 return true
             }
@@ -53,16 +51,20 @@ export abstract class AbstractArticle extends Base {
     }
 
     move(): void {
-        const before = search("每日凌晨.*", {waitFor:true})
+        const before = search("每日凌晨.*", {
+            throwErrIfNotExist:true
+        })
         if(this.moveFlag){
             swipeDown(Move.Fast, 1000)
         } else {
             swipeUp(Move.Fast, 1000)
         }
         waitRandomTime(2)
-        const after = search("每日凌晨.*", {waitFor:true})
+        const after = search("每日凌晨.*", {
+            throwErrIfNotExist:true
+        })
         if(before && after){
-            if(before.bounds.top+before.bounds.bottom=== after.bounds.top+after.bounds.bottom){
+            if(before.bounds().top+before.bounds().bottom === after.bounds().top+after.bounds().bottom){
                 if(!closeByImageMatching()){
                     this.moveFlag = !this.moveFlag
                 }
@@ -73,12 +75,12 @@ export abstract class AbstractArticle extends Base {
     }
 
     ocrClick(text:string):boolean{
-        const component = searchByUiSelect(textMatches(text))
-        if(component !== undefined){
+        const component = scrollTo(textMatches(text))
+        if(component){
             if(coverCheck(component)){
                 return false
             } else {
-                randomClick(component.bounds)
+                randomClick(component.bounds())
                 return true
             }
         }

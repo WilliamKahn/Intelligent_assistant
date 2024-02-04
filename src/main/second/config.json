@@ -515,7 +515,7 @@
             "mealSupp|吃饭补贴":"吃饭补贴",
             "watchAds|看广告":"看广告",
             "swipeVideo|刷视频":"刷视频(分钟)",
-            "swipeReward|刷视频奖励领取":"刷视频奖励领取"
+            "swipeReward|领取刷视频奖励":"领取刷视频奖励"
         },
         "default":[
             "signIn|签到",
@@ -524,14 +524,14 @@
             "mealSupp|吃饭补贴",
             "watchAds|看广告",
             "swipeVideo|刷视频",
-            "swipeReward|刷视频奖励领取"
+            "swipeReward|领取刷视频奖励"
         ]
     },
     {
         "name": "BaiduLite",
         "type": "textarea",
         "label": "执行流程",
-        "default": "签到\n开宝箱\n搜索得金币\n吃饭补贴\n循环(10){\n看广告\n}\n循环(3){\n刷视频(20)\n开宝箱\n刷视频奖励领取\n}"
+        "default": "签到\n开宝箱\n搜索得金币\n吃饭补贴\n循环(10){\n看广告\n}\n循环(3){\n刷视频(20)\n开宝箱\n领取刷视频奖励\n}"
     },
     {
         "label": "18.百度大字版",
@@ -545,8 +545,8 @@
             "watchAds|看广告":"看广告",
             "swipeVideo|刷视频":"刷视频(分钟)",
             "dailyReward|领取日常奖励":"领取日常奖励",
-            "listenReward|听书奖励领取":"听书奖励领取",
-            "swipeReward|刷视频奖励领取":"刷视频奖励领取"
+            "listenReward|领取听书奖励":"领取听书奖励",
+            "swipeReward|领取刷视频奖励":"领取刷视频奖励"
         },
         "default":[
             "signIn|签到",
@@ -556,15 +556,15 @@
             "watchAds|看广告",
             "swipeVideo|刷视频",
             "dailyReward|领取日常奖励",
-            "listenReward|听书奖励领取",
-            "swipeReward|刷视频奖励领取"
+            "listenReward|领取听书奖励",
+            "swipeReward|领取刷视频奖励"
         ]
     },
     {
         "name": "BaiduBig",
         "type": "textarea",
         "label": "执行流程",
-        "default": "签到\n开宝箱\n听书\n搜索得金币\n循环(10){\n看广告\n}\n开宝箱\n领取日常奖励\n循环(3){\n刷视频(20)\n开宝箱\n刷视频奖励领取\n}"
+        "default": "签到\n开宝箱\n听书\n搜索得金币\n循环(10){\n看广告\n}\n开宝箱\n领取日常奖励\n领取听书奖励\n循环(3){\n刷视频(20)\n开宝箱\n领取刷视频奖励\n}"
     },
     {
         "label": "19.有柿",
@@ -896,7 +896,17 @@
             "swipeVideo|刷视频":"刷视频(分钟)",
             "reward|领取奖励":"领取奖励",
             "swipeReward|刷视频奖励领取":"刷视频奖励领取"
-        }
+        },
+        "default":[
+            "signIn|签到",
+            "openTreasure|开宝箱",
+            "doubleEarn|奖励翻倍",
+            "toSearch|搜一搜赚钱",
+            "randomSearch|随机搜赚钱",
+            "swipeVideo|刷视频",
+            "reward|领取奖励",
+            "swipeReward|刷视频奖励领取"
+        ]
     },
     {
         "name": "LightningSearch",

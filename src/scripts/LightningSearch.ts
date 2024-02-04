@@ -1,6 +1,7 @@
-import { dialogClick, findAndClick, fixedClick, normalClick, readClick } from "../common/click"
-import { scrollTo, search } from "../common/search"
-import { close, closeByImageMatching, convertSecondsToMinutes, getNumFromComponent, getScreenImage, moveDown, randomExecute, resizeX, resizeY } from "../common/utils"
+import { dialogClick, findAndClick, fixedClick, normalClick } from "../common/click"
+import { closeByImageMatching, getScreenImage } from "../common/ocr"
+import { search } from "../common/search"
+import { convertSecondsToMinutes, getNumFromComponent, moveDown, randomExecute, resizeX, resizeY } from "../common/utils"
 import { MAX_CYCLES_COUNTS, MIN_RUN_THRESHOLD, NAME_VEDIO_LIGHTNING_SEARCH, PACKAGE_VEDIO_LIGHTNING_SEARCH } from "../global"
 import { functionLog, measureExecutionTime } from "../lib/decorators"
 import { CurrentAppBanned } from "../lib/exception"
@@ -33,15 +34,15 @@ export class LightningSearch extends AbstractArticle {
     lowEff1(time: number): void {
         this.swipeVideo(time)
         this.openTreasure()
-        this.swipeReward()
+        this.reward()
     }
 
     @measureExecutionTime
     weight(): void {
         this.goTo(this.tab, 3)
         const component = search("[0-9]+金币")
-        if(component!== undefined){
-            const weight = getNumFromComponent(component.text)
+        if(component){
+            const weight = getNumFromComponent(component.text())
             Record.debug(`weight: ${weight}`)
             this.store(BaseKey.Weight, weight)
         }
@@ -50,10 +51,10 @@ export class LightningSearch extends AbstractArticle {
     @functionLog("签到")
     signIn(): void {
         this.goTo(this.tab, 3)
-        if(dialogClick("立即签到")){
+        if(dialogClick("立即签到.+")){
             this.watchAdsForCoin("日常任务")
         } else {//"签到失败"
-            if(this.scrollClick("立即签到")){
+            if(findAndClick("去签到") && dialogClick("立即签到.+")){
                 this.watchAdsForCoin("日常任务")
             }
         }
@@ -88,7 +89,7 @@ export class LightningSearch extends AbstractArticle {
         this.goTo(this.tab, 3)
         findAndClick("去领取")
         if(findAndClick("立即领取")){
-            if(fixedClick("点击领取")){
+            if(dialogClick("点击领取")){
                 closeByImageMatching()
             }
         }
@@ -107,7 +108,7 @@ export class LightningSearch extends AbstractArticle {
     toSearch():void{
         this.goTo(this.tab, 3)
         let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS 
+        while(++cycleCounts < 10
             && findAndClick("去搜索") 
             && fixedClick("搜索")){
             moveDown(15, 4)
@@ -119,7 +120,7 @@ export class LightningSearch extends AbstractArticle {
     randomSearch():void{
         this.goTo(this.tab, 3)
         let cycleCounts = 0
-        while(++cycleCounts < MAX_CYCLES_COUNTS
+        while(++cycleCounts < 35
             && findAndClick("随机搜")){
             moveDown(15, 4)
             this.backUntilFind(text("日常任务"))
@@ -130,8 +131,7 @@ export class LightningSearch extends AbstractArticle {
     reward(): void {
         this.goTo(this.tab, 3)
         let cycleCounts = 0
-        scrollTo("现金收益")
-        while(++cycleCounts < MAX_CYCLES_COUNTS  && this.ocrClick("点击领取|点击抽奖")){
+        while(++cycleCounts < MAX_CYCLES_COUNTS  && this.ocrClick("点击领取")){
             this.watchAdsForCoin("日常任务")
             if(dialogClick("开始抽奖")){
                 normalClick(resizeX(random(395, 689)), resizeY(random(750, 1067)))
@@ -139,16 +139,6 @@ export class LightningSearch extends AbstractArticle {
                     this.watchAdsForCoin("日常任务")
                 }
             }
-        }
-    }
-
-    @functionLog("领取刷视频奖励")
-    swipeReward():void{
-        this.goTo(this.tab, 3)
-        let cycleCounts = 0
-        scrollTo("如有疑问请参考活动规则", {waitFor:true})
-        while(++cycleCounts < MAX_CYCLES_COUNTS && fixedClick("点击领取")){
-            this.watchAdsForCoin("日常任务")
         }
     }
 

@@ -1,14 +1,12 @@
-import { dialogClick, findAndClick, fixedClick, goneClick, normalClick, ocrClick, readClick, scrollClick, selectedClick } from "../../common/click";
-import { scrollTo } from "../../common/search";
-import { doFuncAtGivenTime, getNumFromComponent, randomExecute, waitRandomTime } from "../../common/utils";
-import { MAX_CYCLES_COUNTS } from "../../global";
+import { dialogClick, findAndClick, fixedClick, normalClick, ocrClick, readClick, scrollClick, selectedClick } from "../../common/click";
+import { search } from "../../common/search";
+import { getNumFromComponent, randomExecute, waitRandomTime } from "../../common/utils";
+import { MAX_CYCLES_COUNTS, NORMAL_WAIT_TIME } from "../../global";
 import { functionLog, measureExecutionTime } from "../../lib/decorators";
 import { Record } from "../../lib/logger";
 import { Base, BaseKey } from "./Base";
 
 export abstract class AbstractFreeNovel extends Base {
-
-    tab: UiSelector
 
     constructor(packageName: string) {
         super()
@@ -25,7 +23,10 @@ export abstract class AbstractFreeNovel extends Base {
         this.signIn()
         randomExecute([
             ()=>{this.openTreasure()},
-            ()=>{this.watchAds()},
+            ()=>{
+                let cycleCounts = 0
+                while(++cycleCounts < MAX_CYCLES_COUNTS
+                    && this.watchAds()){}},
             ()=>{this.shopping()},
             ()=>{this.luckySpin()},
         ])
@@ -46,14 +47,13 @@ export abstract class AbstractFreeNovel extends Base {
         this.openTreasure()
     }
 
-
     @measureExecutionTime
     weight(): void {
         this.goTo(this.tab, 2)
-        scrollTo("我的金币")
-        if(fixedClick("我的金币")){
-            let tmp = textStartsWith("今日金币").findOnce()
-            if(tmp != null) {
+        if(findAndClick("我的金币")){
+            waitRandomTime(2)
+            const tmp = search("今日金币.*")
+            if(tmp) {
                 const match = tmp.text().replace(",", "").match(/[0-9]+/)
                 if(match){
                     const weight = parseInt(match[0])
@@ -73,15 +73,16 @@ export abstract class AbstractFreeNovel extends Base {
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goTo(this.tab, 2)
-        if (findAndClick('开宝箱得金币',{fixed:true,ocrRecognize:true})) {
+        if (ocrClick('开宝箱得金币')) {
             this.watchAdsForCoin("日常福利")
         }
     }
 
-    @functionLog("看视频")
+    @functionLog("看广告")
     watchAds(): boolean {
         this.goTo(this.tab, 2)
         if(scrollClick("去观看", "看小视频赚金币.*")){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(text("日常福利"))
             scrollClick("领金币", "看小视频赚金币.*")
             return true
@@ -95,6 +96,7 @@ export abstract class AbstractFreeNovel extends Base {
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS 
             && scrollClick("去逛逛", "逛街赚金币.*")) {
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(text("日常福利"))
             scrollClick("领金币", "逛街赚金币.*")
         }
@@ -114,9 +116,10 @@ export abstract class AbstractFreeNovel extends Base {
         }
         if(fixedClick(id(this.packageName+":id/reader_listen_entry"))){
             if(dialogClick("去看小视频")){
+                waitRandomTime(NORMAL_WAIT_TIME)
                 this.watch(text("边听边读"))
             }
-            goneClick("边听边读")
+            fixedClick("边听边读")
         }
     }
 
@@ -124,19 +127,21 @@ export abstract class AbstractFreeNovel extends Base {
     luckySpin(): void {
         this.goTo(this.tab, 2)
         if(scrollClick("去抽奖", "幸运大转盘.*")){
-            let tmp = textStartsWith("今日剩余抽奖次数").findOnce()
-            if(tmp != null){
+            waitRandomTime(NORMAL_WAIT_TIME)
+            const tmp = search("今日剩余抽奖次数.*")
+            if(tmp){
                 const num = getNumFromComponent(tmp.text())
                 Record.debug(`${num}`)
                 for(let i = 0; i < num;i++) {
-                    if(findAndClick("抽奖|看视频", {
-                        fixed:true,
-                        ocrRecognize:true,
-                        waitTimes: 10,
-                        bounds:{bottom: device.height *2/3, top: device.height/3}
+                    if(ocrClick("抽奖|看视频", {
+                        bounds:{
+                            bottom: device.height * 2 / 3, 
+                            top: device.height / 3}
                     })){
+                        waitRandomTime(NORMAL_WAIT_TIME)
                         this.watch(text("幸运大转盘"))
-                        findAndClick("好的", {fixed:true, waitFor:true, clickUntilGone:true})
+                        fixedClick("好的")
+                        findAndClick("好的",{waitFor:2})
                     }
                 }
                 
@@ -150,7 +155,7 @@ export abstract class AbstractFreeNovel extends Base {
         this.watchAdsForCoin("日常福利")
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS &&
-            scrollClick("领金币", "阅读赚金币.*", {clickUntilGone:false})){
+            scrollClick("领金币", "阅读赚金币.*")){
             this.watchAdsForCoin("日常福利")
         }
     }
@@ -161,7 +166,7 @@ export abstract class AbstractFreeNovel extends Base {
         this.watchAdsForCoin("日常福利")
         let cycleCounts = 0
         while(++cycleCounts < MAX_CYCLES_COUNTS &&
-            scrollClick("领金币", "听书赚金币.*", {clickUntilGone:false})){
+            scrollClick("领金币", "听书赚金币.*")){
             this.watchAdsForCoin("日常福利")
         }
     }
@@ -172,9 +177,10 @@ export abstract class AbstractFreeNovel extends Base {
         } else {
             if(findAndClick(id(this.packageName+":id/voice_rl"))){
                 if(dialogClick("去看小视频")){
+                    waitRandomTime(NORMAL_WAIT_TIME)
                     this.watch(text("边听边读"))
                 }
-                goneClick("边听边读")
+                fixedClick("边听边读")
             }
         }
     }
@@ -182,7 +188,9 @@ export abstract class AbstractFreeNovel extends Base {
     openBook(): void {
         this.goTo(this.tab, 1)
         if(selectedClick("推荐", 170)){
-            readClick(id(this.packageName+":id/tv_book_one_book_title"), random(0, 3))
+            findAndClick(id(this.packageName+":id/tv_book_one_book_title"), {
+                index: random(0, 3)
+            })
         }
     }
 }

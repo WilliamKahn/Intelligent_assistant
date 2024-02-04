@@ -1,7 +1,8 @@
-import { findAndClick, ocrClick, scrollClick, selectedClick } from "../common/click";
-import { scrollTo, searchByOcrRecognize } from "../common/search";
-import { closeByImageMatching, convertSecondsToMinutes, doFuncAtGivenTime, moveDown } from "../common/utils";
-import { MAX_CYCLES_COUNTS, NAME_VEDIO_BAIDU, PACKAGE_VEDIO_BAIDU } from "../global";
+import { findAndClick, findByOcrAndClick, ocrClick, randomClick, scrollClick, selectedClick } from "../common/click";
+import { closeByImageMatching, searchByOcrRecognize } from "../common/ocr";
+import { scrollTo, search } from "../common/search";
+import { convertSecondsToMinutes, doFuncAtGivenTime, moveDown, waitRandomTime } from "../common/utils";
+import { MAX_CYCLES_COUNTS, NAME_VEDIO_BAIDU, NORMAL_WAIT_TIME, PACKAGE_VEDIO_BAIDU } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
 import { AbstractBaidu } from "./abstract/AbstractBaidu";
@@ -52,8 +53,9 @@ export class Baidu extends AbstractBaidu {
     @functionLog("去芭芭农场")
     goFarm():void{
         this.goto(-1)
-        if(text("去支付宝芭芭农场").exists() && 
+        if(search("去支付宝芭芭农场") && 
         scrollClick("去完成","去支付宝芭芭农场")){
+            waitRandomTime(NORMAL_WAIT_TIME)
             this.watch(text("金币收益"))
             this.watchAdsForCoin("金币收益")
         }
@@ -75,9 +77,14 @@ export class Baidu extends AbstractBaidu {
     swipeVideo(totalTime: number): void {
         this.goto(0)
         if(selectedClick("发现", 170)){
-            if(findAndClick(className("android.widget.ImageView"), {bounds:{top:device.height/5}})){
-                Record.log(`预计刷视频${convertSecondsToMinutes(totalTime)}分钟`)
-                moveDown(totalTime, 30)
+            const parent = search(className("androidx.recyclerview.widget.RecyclerView").depth(22))
+            if(parent){
+                const child = parent.child(random(0,3))
+                if(child){
+                    randomClick(child.bounds())
+                    Record.log(`预计刷视频${convertSecondsToMinutes(totalTime)}分钟`)
+                    moveDown(totalTime, 30)
+                }
             }
         }
     }
@@ -86,9 +93,7 @@ export class Baidu extends AbstractBaidu {
         if(num === -1){
             if(this.first){
                 this.goTo(this.tab, 4)
-                if(findAndClick("天天领现金",{
-                    ocrRecognize:true,
-                    clickUntilGone:true,
+                if(findByOcrAndClick("天天领现金",{
                     bounds:{bottom:device.height/5, left:device.width/2}})){
                         this.first = false
                     }
