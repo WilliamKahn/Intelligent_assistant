@@ -3,7 +3,7 @@ import { Bounds } from "../../common/interfaces"
 import { getScreenImage, getGrayscaleHistogram, closeByImageMatching } from "../../common/ocr"
 import { search } from "../../common/search"
 import { close, convertSecondsToMinutes, doFuncAtGivenTime, executeDynamicLoop, executeDynamicLoop2, findLargestIndexes, matchAndJudge, merge, resizeX, resizeY, waitRandomTime } from "../../common/utils"
-import { INCOME_THRESHOLD, MAX_BACK_COUNTS, MAX_CYCLES_COUNTS, NORMAL_WAIT_TIME, STORAGE } from "../../global"
+import { INCOME_THRESHOLD, MAX_BACK_COUNTS, MAX_CYCLES_COUNTS, NORMAL_WAIT_TIME, STORAGE, funcNameMap } from "../../global"
 import { startDecorator } from "../../lib/decorators"
 import { ConfigInvalidException, ExceedMaxNumberOfAttempts } from "../../lib/exception"
 import { LOG_STACK, Record } from "../../lib/logger"
@@ -147,7 +147,7 @@ export abstract class Base {
     startContinue(funcName: string): void{
         const start = this[`${funcName}Start`]
         const length = this[`${funcName}Index`]
-        if(start < length && this.lauchApp()){
+        if(start < length && this.lauchApp(true)){
             this.reset()
             this.beforeDoTask()
             this.reSearchTab()
@@ -168,7 +168,7 @@ export abstract class Base {
     @startDecorator
     start2(): void{
         const runCode = hamibot.env[this.constructor.name]
-        if (runCode !== "" && this.lauchApp()){
+        if (runCode !== "" && this.lauchApp(true)){
             this.startReset()
             this.executeRichText(runCode)
             this.weight()
@@ -184,7 +184,7 @@ export abstract class Base {
             let line = lines[i]
             const tokens = line.trim().split(/\(|\)/)
 
-            const command = this.findMethodName(tokens[0])
+            const command = funcNameMap[tokens[0]]
             const params = tokens[1] ? tokens[1].split(',') : []
 
             if(command != null){
@@ -529,17 +529,6 @@ export abstract class Base {
             return defaultValue
         }
         return object[key]
-    }
-
-    findMethodName(chineseName:string) {
-        const list:string[] = hamibot.env[this.constructor.name+"Func"]
-        for (let i = 0; i < list.length; i++) {
-          const parts = list[i].split("|");
-          if (parts[1] === chineseName) {
-            return parts[0];
-          }
-        }
-        return null;// 如果没有找到匹配的方法名称
     }
 
     //*****************空方法*******************

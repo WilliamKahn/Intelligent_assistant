@@ -1,5 +1,5 @@
 import { Point } from "images";
-import { DEVICE_HEIGHT, DEVICE_WIDTH, MAX_CYCLES_COUNTS, PACKAGE_HAMIBOT, characterMapping } from "../global";
+import { DEVICE_HEIGHT, DEVICE_WIDTH, MAX_CYCLES_COUNTS, NORMAL_WAIT_TIME, PACKAGE_HAMIBOT, characterMapping } from "../global";
 import { Record } from "../lib/logger";
 import { findAndClick } from './click';
 import { Move } from "./enums";
@@ -53,9 +53,9 @@ export function waitRandomTime(waitTime:number){
  */
 export function clearBackground(){
     if(home()){
-        waitRandomTime(4)
+        waitRandomTime(NORMAL_WAIT_TIME)
         if(recents()){
-            waitRandomTime(4)
+            waitRandomTime(NORMAL_WAIT_TIME)
             if(!findAndClick(idContains("clear"), {
                 fixed:true,
                 disableCoverCheck:true,
@@ -67,8 +67,9 @@ export function clearBackground(){
                     disableGrayCheck:true
                 })
             }
+            waitRandomTime(NORMAL_WAIT_TIME)
             launchPackage(PACKAGE_HAMIBOT)
-            waitRandomTime(4)
+            waitRandomTime(NORMAL_WAIT_TIME)
         }
     }
 }

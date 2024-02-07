@@ -44,6 +44,7 @@ import { XinyaFree } from "./scripts/XinyaFree";
 import { YouShi } from "./scripts/YouShi";
 import { BaseKey } from "./scripts/abstract/Base";
 import { FontCharacterMap } from "./common/interfaces";
+import { sendIncomeMessageToWxPuher, toShowString } from "./common/report";
 
 
 //*******************全局常量****************************/
@@ -106,6 +107,43 @@ export const characterMapping: FontCharacterMap = {
     "剧": ["剧", "刷"],
     "首页": ["首页", "锁"]
     // 其他字符的映射
+}
+export const funcNameMap = {
+    "签到": "signIn",
+    "开宝箱": "openTreasure",
+    "看广告": "watchAds",
+    "听书": "listenBook",
+    "听音乐": "listenMusic",
+    "阅读": "readBook",
+    "看短剧": "swipeVideo",
+    "刷视频": "swipeVideo",
+    "吃饭补贴": "mealSupp",
+    "吃饭打卡": "mealSupp",
+    "逛街": "shopping",
+    "领取奖励": "reward",
+    "领取阅读奖励": "readReward",
+    "领取短剧奖励": "swipeReward",
+    "领取视频奖励": "swipeReward",
+    "领取听书奖励": "listenReward",
+    "领取听歌奖励": "listenReward",
+    "领取每日奖励": "dailyReward",
+    "领取日常奖励": "dailyReward",
+    "领取额外存金币奖励": "depositReward",
+    "参与活动": "joinActivity",
+    "幸运大转盘": "luckySpin",
+    "抽奖赢金币": "winGoldCoin",
+    "点赞": "like",
+    "评论": "comment",
+    "收藏": "collect",
+    "搜索得金币": "searchForCoin",
+    "测运势": "makesureFortune",
+    "芭芭农场": "goFarm",
+    "走路赚钱": "walkEarn",
+    "睡觉赚钱": "sleepEarn",
+    "奖励翻倍": "doubleEarn",
+    "搜一搜赚钱": "toSearch",
+    "随机搜赚钱": "randomSearch",
+    "看直播": "watchLive"
 }
 
 export const PACKAGE_HAMIBOT = "com.hamibot.hamibot"
@@ -339,6 +377,20 @@ events.on("exit", () => {
     waitRandomTime(5)
     console.hide()
 })
+threads.start(()=>{
+    events.setKeyInterceptionEnabled('volume_up', true);
+    events.setKeyInterceptionEnabled('volume_down', true);
+    events.observeKey();
+    events.onKeyDown('volume_down', () => {
+        exit()
+    })
+    events.onKeyDown('volume_up', () => {
+        LogRecord.info("发送运行收益")
+        sendIncomeMessageToWxPuher(toShowString(list))
+    })
+})
+LogRecord.log("音量+键发送收益")
+LogRecord.log("音量-键停止运行")
 
 // ------------------------ validation --------------------------
 

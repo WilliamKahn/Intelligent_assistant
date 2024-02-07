@@ -37,7 +37,14 @@ export function init() {
         // @ts-ignore
         findAndClick(className("android.widget.Button").textMatches(".?立即开始.?|.?允许.?"),{
             waitFor:10,
-            waitTimes:2.5,
+            throwErrIfNotExist:true,
+            disableCoverCheck:true,
+            disableGrayCheck:true,
+            fixed:true
+        })
+        waitRandomTime(2)
+        findAndClick(className("android.widget.Button").textMatches(".?立即开始.?|.?允许.?"),{
+            waitFor:-1,
             throwErrIfNotExist:true,
             disableCoverCheck:true,
             disableGrayCheck:true,
@@ -61,5 +68,5 @@ export function init() {
     }
     device.keepScreenOn(3600 * 1000)
     console.show()
-    waitRandomTime(1)
+    waitRandomTime(2)
 }

@@ -222,8 +222,12 @@ export function getClosePointGrayScale(img:Image, list:Point[]):ClosePoint[]{
     for(const point of list){
         let sum = 0
         let gray = 0
-        for(let y = point.y-50;y<point.y+50;y++){
-            for(let x = point.x-50;x<point.x+50;x++){
+        const yFrom = point.y - 50 > 0 ? point.y - 50 : 0
+        const yEnd = point.y + 50 < device.height ? point.y + 50 : device.height
+        const xFrom = point.x - 50 > 0 ? point.x - 50 : 0
+        const xEnd = point.x + 50 < device.width ? point.x + 50 : device.width
+        for(let y = yFrom;y<yEnd+50;y++){
+            for(let x = xFrom;x<xEnd;x++){
                 let color = img.pixel(x,y)
                 if(isGray(colors.red(color), colors.green(color), colors.blue(color))){
                     gray++

@@ -1,6 +1,6 @@
 import { sendIncomeMessageToWxPuher, toShowString } from "../../common/report";
 import { clearBackground } from "../../common/utils";
-import { ORDER, STORAGE, STORAGE_APP, STORAGE_DATE, article, articleLite, baidu, baiduBig, baiduLite, deJian, eggplantFree, kuaiShou, kuaiShouFree, kuaiShouLite, marvelFree, pandaBrain, redFruits, sevenCatsFree, shuQi, speedFree, starrySky, tikTokLite, tikTokVolcano, tomato, tomatoFree, tomatoLite, youShi } from "../../global"
+import { ORDER, STORAGE, STORAGE_APP, STORAGE_DATE, article, articleLite, baidu, baiduBig, baiduLite, changReadFree, deJian, eggFlower, eggplantFree, kuaiShou, kuaiShouFree, kuaiShouLite, lightningSearch, marvelFree, pandaBrain, redFruits, sevenCatsFree, shengRead, shuQi, speedFree, starrySky, tikTokLite, tikTokVolcano, tomato, tomatoFree, tomatoLite, watermelon, ximalayaLite, xinyaFree, youShi } from "../../global"
 import { Record as LogRecord } from "../../lib/logger";
 main()
 export function main(){
@@ -28,6 +28,13 @@ export function main(){
         "21": articleLite,
         "22": tikTokLite,
         "23": tikTokVolcano,
+        "24": watermelon,
+        "25": changReadFree,
+        "26": eggFlower,
+        "27": ximalayaLite,
+        "28": shengRead,
+        "29": xinyaFree,
+        "30": lightningSearch
     }
     const list:any = []
     if(ORDER){
@@ -50,9 +57,12 @@ export function main(){
             }
         }
     }
+    const filteredList = list.filter(
+        item => hamibot.env[`${item.constructor.name}Flag`] !== false
+    )
     let first = true
     while(true){
-        let runList = list
+        let runList = filteredList
         if(first && STORAGE.get(STORAGE_APP) !== undefined){
             first = false
             let index = -1

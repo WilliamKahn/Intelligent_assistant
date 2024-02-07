@@ -1,6 +1,6 @@
-import { findAndClick, scrollClick } from "./common/click"
-import { speedFree, tikTokLite } from "./global"
-import { main } from "./main/first/main"
+import { tikTokLite } from "./global"
+import { main } from "./main/second/main"
+
 
 
 /*
@@ -22,6 +22,5 @@ function test() {
     //     // log(`${app.appName}:${app.fetch(BaseKey.LowEff2IncomePerMinute)}`)
     //     // log(`${app.appName}:${app.fetch(BaseKey.LowEff3IncomePerMinute)}`)
     // }
-    speedFree.medEffFlag = true
-    speedFree.start1()
+    main()
 }
