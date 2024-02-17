@@ -1,7 +1,7 @@
-import { findAndClick, findByOcrAndClick, ocrClick, randomClick, scrollClick, selectedClick } from "../common/click";
+import { findByOcrAndClick, randomClick, scrollClick, selectedClick } from "../common/click";
 import { closeByImageMatching, searchByOcrRecognize } from "../common/ocr";
 import { scrollTo, search } from "../common/search";
-import { convertSecondsToMinutes, doFuncAtGivenTime, moveDown, waitRandomTime } from "../common/utils";
+import { convertSecondsToMinutes, moveDown, waitRandomTime } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_VEDIO_BAIDU, NORMAL_WAIT_TIME, PACKAGE_VEDIO_BAIDU } from "../global";
 import { functionLog, measureExecutionTime } from "../lib/decorators";
 import { Record } from "../lib/logger";
@@ -65,7 +65,7 @@ export class Baidu extends AbstractBaidu {
     makesureFortune(): void{
         this.goto(-1)
         if(scrollClick("测一测", "测测今日运势")){
-            if(ocrClick("测一测")){
+            if(findByOcrAndClick("测一测")){
                 closeByImageMatching()
                 this.backUntilFind(text("金币收益"))
                 this.watchAdsForCoin("金币收益")

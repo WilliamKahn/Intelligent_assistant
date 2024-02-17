@@ -1,4 +1,4 @@
-import { dialogClick, fixedClick, findAndClick, normalClick, ocrClick } from "../common/click";
+import { dialogClick, fixedClick, findAndClick, normalClick, findByOcrAndClick } from "../common/click";
 import { searchByOcrRecognize } from "../common/ocr";
 import { search } from "../common/search";
 import { randomExecute, getNumFromComponent, convertSecondsToMinutes, moveDown, resizeX, resizeY, waitRandomTime } from "../common/utils";
@@ -132,7 +132,7 @@ export class Article extends AbstractArticle{
         let cycleCounts = 0
         this.scrollTo("现金收益")
         while(++cycleCounts < MAX_CYCLES_COUNTS  
-            && ocrClick("点击领取|点击抽奖", {
+            && findByOcrAndClick("点击领取|点击抽奖", {
             // ocrRecognize:true,
             bounds:{
                 bottom:device.height / 3,

@@ -1,4 +1,4 @@
-import { dialogClick, findAndClick, findByOcrAndClick, fixedClick, ocrClick, readClick, scrollClick } from "../common/click"
+import { dialogClick, findAndClick, fixedClick, findByOcrAndClick, readClick, scrollClick } from "../common/click"
 import { closeByImageMatching } from "../common/ocr"
 import { scrollTo, search } from "../common/search"
 import { randomExecute, padZero, getNumFromComponent, waitRandomTime } from "../common/utils"
@@ -101,7 +101,7 @@ export class ShengRead extends Base {
             throwErrIfNotExist:true
         }, {bottom:device.height*2/3})
         while(++cycleCounts < MAX_CYCLES_COUNTS && component
-            && ocrClick("领取", {
+            && findByOcrAndClick("领取", {
                 bounds:{
                     top: component.bounds().top - 20,
                     bottom: component.bounds().bottom + 200

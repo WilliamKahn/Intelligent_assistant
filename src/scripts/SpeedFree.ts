@@ -1,4 +1,4 @@
-import { dialogClick, findAndClick, findByOcrAndClick, fixedClick, ocrClick, readClick, scrollClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, findByOcrAndClick, readClick, scrollClick } from "../common/click";
 import { scrollTo, search } from "../common/search";
 import { merge, waitRandomTime } from "../common/utils";
 import { MAX_CYCLES_COUNTS, NAME_READ_SPEED_FREE, NORMAL_WAIT_TIME, PACKAGE_READ_SPEED_FREE } from "../global";
@@ -67,7 +67,7 @@ export class SpeedFree extends Base {
     signIn(): void{
         //每日签到 签到
         this.goTo(desc("discovery_button"), -1)
-        if (ocrClick("立即签到.+")) {
+        if (findByOcrAndClick("立即签到.+")) {
             this.watchAdsForCoin("日常福利")
         } else {
             if(findAndClick("签到")){

@@ -1,9 +1,9 @@
-import { closeDialogifExist, continueWatch, dialogClick, findAndClick, fixedClick, normalClick, randomClick, watchAgain } from "../../common/click"
+import { closeDialogifExist, continueWatch, dialogClick, findAndClick, normalClick, randomClick, watchAgain } from "../../common/click"
 import { Bounds } from "../../common/interfaces"
-import { getScreenImage, getGrayscaleHistogram, closeByImageMatching } from "../../common/ocr"
+import { closeByImageMatching, getGrayscaleHistogram, getScreenImage } from "../../common/ocr"
 import { search } from "../../common/search"
 import { close, convertSecondsToMinutes, doFuncAtGivenTime, executeDynamicLoop, executeDynamicLoop2, findLargestIndexes, matchAndJudge, merge, resizeX, resizeY, waitRandomTime } from "../../common/utils"
-import { INCOME_THRESHOLD, MAX_BACK_COUNTS, MAX_CYCLES_COUNTS, NORMAL_WAIT_TIME, STORAGE, funcNameMap } from "../../global"
+import { INCOME_THRESHOLD, MAX_CYCLES_COUNTS, NORMAL_WAIT_TIME, STORAGE, funcNameMap } from "../../global"
 import { startDecorator } from "../../lib/decorators"
 import { ConfigInvalidException, ExceedMaxNumberOfAttempts } from "../../lib/exception"
 import { LOG_STACK, Record } from "../../lib/logger"
@@ -95,7 +95,7 @@ export abstract class Base {
 
     @startDecorator
     start1(): void{
-        if(this.lauchApp(true)){
+        if(this.lauchApp()){
             this.startReset()
             const processTime:any = this.highEff()
             this.weight()
@@ -147,7 +147,7 @@ export abstract class Base {
     startContinue(funcName: string): void{
         const start = this[`${funcName}Start`]
         const length = this[`${funcName}Index`]
-        if(start < length && this.lauchApp(true)){
+        if(start < length && this.lauchApp()){
             this.reset()
             this.beforeDoTask()
             this.reSearchTab()
@@ -168,7 +168,7 @@ export abstract class Base {
     @startDecorator
     start2(): void{
         const runCode = hamibot.env[this.constructor.name]
-        if (runCode !== "" && this.lauchApp(true)){
+        if (runCode !== "" && this.lauchApp()){
             this.startReset()
             this.executeRichText(runCode)
             this.weight()
@@ -251,19 +251,22 @@ export abstract class Base {
         }
     }
 
-    lauchApp(start:boolean = false): boolean {
+    lauchApp(): boolean {
         Record.log(`尝试启动${this.appName}`)
         const isLauchApp = launchPackage(this.packageName)
         if(isLauchApp) {
-            if(start){
-                findAndClick("跳过", {
-                    fixed:true,
-                    disableCoverCheck:true,
-                    disableGrayCheck:true
-                })
-            }
+            findAndClick(className("android.widget.Button").textMatches("打开"), {
+                fixed:true,
+                disableCoverCheck:true,
+                disableGrayCheck:true,
+                waitFor:2
+            })
+            findAndClick("跳过", {
+                fixed:true,
+                disableCoverCheck:true,
+                disableGrayCheck:true
+            })
             Record.log(`${this.appName}已启动`)
-            //fixedClick(className("android.widget.Button").textMatches("打开"))
         } else {
             Record.log(`${this.appName}应用未安装`)
         }
@@ -336,7 +339,7 @@ export abstract class Base {
             throw new ExceedMaxNumberOfAttempts("超过最大限制次数")
         }
         if (currentPackage() !== this.packageName) {
-            this.lauchApp()
+            launchPackage(this.packageName)
         }
         let str:string|undefined = undefined
         const first = search("浏览页面[0-9]+s 领取奖励", {
@@ -454,7 +457,7 @@ export abstract class Base {
             }
             //判断是否还在app内
             if (currentPackage() !== this.packageName) {
-                this.lauchApp()
+                launchPackage(this.packageName)
             }
             return this.backUntilFind(component, ++times)
         }

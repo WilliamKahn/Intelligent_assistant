@@ -51,14 +51,6 @@ export function closeDialogifExist(){
 export function fixedClick(component:string|UiSelector){
     return findAndClick(component, {fixed:true})
 }
-export function ocrClick(text:string, options?:SearchByOcrRecognizeOptions){
-    const component = searchByOcrRecognize(text, options)
-    if(component){
-        randomClick(component.bounds)
-        return true
-    }
-    return false
-}
 //固定、ocr识别、重复点击、区域限定 206 874   1080  216 864
 export function dialogClick(text:string, bounds?:Bounds){
     const boundss = bounds || {

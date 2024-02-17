@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, ocrClick } from "../common/click";
+import { findAndClick, fixedClick, findByOcrAndClick } from "../common/click";
 import { getScreenImage } from "../common/ocr";
 import { search } from "../common/search";
 import { resizeX, resizeY, waitRandomTime } from "../common/utils";
@@ -47,7 +47,7 @@ export class WanChao extends Base {
                     swipe(box.bounds().centerX(), box.bounds().centerY(), device.width,box.bounds().centerY()+random(-25,0), 100)
                     waitRandomTime(3)
                 }
-                if(ocrClick("抽奖", {bounds:{top:200}})){
+                if(findByOcrAndClick("抽奖", {bounds:{top:200}})){
                     let money = textMatches("[0-9]+\.[0-9]+元")
                     .boundsInside(resizeX(108),resizeY(1140),resizeX(972),resizeY(1323)).findOnce()
                     if(money != null) {

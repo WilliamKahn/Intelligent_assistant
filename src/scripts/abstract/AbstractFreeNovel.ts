@@ -1,4 +1,4 @@
-import { dialogClick, findAndClick, fixedClick, normalClick, ocrClick, readClick, scrollClick, selectedClick } from "../../common/click";
+import { dialogClick, findAndClick, fixedClick, normalClick, findByOcrAndClick, readClick, scrollClick, selectedClick } from "../../common/click";
 import { search } from "../../common/search";
 import { getNumFromComponent, randomExecute, waitRandomTime } from "../../common/utils";
 import { MAX_CYCLES_COUNTS, NORMAL_WAIT_TIME } from "../../global";
@@ -73,7 +73,7 @@ export abstract class AbstractFreeNovel extends Base {
     @functionLog("开宝箱")
     openTreasure(): void {
         this.goTo(this.tab, 2)
-        if (ocrClick('开宝箱得金币')) {
+        if (findByOcrAndClick('开宝箱得金币')) {
             this.watchAdsForCoin("日常福利")
         }
     }
@@ -133,7 +133,7 @@ export abstract class AbstractFreeNovel extends Base {
                 const num = getNumFromComponent(tmp.text())
                 Record.debug(`${num}`)
                 for(let i = 0; i < num;i++) {
-                    if(ocrClick("抽奖|看视频", {
+                    if(findByOcrAndClick("抽奖|看视频", {
                         bounds:{
                             bottom: device.height * 2 / 3, 
                             top: device.height / 3}

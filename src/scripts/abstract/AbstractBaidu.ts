@@ -1,4 +1,4 @@
-import { findAndClick, fixedClick, ocrClick, scrollClick } from "../../common/click";
+import { findAndClick, fixedClick, findByOcrAndClick, scrollClick } from "../../common/click";
 import { closeByImageMatching } from "../../common/ocr";
 import { scrollTo, search } from "../../common/search";
 import { waitRandomTime } from "../../common/utils";
@@ -99,7 +99,7 @@ export abstract class AbstractBaidu extends Base {
         let cycleCounts = 0
         const component = scrollTo("今日任务")
         while(++cycleCounts <= MAX_CYCLES_COUNTS && component
-            && ocrClick(".?领取", {
+            && findByOcrAndClick(".?领取", {
                 bounds:{
                     top:component.bounds().top - 30, 
                     bottom:component.bounds().bottom + 30}
@@ -113,7 +113,7 @@ export abstract class AbstractBaidu extends Base {
         let cycleCounts = 0
         const component = scrollTo(this.readRewardText,undefined,{bottom:device.height/2})
         while(++cycleCounts <= MAX_CYCLES_COUNTS && component
-            && ocrClick("领",{
+            && findByOcrAndClick("领",{
                 bounds:{
                     top:component.bounds().bottom, 
                     bottom:component.bounds().bottom+500},

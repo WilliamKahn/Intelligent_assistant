@@ -1,4 +1,4 @@
-import { dialogClick, findAndClick, fixedClick, normalClick, ocrClick, scrollClick } from "../common/click";
+import { dialogClick, findAndClick, fixedClick, normalClick, findByOcrAndClick, scrollClick } from "../common/click";
 import { Move } from "../common/enums";
 import { closeByImageMatching, getScreenImage, searchByOcrRecognize } from "../common/ocr";
 import { scrollTo, search } from "../common/search";
@@ -151,7 +151,7 @@ export class ArticleLite extends AbstractArticle{
         let cycleCounts = 0
         this.scrollTo("现金收益")
         while(++cycleCounts < MAX_CYCLES_COUNTS  
-            && ocrClick("点击领取|点击抽奖", {
+            && findByOcrAndClick("点击领取|点击抽奖", {
         })){
             this.watchAdsForCoin("任务")
             if(dialogClick("开始抽奖")){

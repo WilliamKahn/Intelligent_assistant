@@ -1,5 +1,7 @@
-import { tikTokLite } from "./global"
-import { main } from "./main/second/main"
+import { starrySky } from "./global"
+import { main } from "./main/first/main"
+import { StarrySky } from "./scripts/StarrySky"
+
 
 
 
@@ -22,5 +24,5 @@ function test() {
     //     // log(`${app.appName}:${app.fetch(BaseKey.LowEff2IncomePerMinute)}`)
     //     // log(`${app.appName}:${app.fetch(BaseKey.LowEff3IncomePerMinute)}`)
     // }
-    main()
+    launchPackage(starrySky.packageName)
 }

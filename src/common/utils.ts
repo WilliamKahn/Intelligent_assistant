@@ -470,11 +470,6 @@ export function replaceCharacters(input: string): string {
 }
 
 export function removeNonChineseCharsFromEdges(input: string): string {
-    // 匹配首尾非汉字字符的正则表达式
-    // const nonChineseEdgesRegex = /^([^\u4e00-\u9fa5]+)(.*?)([^\u4e00-\u9fa5]+)$/;
-  
-    // // 去除首尾非汉字字符
-    // const result = input.replace(nonChineseEdgesRegex, '$2');
     // 进一步去除中文符号
     const chineseSymbolRegex = /[，。、；‘’：“”【】『』《》（）！？]/g;
     return input.replace(chineseSymbolRegex, '');
