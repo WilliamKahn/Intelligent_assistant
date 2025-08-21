@@ -59,8 +59,11 @@ export const VERSION = "0.7.3";
 
 //微信推送url
 export const WX_PUSHER_URL = "https://wxpusher.zjiecode.com/api/send/message"
-//微信推送应用token
-export const APP_TOKEN = "AT_2vEaUfXFmwMKybX7YeX3yCJFrmc7TFlD"
+// 微信推送应用 token (原始仓库中已移除敏感真实值)
+// 1. 请在 hamibot 平台脚本配置里新增 APP_TOKEN 环境变量或在部署时以环境变量方式注入
+// 2. 禁止把真实 token 提交到仓库; 协议: 若为空则不发送相关推送
+// 3. 历史提交中如曾包含真实 token, 请参考 README 的 “敏感信息清理” 一节执行 git 历史重写
+export const APP_TOKEN = (hamibot.env && (hamibot.env as any).APP_TOKEN) || "";
 export const INCOME_THRESHOLD:number = 0.0035
 export const INCOME_RECOVER:number = 0.0005
 //最大返回次数
